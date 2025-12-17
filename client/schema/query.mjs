@@ -5,15 +5,15 @@ export const ViewRow = z.object({
   id: z.string().optional(),
   key: z.any().nullable(),
   value: z.any().nullable(),
-  doc: z.object({}).passthrough().optional().nullish(),
+  doc: z.looseObject({}).optional().nullish(),
   error: z.string().optional().describe('usually not_found, if something is wrong with this doc')
 })
 /** @typedef { z.infer<typeof ViewRow> } ViewRowSchema */
 
-export const SimpleViewQueryResponse = z.object({
+export const SimpleViewQueryResponse = z.looseObject({
   error: z.string().optional().describe('if something is wrong'),
   rows: z.array(ViewRow)
-}).passthrough()
+})
 /** @typedef { z.infer<typeof SimpleViewQueryResponse> } SimpleViewQueryResponseSchema */
 
 export const SimpleViewOptions = z.object({
@@ -31,15 +31,8 @@ export const SimpleViewOptions = z.object({
 }).optional().describe('query options')
 /** @typedef { z.infer<typeof SimpleViewOptions> } SimpleViewOptionsSchema */
 
-export const SimpleViewQuery = z.function().args(
-  CouchConfig,
-  z.string().describe('the view name'),
-  SimpleViewOptions
-).returns(z.promise(SimpleViewQueryResponse))
+export const SimpleViewQuery = z.function({ input: [CouchConfig, z.string().describe('the view name'), SimpleViewOptions], output: z.promise(SimpleViewQueryResponse) })
 /** @typedef { z.infer<typeof SimpleViewQuery> } SimpleViewQuerySchema */
 
-export const SimpleViewQueryBound = z.function().args(
-  z.string().describe('the view name'),
-  SimpleViewOptions
-).returns(z.promise(SimpleViewQueryResponse))
+export const SimpleViewQueryBound = z.function({ input: [z.string().describe('the view name'), SimpleViewOptions], output: z.promise(SimpleViewQueryResponse) })
 /** @typedef { z.infer<typeof SimpleViewQueryBound> } SimpleViewQueryBoundSchema */

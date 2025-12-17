@@ -1,14 +1,11 @@
 import { z } from 'zod'
 
 const LoggerSchema = z.object({
-  error: z.function().args(z.any()).returns(z.void()).optional(),
-  warn: z.function().args(z.any()).returns(z.void()).optional(),
-  info: z.function().args(z.any()).returns(z.void()).optional(),
-  debug: z.function().args(z.any()).returns(z.void()).optional()
-}).or(z.function().args(
-  z.string(), // level
-  z.any() // message/args
-).returns(z.void()))
+  error: z.function().optional({ input: [z.any()], output: z.void() }),
+  warn: z.function().optional({ input: [z.any()], output: z.void() }),
+  info: z.function().optional({ input: [z.any()], output: z.void() }),
+  debug: z.function().optional({ input: [z.any()], output: z.void() })
+}).or(z.function({ input: [z.string(), z.any()], output: z.void() }))
 
 export const NeedleBaseOptions = z.object({
   json: z.boolean(),
@@ -30,8 +27,8 @@ export const NeedleOptions = z.object({
   parse_response: z.boolean().optional(),
   decode: z.boolean().optional(),
   parse_cookies: z.boolean().optional(),
-  cookies: z.record(z.string()).optional(),
-  headers: z.record(z.string()).optional(),
+  cookies: z.record(z.string(), z.string()).optional(),
+  headers: z.record(z.string(), z.string()).optional(),
   auth: z.enum(['auto', 'digest', 'basic']).optional(),
   username: z.string().optional(),
   password: z.string().optional(),
@@ -46,7 +43,7 @@ export const NeedleOptions = z.object({
   keepAlive: z.boolean().optional()
 })
 
-export const CouchConfig = z.object({
+export const CouchConfig = z.looseObject({
   throwOnGetNotFound: z.boolean().optional().default(false).describe('if a get is 404 should we throw or return undefined'),
   couch: z.string().describe('the url of the couch db'),
   bindWithRetry: z.boolean().optional().default(true).describe('should we bind with retry'),
@@ -58,6 +55,6 @@ export const CouchConfig = z.object({
   // _emitter: z.any().optional().describe('emitter for events'),
   _normalizedLogger: z.any().optional(), // Internal property for caching normalized logger
   needleOpts: NeedleOptions.optional()
-}).passthrough().describe('The std config object')
+}).describe('The std config object')
 
 /** @typedef { z.infer<typeof CouchConfig> } CouchConfigSchema */

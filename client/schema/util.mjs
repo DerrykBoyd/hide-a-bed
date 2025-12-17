@@ -16,26 +16,21 @@ import { CouchConfig, NeedleBaseOptions, NeedleOptions } from './config.mjs'
 "committed_update_seq": 23873801
 } */
 
-export const DBInfo = z.object({
+export const DBInfo = z.looseObject({
   db_name: z.string(),
   doc_count: z.number(),
   update_seq: z.number(),
   compact_running: z.boolean().nullish(),
   disk_size: z.number().nullish(),
   committed_update_seq: z.number().nullish()
-}).passthrough()
+})
 
-export const GetDBInfo = z.function().args(
-  CouchConfig
-).returns(z.promise(DBInfo))
+export const GetDBInfo = z.function({ input: [CouchConfig], output: z.promise(DBInfo) })
 /** @typedef { z.infer<typeof GetDBInfo> } GetDBInfoSchema */
 
-export const GetDBInfoBound = z.function().args(
-).returns(z.promise(DBInfo))
+export const GetDBInfoBound = z.function({ input: [], output: z.promise(DBInfo) })
 /** @typedef { z.infer<typeof GetDBInfoBound> } GetDBInfoBoundSchema */
 
 export const MergeNeedleOpts = z
-  .function()
-  .args(CouchConfig, NeedleBaseOptions)
-  .returns(NeedleOptions)
+  .function({ input: [CouchConfig, NeedleBaseOptions], output: NeedleOptions })
 /** @typedef { z.infer<typeof MergeNeedleOpts> } MergeNeedleOptsSchema */

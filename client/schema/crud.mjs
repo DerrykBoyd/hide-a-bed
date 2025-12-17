@@ -1,11 +1,11 @@
 import { z } from 'zod'
 import { CouchConfig } from './config.mjs'
 
-export const CouchDoc = z.object({
+export const CouchDoc = z.looseObject({
   _id: z.string().describe('the couch doc id'),
   _rev: z.string().optional().nullish().describe('the doc revision'),
   _deleted: z.boolean().optional().describe('is the doc deleted')
-}).passthrough()
+})
 /** @typedef { z.infer<typeof CouchDoc> } CouchDocSchema */
 
 export const CouchDocResponse = z.object({
@@ -17,61 +17,33 @@ export const CouchDocResponse = z.object({
 })
 /** @typedef { z.infer<typeof CouchDocResponse> } CouchDocResponseSchema */
 
-export const CouchPut = z.function().args(
-  CouchConfig,
-  CouchDoc
-).returns(z.promise(CouchDocResponse))
+export const CouchPut = z.function({ input: [CouchConfig, CouchDoc], output: z.promise(CouchDocResponse) })
 /** @typedef { z.infer<typeof CouchPut> } CouchPutSchema */
 
-export const CouchPutBound = z.function().args(
-  CouchDoc
-).returns(z.promise(CouchDocResponse))
+export const CouchPutBound = z.function({ input: [CouchDoc], output: z.promise(CouchDocResponse) })
 /** @typedef { z.infer<typeof CouchPutBound> } CouchPutBoundSchema */
 
-export const CouchGet = z.function().args(
-  CouchConfig,
-  z.string().describe('the couch doc id')
-).returns(z.promise(CouchDoc.nullable()))
+export const CouchGet = z.function({ input: [CouchConfig, z.string().describe('the couch doc id')], output: z.promise(CouchDoc.nullable()) })
 /** @typedef { z.infer<typeof CouchGet> } CouchGetSchema */
 
-export const CouchGetBound = z.function().args(
-  z.string().describe('the couch doc id')
-).returns(z.promise(CouchDoc.nullable()))
+export const CouchGetBound = z.function({ input: [z.string().describe('the couch doc id')], output: z.promise(CouchDoc.nullable()) })
 /** @typedef { z.infer<typeof CouchGetBound> } CouchBoundSchema */
 
-export const CouchGetAtRev = z.function().args(
-  CouchConfig,
-  z.string().describe('the couch doc id'),
-  z.string().describe('the rev')
-).returns(z.promise(CouchDoc.nullable()))
+export const CouchGetAtRev = z.function({ input: [CouchConfig, z.string().describe('the couch doc id'), z.string().describe('the rev')], output: z.promise(CouchDoc.nullable()) })
 /** @typedef { z.infer<typeof CouchGetAtRev> } CouchGetAtRevSchema */
 
-export const CouchGetAtRevBound = z.function().args(
-  z.string().describe('the couch doc id'),
-  z.string().describe('the rev')
-).returns(z.promise(CouchDoc.nullable()))
+export const CouchGetAtRevBound = z.function({ input: [z.string().describe('the couch doc id'), z.string().describe('the rev')], output: z.promise(CouchDoc.nullable()) })
 /** @typedef { z.infer<typeof CouchGetAtRevBound> } CouchGetAtRevBoundSchema */
 
 export const CouchGetOptions = z.object({
   rev: z.string().optional().describe('the couch doc revision')
 })
 
-export const CouchGetWithOptions = z.function().args(
-  CouchConfig,
-  z.string().describe('the couch doc id'),
-  CouchGetOptions
-).returns(z.promise(CouchDoc.nullable()))
+export const CouchGetWithOptions = z.function({ input: [CouchConfig, z.string().describe('the couch doc id'), CouchGetOptions], output: z.promise(CouchDoc.nullable()) })
 /** @typedef { z.infer<typeof CouchGetWithOptions> } CouchGetWithOptionsSchema */
 
-export const CouchRemove = z.function().args(
-  CouchConfig,
-  z.string().describe('the couch doc id'),
-  z.string().describe('the couch doc revision')
-).returns(z.promise(CouchDocResponse))
+export const CouchRemove = z.function({ input: [CouchConfig, z.string().describe('the couch doc id'), z.string().describe('the couch doc revision')], output: z.promise(CouchDocResponse) })
 /** @typedef { z.infer<typeof CouchRemove> } CouchRemoveSchema */
 
-export const CouchRemoveBound = z.function().args(
-  z.string().describe('the couch doc id'),
-  z.string().describe('the couch doc revision')
-).returns(z.promise(CouchDocResponse))
+export const CouchRemoveBound = z.function({ input: [z.string().describe('the couch doc id'), z.string().describe('the couch doc revision')], output: z.promise(CouchDocResponse) })
 /** @typedef { z.infer<typeof CouchRemoveBound> } CouchRemoveBoundSchema */

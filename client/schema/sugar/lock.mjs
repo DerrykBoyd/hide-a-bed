@@ -11,40 +11,18 @@ export const Lock = CouchDoc.extend({
 /** @typedef { z.infer<typeof Lock> } LockSchema */
 
 export const LockOptions = z.object({
-  enableLocking: z.boolean().default(true).describe('whether locking is enabled'),
+  enableLocking: z.boolean().prefault(true).describe('whether locking is enabled'),
   username: z.string().describe('username to attribute locks to')
 })
 /** @typedef { z.infer<typeof LockOptions> } LockOptionsSchema */
 
-export const CreateLock = z.function()
-  .args(
-    CouchConfig,
-    z.string().describe('document ID to lock'),
-    LockOptions
-  )
-  .returns(z.promise(z.boolean()))
+export const CreateLock = z.function({ input: [CouchConfig, z.string().describe('document ID to lock'), LockOptions], output: z.promise(z.boolean()) })
 /** @typedef { z.infer<typeof CreateLock> } CreateLockSchema */
-export const CreateLockBound = z.function()
-  .args(
-    z.string().describe('document ID to lock'),
-    LockOptions
-  )
-  .returns(z.promise(z.boolean()))
+export const CreateLockBound = z.function({ input: [z.string().describe('document ID to lock'), LockOptions], output: z.promise(z.boolean()) })
 /** @typedef { z.infer<typeof CreateLockBound> } CreateLockBoundSchema */
 
-export const RemoveLock = z.function()
-  .args(
-    CouchConfig,
-    z.string().describe('document ID to unlock'),
-    LockOptions
-  )
-  .returns(z.promise(z.void()))
+export const RemoveLock = z.function({ input: [CouchConfig, z.string().describe('document ID to unlock'), LockOptions], output: z.promise(z.void()) })
 /** @typedef { z.infer<typeof RemoveLock> } RemoveLockSchema */
 
-export const RemoveLockBound = z.function()
-  .args(
-    z.string().describe('document ID to unlock'),
-    LockOptions
-  )
-  .returns(z.promise(z.void()))
+export const RemoveLockBound = z.function({ input: [z.string().describe('document ID to unlock'), LockOptions], output: z.promise(z.void()) })
 /** @typedef { z.infer<typeof RemoveLockBound> } RemoveLockBoundSchema */

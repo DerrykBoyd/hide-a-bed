@@ -1,0 +1,20 @@
+{
+  "folders": [
+    {
+      "path": "../."
+    },
+    {
+      "path": "../client",
+    },
+    {
+      "path": "../stub"
+    },
+    {
+      "path": "../test"
+    }
+  ],
+  "settings": {
+    "prettier.enable": false,
+    "editor.formatOnSave": false,
+  },
+}

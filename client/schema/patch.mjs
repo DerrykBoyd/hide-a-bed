@@ -7,36 +7,14 @@ export const StrictPatchProperties = z.object({
   _rev: z.string()
 }).and(PatchProperties)
 
-export const Patch = z.function()
-  .args(
-    CouchConfig,
-    z.string().describe('the couch doc id'),
-    StrictPatchProperties
-  )
-  .returns(z.promise(CouchDocResponse))
+export const Patch = z.function({ input: [CouchConfig, z.string().describe('the couch doc id'), StrictPatchProperties], output: z.promise(CouchDocResponse) })
 /** @typedef { z.infer<typeof Patch> } PatchSchema */
 
-export const PatchBound = z.function()
-  .args(
-    z.string().describe('the couch doc id'),
-    StrictPatchProperties
-  )
-  .returns(z.promise(CouchDocResponse))
+export const PatchBound = z.function({ input: [z.string().describe('the couch doc id'), StrictPatchProperties], output: z.promise(CouchDocResponse) })
 /** @typedef { z.infer<typeof PatchBound> } PatchBoundSchema */
 
-export const PatchDangerously = z.function()
-  .args(
-    CouchConfig,
-    z.string().describe('the couch doc id'),
-    PatchProperties
-  )
-  .returns(z.promise(CouchDocResponse))
+export const PatchDangerously = z.function({ input: [CouchConfig, z.string().describe('the couch doc id'), PatchProperties], output: z.promise(CouchDocResponse) })
 /** @typedef { z.infer<typeof PatchDangerously> } PatchDangerouslySchema */
 
-export const PatchDangerouslyBound = z.function()
-  .args(
-    z.string().describe('the couch doc id'),
-    PatchProperties
-  )
-  .returns(z.promise(CouchDocResponse))
+export const PatchDangerouslyBound = z.function({ input: [z.string().describe('the couch doc id'), PatchProperties], output: z.promise(CouchDocResponse) })
 /** @typedef { z.infer<typeof PatchDangerouslyBound> } PatchDangerouslyBoundSchema */

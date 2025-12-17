@@ -12,7 +12,7 @@ const WatchEmitter = z.object({
 })
 
 export const WatchOptions = z.object({
-  include_docs: z.boolean().default(false)
+  include_docs: z.boolean().prefault(false)
 }).partial()
 
 export const WatchDocs = z.function()

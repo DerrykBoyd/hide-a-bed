@@ -35,9 +35,9 @@ const RebindOptions = CouchConfig.omit({ couch: true })
 
 // Define a recursive type where config returns the same type
 export const BindReturns = BindBase.extend({
-  options: z.function().args(RebindOptions).returns(BindBase)
+  options: z.function({ input: [RebindOptions], output: BindBase })
 })
 /** @typedef { z.infer<typeof BindReturns> } BindReturnsSchema */
 
-export const Bind = z.function().args(CouchConfig).returns(BindReturns)
+export const Bind = z.function({ input: [CouchConfig], output: BindReturns })
 /** @typedef { z.infer<typeof Bind> } BindSchema */

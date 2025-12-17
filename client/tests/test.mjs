@@ -1,7 +1,7 @@
 import { TrackedEmitter } from '../impl/trackedEmitter.mjs'
 import test from 'tap'
 import { spawn } from 'child_process'
-import { bindConfig, bulkSaveTransaction, get, query } from '../index.mjs'
+import { bindConfig, bulkSaveTransaction, get, query } from '../index.js'
 import needle from 'needle'
 
 const PORT = 8985

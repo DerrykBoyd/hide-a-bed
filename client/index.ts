@@ -1,5 +1,3 @@
-// @ts-check */
-import { z } from 'zod'
 import { bulkGet, bulkSave, bulkRemove, bulkRemoveMap, bulkGetDictionary, bulkSaveTransaction } from './impl/bulk.mjs'
 import { get, put, getAtRev, remove } from './impl/crud.mjs'
 import { patch, patchDangerously } from './impl/patch.mjs'
@@ -10,55 +8,24 @@ import { queryStream } from './impl/stream.mjs'
 import { createQuery } from './impl/queryBuilder.mjs'
 import { getDBInfo } from './impl/util.mjs'
 import { withRetry } from './impl/retry.mjs'
-import { BulkSave, BulkGet, BulkRemove, BulkRemoveMap, BulkGetDictionary, BulkSaveTransaction } from './schema/bulk.mjs'
-import { CouchConfig } from './schema/config.mjs'
-import { SimpleViewQuery, SimpleViewQueryResponse } from './schema/query.mjs'
-import { SimpleViewQueryStream, OnRow } from './schema/stream.mjs'
-import { Patch, PatchDangerously } from './schema/patch.mjs'
-import { Lock, LockOptions, CreateLock, RemoveLock } from './schema/sugar/lock.mjs'
-import { WatchDocs } from './schema/sugar/watch.mjs'
-import { CouchDoc, CouchDocResponse, CouchPut, CouchGet, CouchGetAtRev, CouchRemove } from './schema/crud.mjs'
-import { Bind, BindReturns } from './schema/bind.mjs'
-import { GetDBInfo } from './schema/util.mjs'
 
-const schema = {
-  CouchConfig,
-  SimpleViewQuery,
-  SimpleViewQueryResponse,
-  SimpleViewQueryStream,
-  OnRow,
-  BulkSave,
-  BulkGet,
-  BulkRemove,
-  BulkRemoveMap,
-  BulkGetDictionary,
-  BulkSaveTransaction,
-  CouchGet,
-  CouchPut,
-  CouchDoc,
-  CouchDocResponse,
-  Patch,
-  PatchDangerously,
-  CouchGetAtRev,
-  CouchRemove,
-  Bind,
-  Lock,
-  WatchDocs,
-  LockOptions,
-  CreateLock,
-  RemoveLock,
-  GetDBInfo
-}
+import { Bind } from './schema/bind.mjs'
+import { CouchConfig, type CouchConfigSchema } from './schema/config.mjs'
+import type z from 'zod'
+import type { BoundQuery, ViewString } from './schema/query.mjs'
+
 /**
-  * @param {import('./schema/config.mjs').CouchConfigSchema } config
-  */
-function doBind (config) {
+ * Bind core CouchDB operations to a specific configuration, optionally applying retry wrappers.
+ */
+function doBind(config: CouchConfigSchema) {
   // Default retry options
   const retryOptions = {
     maxRetries: config.maxRetries ?? 10,
     initialDelay: config.initialDelay ?? 1000,
     backoffFactor: config.backoffFactor ?? 2
   }
+
+  const queryBound = ((view: Parameters<typeof query>[1], options: Parameters<typeof query>[2]) => query(config, view, options)) as BoundQuery
 
   // Create the object without the config property first
   const result = {
@@ -68,7 +35,7 @@ function doBind (config) {
     remove: config.bindWithRetry ? withRetry(remove.bind(null, config), retryOptions) : remove.bind(null, config),
     bulkGet: config.bindWithRetry ? withRetry(bulkGet.bind(null, config), retryOptions) : bulkGet.bind(null, config),
     bulkSave: config.bindWithRetry ? withRetry(bulkSave.bind(null, config), retryOptions) : bulkSave.bind(null, config),
-    query: config.bindWithRetry ? withRetry(query.bind(null, config), retryOptions) : query.bind(null, config),
+    query: config.bindWithRetry ? withRetry(queryBound, retryOptions) as BoundQuery : queryBound,
     queryStream: config.bindWithRetry ? withRetry(queryStream.bind(null, config), retryOptions) : queryStream.bind(null, config),
     // Sugar Methods
     patch: config.bindWithRetry ? withRetry(patch.bind(null, config), retryOptions) : patch.bind(null, config),
@@ -80,38 +47,35 @@ function doBind (config) {
     createLock: createLock.bind(null, config),
     removeLock: removeLock.bind(null, config),
     watchDocs: watchDocs.bind(null, config),
-    getDBInfo: config.bindWithRetry ? withRetry(getDBInfo.bind(null, config), retryOptions) : getDBInfo.bind(null, config)
+    getDBInfo: config.bindWithRetry ? withRetry(getDBInfo.bind(null, config), retryOptions) : getDBInfo.bind(null, config),
   }
 
   return result
 }
 
-/** @type { import('./schema/bind.mjs').BindSchema } */
-const bindConfig = Bind.implement((
-  /** @type { import('./schema/config.mjs').CouchConfigSchema } */
-  config
+/**
+ * Build a validated binding that exposes CouchDB helpers plus an options() helper for overrides.
+ */
+const bindConfig = (
+  config: z.input<typeof CouchConfig>
 ) => {
   const parsedConfig = CouchConfig.parse(config)
 
-  /** @type { import('./schema/bind.mjs').BindBaseSchema } funcs */
   const funcs = doBind(parsedConfig)
 
   // Add the options function that returns a new bound instance
   // this allows the user to override some options
-  const reconfig = (
-    /** @type any  */
-    _overrides
+  const reconfigure = (
+    _overrides: Partial<z.infer<typeof CouchConfig>>
   ) => {
     // override the config and return doBind again
     const newConfig = { ...config, ..._overrides }
     return bindConfig(newConfig)
   }
-  /** @type { import('./schema/bind.mjs').BindReturnsSchema } */
-  const all = { ...funcs, options: reconfig }
-  return all
-})
 
-/** @typedef { z.infer<typeof BindReturns> } DB */
+  const all = { ...funcs, options: reconfigure }
+  return all
+}
 
 export {
   get,
@@ -122,7 +86,6 @@ export {
   bulkSave,
   query,
   queryStream,
-  schema,
   getDBInfo,
 
   // sugar methods

@@ -1,13 +1,12 @@
 {
-  "include": ["*.mjs"],
-  "exclude": ["node_modules", "cjs"],
+  "exclude": ["node_modules", "cjs", "types/output"],
   "compilerOptions": {
     "module": "Node16",
     "target": "es2020",
     "verbatimModuleSyntax": true,
     "strict": true,
-    // "checkJs": true, // TODO: enable for better type safety
     "allowJs": true,
+    // "checkJs": true, // TODO: enable later
     "skipLibCheck": true,
     "declaration": true,
     "emitDeclarationOnly": true,

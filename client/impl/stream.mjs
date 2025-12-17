@@ -49,7 +49,7 @@ export const queryStream = (rawConfig, view, options, onRow) => new Promise((res
   const streamer = JSONStream.parse('rows.*')
 
   let rowCount = 0
-  streamer.on('data', /** @param {object} row */ row => {
+  streamer.on('data', /** @param {any} row */ row => {
     rowCount++
     onRow(row)
   })

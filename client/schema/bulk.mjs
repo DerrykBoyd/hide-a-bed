@@ -22,57 +22,33 @@ export const OptionalIdCouchDoc = CouchDoc.extend({
   _id: CouchDoc.shape._id.optional()
 })
 
-export const BulkSave = z.function().args(
-  CouchConfig,
-  z.array(OptionalIdCouchDoc)
-).returns(z.promise(BulkSaveResponseSchema))
+export const BulkSave = z.function({ input: [CouchConfig, z.array(OptionalIdCouchDoc)], output: z.promise(BulkSaveResponseSchema) })
 /** @typedef { z.infer<typeof BulkSave> } BulkSaveSchema */
 
-export const BulkSaveBound = z.function().args(
-  z.array(OptionalIdCouchDoc)
-).returns(z.promise(BulkSaveResponseSchema))
+export const BulkSaveBound = z.function({ input: [z.array(OptionalIdCouchDoc)], output: z.promise(BulkSaveResponseSchema) })
 /** @typedef { z.infer<typeof BulkSaveBound> } BulkSaveBoundSchema */
 
-export const BulkGet = z.function().args(
-  CouchConfig,
-  z.array(z.string().describe('the ids to get'))
-).returns(z.promise(SimpleViewQueryResponse))
+export const BulkGet = z.function({ input: [CouchConfig, z.array(z.string().describe('the ids to get'))], output: z.promise(SimpleViewQueryResponse) })
 /** @typedef { z.infer<typeof BulkGet> } BulkGetSchema */
 
-export const BulkGetBound = z.function().args(
-  z.array(z.string().describe('the ids to get'))
-).returns(z.promise(SimpleViewQueryResponse))
+export const BulkGetBound = z.function({ input: [z.array(z.string().describe('the ids to get'))], output: z.promise(SimpleViewQueryResponse) })
 /** @typedef { z.infer<typeof BulkGetBound> } BulkGetBoundSchema */
 
-export const BulkGetWithOptions = z.function().args(
-  CouchConfig,
-  z.array(z.string().describe('the ids to get')),
-  z.object({
-    includeDocs: z.boolean().optional().describe('the couch doc revision')
-  })
-).returns(z.promise(SimpleViewQueryResponse))
+export const BulkGetWithOptions = z.function({ input: [CouchConfig, z.array(z.string().describe('the ids to get')), z.object({
+        includeDocs: z.boolean().optional().describe('the couch doc revision')
+      })], output: z.promise(SimpleViewQueryResponse) })
 /** @typedef { z.infer<typeof BulkGetWithOptions> } BulkGetWithOptionsSchema */
 
-export const BulkRemove = z.function().args(
-  CouchConfig,
-  z.array(z.string().describe('the ids to delete'))
-).returns(z.promise(BulkSaveResponseSchema))
+export const BulkRemove = z.function({ input: [CouchConfig, z.array(z.string().describe('the ids to delete'))], output: z.promise(BulkSaveResponseSchema) })
 /** @typedef { z.infer<typeof BulkRemove> } BulkRemoveSchema */
 
-export const BulkRemoveBound = z.function().args(
-  z.array(z.string().describe('the ids to delete'))
-).returns(z.promise(BulkSaveResponseSchema))
+export const BulkRemoveBound = z.function({ input: [z.array(z.string().describe('the ids to delete'))], output: z.promise(BulkSaveResponseSchema) })
 /** @typedef { z.infer<typeof BulkRemoveBound> } BulkRemoveBoundSchema */
 
-export const BulkRemoveMap = z.function().args(
-  CouchConfig,
-  z.array(z.string().describe('the ids to delete'))
-).returns(z.promise(z.array(CouchDocResponse)))
+export const BulkRemoveMap = z.function({ input: [CouchConfig, z.array(z.string().describe('the ids to delete'))], output: z.promise(z.array(CouchDocResponse)) })
 /** @typedef { z.infer<typeof BulkRemoveMap> } BulkRemoveMapSchema */
 
-export const BulkRemoveMapBound = z.function().args(
-  z.array(z.string().describe('the ids to delete'))
-).returns(z.promise(BulkSaveMapResponseSchema))
+export const BulkRemoveMapBound = z.function({ input: [z.array(z.string().describe('the ids to delete'))], output: z.promise(BulkSaveMapResponseSchema) })
 /** @typedef { z.infer<typeof BulkRemoveMapBound> } BulkRemoveMapBoundSchema */
 
 export const BulkGetDictionaryResponse = z.object({
@@ -81,26 +57,14 @@ export const BulkGetDictionaryResponse = z.object({
 })
 /** @typedef { z.infer<typeof BulkGetDictionaryResponse> } BulkGetDictionaryResponseSchema */
 
-export const BulkGetDictionary = z.function().args(
-  CouchConfig,
-  z.array(z.string().describe('the ids to get'))
-).returns(z.promise(BulkGetDictionaryResponse))
+export const BulkGetDictionary = z.function({ input: [CouchConfig, z.array(z.string().describe('the ids to get'))], output: z.promise(BulkGetDictionaryResponse) })
 /** @typedef { z.infer<typeof BulkGetDictionary> } BulkGetDictionarySchema */
 
-export const BulkGetDictionaryBound = z.function().args(
-  z.array(z.string().describe('the ids to get'))
-).returns(z.promise(BulkGetDictionaryResponse))
+export const BulkGetDictionaryBound = z.function({ input: [z.array(z.string().describe('the ids to get'))], output: z.promise(BulkGetDictionaryResponse) })
 /** @typedef { z.infer<typeof BulkGetDictionaryBound> } BulkGetDictionaryBoundSchema */
 
-export const BulkSaveTransaction = z.function().args(
-  CouchConfig,
-  z.string().describe('transaction id'),
-  z.array(CouchDoc)
-).returns(z.promise(BulkSaveResponseSchema))
+export const BulkSaveTransaction = z.function({ input: [CouchConfig, z.string().describe('transaction id'), z.array(CouchDoc)], output: z.promise(BulkSaveResponseSchema) })
 /** @typedef { z.infer<typeof BulkSaveTransaction> } BulkSaveTransactionSchema */
 
-export const BulkSaveTransactionBound = z.function().args(
-  z.string().describe('transaction id'),
-  z.array(CouchDoc)
-).returns(z.promise(BulkSaveResponseSchema))
+export const BulkSaveTransactionBound = z.function({ input: [z.string().describe('transaction id'), z.array(CouchDoc)], output: z.promise(BulkSaveResponseSchema) })
 /** @typedef { z.infer<typeof BulkSaveTransactionBound> } BulkSaveTransactionBoundSchema */

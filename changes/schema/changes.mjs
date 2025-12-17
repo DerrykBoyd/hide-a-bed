@@ -13,7 +13,7 @@ export const ChangesOptions = z.object({
   heartbeat: z.number().default(30 * 1000),
   style: z.enum(['main_only', 'all_docs']).default('main_only'),
   include_docs: z.boolean().default(false),
-  query_params: z.record(z.any()).default({}),
+  query_params: z.record(z.string(), z.any()).default({}),
   use_post: z.boolean().default(false)
 }).partial()
 /** @typedef { z.infer<typeof ChangesOptions> } ChangesOptionsSchema */
@@ -29,22 +29,12 @@ export const ChangesResponse = z.object({
 })
 
 export const ChangesEmitter = z.object({
-  on: z.function()
-    .args(z.string(), z.function().args(z.any()).returns(z.void()))
-    .returns(z.any()),
-  removeListener: z.function()
-    .args(z.string(), z.function().args(z.any()).returns(z.void()))
-    .returns(z.any()),
-  stop: z.function().returns(z.void())
+  on: z.function({ input: [z.string(), z.function()], output: z.any() }),
+  removeListener: z.function({ input: [z.string(), z.function()], output: z.any() }),
+  stop: z.function({ input: undefined, output: z.void() })
 })
 
-export const Changes = z.function()
-  .args(
-    CouchConfig,
-    z.function().args(z.any()).returns(z.void()),
-    ChangesOptions
-  )
-  .returns(z.promise(ChangesEmitter))
+export const Changes = z.function({ input: [CouchConfig, z.function(), ChangesOptions], output: z.promise(ChangesEmitter) })
 
 /** @typedef { z.infer<typeof Changes> } ChangesSchema */
 /** @typedef { z.infer<typeof ChangesEmitter> } ChangesEmitterSchema */
