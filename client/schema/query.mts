@@ -1,4 +1,4 @@
-import { z, ZodObject, ZodType } from 'zod'
+import { z, ZodType } from 'zod'
 
 export type ViewString = "_all_docs" | `_design/${string}/_view/${string}`
 
@@ -37,7 +37,7 @@ export type SimpleViewQueryResponseValidated<DocSchema, KeySchema, ValueSchema> 
   total_rows?: number
   offset?: number
   error?: string
-  rows: Array<Expand<ViewRow<DocSchema, KeySchema, ValueSchema>>>
+  rows: Array<ViewRow<DocSchema, KeySchema, ValueSchema>>
 }
 
 export const SimpleViewOptions = z.object({
@@ -52,7 +52,8 @@ export const SimpleViewOptions = z.object({
   reduce: z.boolean().optional().describe('reduce the results'),
   group: z.boolean().optional().describe('group the results'),
   group_level: z.number().positive().optional().describe('group the results at this level'),
-}).optional().describe('query options')
+}).describe('base options for a CouchDB view query')
+export type ViewOptions = z.input<typeof SimpleViewOptions> 
 
 // export const SimpleViewQuery = z.function({ input: [CouchConfig, z.string().describe('the view name'), SimpleViewOptions], output: z.promise(SimpleViewQueryResponse) })
 // export type SimpleViewQuery = z.infer<typeof SimpleViewQuery>
@@ -61,21 +62,20 @@ export const SimpleViewOptions = z.object({
 // export type SimpleViewQueryBound = z.infer<typeof SimpleViewQueryBound>
 
 export type BoundQuery = {
-  (view: ViewString, options?: z.infer<typeof SimpleViewOptions>): Promise<Expand<SimpleViewQueryResponse>>;
-  <DocSchema extends ZodObject = ZodObject<any>, KeySchema extends ZodType = ZodType, ValueSchema extends ZodType = ZodType>(
+  (view: ViewString, options?: ViewOptions): Promise<SimpleViewQueryResponse>;
+  <DocSchema extends ZodType, KeySchema extends ZodType, ValueSchema extends ZodType>(
     view: ViewString,
-    options: z.infer<typeof SimpleViewOptions> & {
+    options: ViewOptions & {
       include_docs: false;
       validate?: {
-        docSchema: never;
         keySchema?: KeySchema;
         valueSchema?: ValueSchema;
       };
     }
-  ): Promise<Expand<SimpleViewQueryResponseValidated<DocSchema, KeySchema, ValueSchema>>>;
-  <DocSchema extends ZodObject = ZodObject<any>, KeySchema extends ZodType = ZodType, ValueSchema extends ZodType = ZodType>(
+  ): Promise<SimpleViewQueryResponseValidated<DocSchema, KeySchema, ValueSchema>>;
+  <DocSchema extends ZodType, KeySchema extends ZodType, ValueSchema extends ZodType>(
     view: ViewString,
-    options: z.infer<typeof SimpleViewOptions> & {
+    options: ViewOptions & {
       include_docs: true;
       validate?: {
         docSchema?: DocSchema;
@@ -83,5 +83,5 @@ export type BoundQuery = {
         valueSchema?: ValueSchema;
       };
     }
-  ): Promise<Expand<SimpleViewQueryResponseValidated<DocSchema, KeySchema, ValueSchema>>>;
+  ): Promise<SimpleViewQueryResponseValidated<DocSchema, KeySchema, ValueSchema>>;
 };

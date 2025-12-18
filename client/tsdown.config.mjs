@@ -2,13 +2,13 @@ import { defineConfig } from 'tsdown'
 
 export default defineConfig([
   {
-    entry: 'index.ts',
+    entry: 'index.mts',
     outDir: 'dist/esm',
     dts: false,
     format: 'esm'
   },
   {
-    entry: 'index.ts',
+    entry: 'index.mts',
     outDir: 'dist/cjs',
     dts: false,
     format: 'cjs'

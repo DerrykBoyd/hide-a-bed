@@ -1,38 +1,36 @@
 import needle from 'needle'
-import { SimpleViewQueryResponse, ViewDoc, type SimpleViewOptions, type SimpleViewQueryResponseValidated, type ViewRow, type ViewString } from '../schema/query.mjs'
+import { SimpleViewQueryResponse, ViewDoc, type SimpleViewOptions, type SimpleViewQueryResponseValidated, type ViewOptions, type ViewRow, type ViewString } from '../schema/query.mjs'
 import { RetryableError } from './errors.mjs'
 import { createLogger } from './logger.mjs'
 
 import pkg from 'lodash'
 import { mergeNeedleOpts } from './util.mjs'
 import { CouchConfig, type CouchConfigInput, type CouchConfigSchema } from '../schema/config.mjs'
-import type { ZodObject, ZodType } from 'zod'
-import { z } from 'zod'
+import * as z4 from "zod/v4/core"
 const { includes } = pkg
 
 export async function query(
   config: CouchConfigInput,
   view: ViewString,
-  options?: z.infer<typeof SimpleViewOptions>,
-): Promise<Expand<SimpleViewQueryResponse>>
+  options?: ViewOptions,
+): Promise<SimpleViewQueryResponse>
 
-export async function query<DocSchema extends ZodObject = ZodObject<any>, KeySchema extends ZodType = ZodType, ValueSchema extends ZodType = ZodType>(
+export async function query<DocSchema extends z4.$ZodType, KeySchema extends z4.$ZodType, ValueSchema extends z4.$ZodType>(
   config: CouchConfigInput,
   view: ViewString,
-  options: z.infer<typeof SimpleViewOptions> & {
+  options: ViewOptions & {
     include_docs: false,
     validate?: {
-      docSchema: never,
       keySchema?: KeySchema,
       valueSchema?: ValueSchema
     },
   }
-): Promise<Expand<SimpleViewQueryResponseValidated<DocSchema, KeySchema, ValueSchema>>>
+): Promise<SimpleViewQueryResponseValidated<DocSchema, KeySchema, ValueSchema>>
 
-export async function query<DocSchema extends ZodObject = ZodObject<any>, KeySchema extends ZodType = ZodType, ValueSchema extends ZodType = ZodType>(
+export async function query<DocSchema extends z4.$ZodType, KeySchema extends z4.$ZodType, ValueSchema extends z4.$ZodType>(
   config: CouchConfigInput,
   view: ViewString,
-  options: z.infer<typeof SimpleViewOptions> & {
+  options: ViewOptions & {
     include_docs: true,
     validate?: {
       docSchema?: DocSchema,
@@ -40,12 +38,12 @@ export async function query<DocSchema extends ZodObject = ZodObject<any>, KeySch
       valueSchema?: ValueSchema
     }
   }
-): Promise<Expand<SimpleViewQueryResponseValidated<DocSchema, KeySchema, ValueSchema>>>
+): Promise<SimpleViewQueryResponseValidated<DocSchema, KeySchema, ValueSchema>>
 
 /**
  * Execute a CouchDB view query with optional POST fallback when keys would exceed URL limits.
  */
-export async function query<DocSchema extends ZodObject, KeySchema extends ZodType, ValueSchema extends ZodType>(_config: CouchConfigInput, view: ViewString, options: z.infer<typeof SimpleViewOptions> & {
+export async function query<DocSchema extends z4.$ZodType, KeySchema extends z4.$ZodType, ValueSchema extends z4.$ZodType>(_config: CouchConfigInput, view: ViewString, options: ViewOptions & {
   validate?: {
     docSchema?: DocSchema,
     keySchema?: KeySchema,

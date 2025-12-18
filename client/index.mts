@@ -53,28 +53,31 @@ function doBind(config: CouchConfigSchema) {
   return result
 }
 
+type BoundInstance = ReturnType<typeof doBind> & {
+  options(overrides: Partial<z.input<typeof CouchConfig>>): BoundInstance
+}
+
 /**
  * Build a validated binding that exposes CouchDB helpers plus an options() helper for overrides.
  */
 const bindConfig = (
   config: z.input<typeof CouchConfig>
-) => {
+): BoundInstance => {
   const parsedConfig = CouchConfig.parse(config)
 
   const funcs = doBind(parsedConfig)
 
   // Add the options function that returns a new bound instance
   // this allows the user to override some options
-  const reconfigure = (
-    _overrides: Partial<z.infer<typeof CouchConfig>>
+  const reconfigure: BoundInstance['options'] = (
+    overrides
   ) => {
-    // override the config and return doBind again
-    const newConfig = { ...config, ..._overrides }
+    const newConfig: z.input<typeof CouchConfig> = { ...config, ...overrides }
     return bindConfig(newConfig)
   }
 
-  const all = { ...funcs, options: reconfigure }
-  return all
+  const bound: BoundInstance = { ...funcs, options: reconfigure }
+  return bound
 }
 
 export {
