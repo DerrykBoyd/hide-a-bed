@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { CouchConfig } from './config.mjs'
-import { SimpleViewQueryResponse, ViewRow } from './query.mjs'
+import { SimpleViewQueryResponse, DefaultRowSchema } from './query.mjs'
 import { CouchDoc, CouchDocResponse } from './crud.mjs'
 
 export const BulkSaveRow = z.object({
@@ -34,9 +34,12 @@ export const BulkGet = z.function({ input: [CouchConfig, z.array(z.string().desc
 export const BulkGetBound = z.function({ input: [z.array(z.string().describe('the ids to get'))], output: z.promise(SimpleViewQueryResponse) })
 /** @typedef { z.infer<typeof BulkGetBound> } BulkGetBoundSchema */
 
-export const BulkGetWithOptions = z.function({ input: [CouchConfig, z.array(z.string().describe('the ids to get')), z.object({
-        includeDocs: z.boolean().optional().describe('the couch doc revision')
-      })], output: z.promise(SimpleViewQueryResponse) })
+export const BulkGetWithOptions = z.function({
+  input: [CouchConfig, z.array(z.string().describe('the ids to get')), z.object({
+    includeDocs: z.boolean().optional().describe('the couch doc revision')
+  })],
+  output: z.promise(SimpleViewQueryResponse)
+})
 /** @typedef { z.infer<typeof BulkGetWithOptions> } BulkGetWithOptionsSchema */
 
 export const BulkRemove = z.function({ input: [CouchConfig, z.array(z.string().describe('the ids to delete'))], output: z.promise(BulkSaveResponseSchema) })
@@ -53,7 +56,7 @@ export const BulkRemoveMapBound = z.function({ input: [z.array(z.string().descri
 
 export const BulkGetDictionaryResponse = z.object({
   found: z.record(z.string(), CouchDoc),
-  notFound: z.record(z.string(), ViewRow)
+  notFound: z.record(z.string(), DefaultRowSchema)
 })
 /** @typedef { z.infer<typeof BulkGetDictionaryResponse> } BulkGetDictionaryResponseSchema */
 

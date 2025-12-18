@@ -8,7 +8,7 @@
 
 /**
  * Creates a unified logger interface that works with both function and object-style loggers
- * @param {import('../schema/config.mjs').CouchConfigSchema} config
+ * @param {import('../schema/config.mjs').CouchConfigInput} config
  * @returns {Logger} Normalized logger interface
  */
 export function createLogger (config) {

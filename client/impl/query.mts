@@ -1,27 +1,69 @@
-// @ts-check
-
-import { z } from 'zod' // eslint-disable-line
 import needle from 'needle'
-import { SimpleViewQuery, SimpleViewQueryResponse } from '../schema/query.mjs' // eslint-disable-line
+import { SimpleViewQueryResponse, ViewDoc, type SimpleViewOptions, type SimpleViewQueryResponseValidated, type ViewRow, type ViewString } from '../schema/query.mjs'
 import { RetryableError } from './errors.mjs'
 import { createLogger } from './logger.mjs'
 
 import pkg from 'lodash'
 import { mergeNeedleOpts } from './util.mjs'
+import { CouchConfig, type CouchConfigInput, type CouchConfigSchema } from '../schema/config.mjs'
+import type { ZodObject, ZodType } from 'zod'
+import { z } from 'zod'
 const { includes } = pkg
 
+export async function query(
+  config: CouchConfigInput,
+  view: ViewString,
+  options?: z.infer<typeof SimpleViewOptions>,
+): Promise<Expand<SimpleViewQueryResponse>>
+
+export async function query<DocSchema extends ZodObject = ZodObject<any>, KeySchema extends ZodType = ZodType, ValueSchema extends ZodType = ZodType>(
+  config: CouchConfigInput,
+  view: ViewString,
+  options: z.infer<typeof SimpleViewOptions> & {
+    include_docs: false,
+    validate?: {
+      docSchema: never,
+      keySchema?: KeySchema,
+      valueSchema?: ValueSchema
+    },
+  }
+): Promise<Expand<SimpleViewQueryResponseValidated<DocSchema, KeySchema, ValueSchema>>>
+
+export async function query<DocSchema extends ZodObject = ZodObject<any>, KeySchema extends ZodType = ZodType, ValueSchema extends ZodType = ZodType>(
+  config: CouchConfigInput,
+  view: ViewString,
+  options: z.infer<typeof SimpleViewOptions> & {
+    include_docs: true,
+    validate?: {
+      docSchema?: DocSchema,
+      keySchema?: KeySchema,
+      valueSchema?: ValueSchema
+    }
+  }
+): Promise<Expand<SimpleViewQueryResponseValidated<DocSchema, KeySchema, ValueSchema>>>
+
 /**
- * @type { z.infer<SimpleViewQuery> }
- * @param {import('../schema/config.mjs').CouchConfigSchema} config
- * @param {string} view
- * @param {import('../schema/query.mjs').SimpleViewOptionsSchema} [options]
+ * Execute a CouchDB view query with optional POST fallback when keys would exceed URL limits.
  */
-export const query = SimpleViewQuery.implement(async (config, view, options = {}) => {
-  const logger = createLogger(config)
+export async function query<DocSchema extends ZodObject, KeySchema extends ZodType, ValueSchema extends ZodType>(_config: CouchConfigInput, view: ViewString, options: z.infer<typeof SimpleViewOptions> & {
+  validate?: {
+    docSchema?: DocSchema,
+    keySchema?: KeySchema,
+    valueSchema?: ValueSchema
+  }
+} = {}): Promise<SimpleViewQueryResponseValidated<DocSchema, KeySchema, ValueSchema>> {
+  const configParseResult = CouchConfig.safeParse(_config)
+  const logger = createLogger(_config)
   logger.info(`Starting view query: ${view}`)
   logger.debug('Query options:', options)
 
-  // @ts-ignore
+  if (!configParseResult.success) {
+    logger.error('Invalid configuration provided:', configParseResult.error)
+    throw configParseResult.error
+  }
+
+  const config = configParseResult.data
+
   let qs = queryString(options, ['key', 'startkey', 'endkey', 'reduce', 'group', 'group_level', 'stale', 'limit'])
   let method = 'GET'
   let payload = null
@@ -42,7 +84,7 @@ export const query = SimpleViewQuery.implement(async (config, view, options = {}
 
     const _options = JSON.parse(JSON.stringify(options))
     delete _options.keys
-    qs = queryString(_options, ['key', 'startkey', 'endkey', 'reduce', 'group', 'group_level', 'stale', 'limit']) // dont need descening or skip, those will work
+    qs = queryString(_options, ['key', 'startkey', 'endkey', 'reduce', 'group', 'group_level', 'stale', 'limit']) // dont need descending or skip, those will work
 
     const keysAsString = `keys=${JSON.stringify(options.keys)}`
 
@@ -65,7 +107,7 @@ export const query = SimpleViewQuery.implement(async (config, view, options = {}
   let results
   try {
     logger.debug(`Sending ${method} request to: ${url}`)
-    results = method === 'GET' ? await needle('get', url, mergedOpts) : await needle('post', url, payload, mergedOpts)
+    results = (method === 'GET') ? await needle('get', url, mergedOpts) : await needle('post', url, payload, mergedOpts)
   } catch (err) {
     logger.error('Network error during query:', err)
     RetryableError.handleNetworkError(err)
@@ -76,8 +118,7 @@ export const query = SimpleViewQuery.implement(async (config, view, options = {}
     throw new RetryableError('no response', 503)
   }
 
-  /** @type { z.infer<SimpleViewQueryResponse> } body */
-  const body = results.body
+  let body = results.body
 
   if (RetryableError.isRetryableStatusCode(results.statusCode)) {
     logger.warn(`Retryable status code received: ${results.statusCode}`)
@@ -92,18 +133,12 @@ export const query = SimpleViewQuery.implement(async (config, view, options = {}
   logger.info(`Successfully executed view query: ${view}`)
   logger.debug('Query response:', body)
   return body
-})
+}
 
 /**
- * @param {{ [key: string]: any }} options - The options object containing query parameters.
- * @param {string[]} params - The list of parameter names to include in the query string.
+ * Serialize CouchDB view options into a URL-safe query string, quoting values CouchDB expects as JSON.
  */
-/**
- * @param {{ [key: string]: any }} options
- * @param {string[]} params
- * @returns {string}
- */
-export function queryString (options = {}, params) {
+export function queryString(options = {}, params: string[]) {
   const searchParams = new URLSearchParams()
   Object.entries(options).forEach(([key, rawValue]) => {
     let value = rawValue

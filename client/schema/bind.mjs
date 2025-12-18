@@ -4,7 +4,7 @@ import { CouchConfig } from './config.mjs'
 import { BulkSaveBound, BulkGetBound, BulkRemoveBound, BulkRemoveMapBound, BulkGetDictionaryBound, BulkSaveTransactionBound } from './bulk.mjs'
 import { CouchGetBound, CouchPutBound, CouchGetAtRevBound, CouchRemoveBound } from './crud.mjs'
 import { PatchBound } from './patch.mjs'
-import { SimpleViewQueryBound } from './query.mjs'
+// import { SimpleViewQueryBound } from './query.js'
 import { SimpleViewQueryStreamBound } from './stream.mjs'
 import { CreateLockBound, RemoveLockBound } from './sugar/lock.mjs'
 import { WatchDocsBound } from './sugar/watch.mjs'
@@ -22,7 +22,7 @@ export const BindBase = z.object({
   put: CouchPutBound,
   remove: CouchRemoveBound,
   patch: PatchBound,
-  query: SimpleViewQueryBound,
+  // query: SimpleViewQueryBound, // TODO figure out how to type the bound functions
   queryStream: SimpleViewQueryStreamBound,
   createLock: CreateLockBound,
   removeLock: RemoveLockBound,

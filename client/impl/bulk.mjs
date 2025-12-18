@@ -2,7 +2,7 @@
 import needle from 'needle'
 import { BulkSave, BulkGet, BulkRemove, BulkRemoveMap, BulkGetDictionary, BulkSaveTransaction, BulkGetWithOptions } from '../schema/bulk.mjs'
 import { withRetry } from './retry.mjs'
-import { get, put, remove } from './crud.mjs'
+import { put, remove } from './crud.mjs'
 import { RetryableError } from './errors.mjs'
 import { TransactionSetupError, TransactionVersionConflictError, TransactionBulkOperationError, TransactionRollbackError } from './transactionErrors.mjs'
 import { createLogger } from './logger.mjs'
@@ -91,7 +91,7 @@ const _bulkGetWithOptions = BulkGetWithOptions.implement(async (config, ids, { i
     logger.error(`Unexpected status code: ${resp.statusCode}`)
     throw new Error('could not fetch')
   }
-  /** @type { import('../schema/query.mjs').SimpleViewQueryResponseSchema } body */
+  /** @type { import('../schema/query.mjs').SimpleViewQueryResponse } body */
   const body = resp.body
   return body
 })
@@ -155,7 +155,7 @@ export const bulkGetDictionary = BulkGetDictionary.implement(async (config, ids)
   const results = { found: {}, notFound: {} }
 
   resp.rows.forEach(
-    /** @param { import('../schema/query.mjs').ViewRowSchema } row */
+    /** @param { import('../schema/query.mjs').DefaultRowSchema } row */
     row => {
       if (!row.key) return
       if (row.error) {

@@ -1,5 +1,5 @@
 {
-  "exclude": ["node_modules", "cjs", "types/output"],
+  "exclude": ["node_modules", "dist", "types/output"],
   "compilerOptions": {
     "module": "Node16",
     "target": "es2020",

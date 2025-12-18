@@ -16,5 +16,9 @@
   "settings": {
     "prettier.enable": false,
     "editor.formatOnSave": false,
+    "editor.defaultFormatter": "standard.vscode-standard",
+    "[typescript]": {
+      "editor.defaultFormatter": "vscode.typescript-language-features"
+    },
   },
 }

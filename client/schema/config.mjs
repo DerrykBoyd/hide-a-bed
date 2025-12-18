@@ -58,3 +58,4 @@ export const CouchConfig = z.looseObject({
 }).describe('The std config object')
 
 /** @typedef { z.infer<typeof CouchConfig> } CouchConfigSchema */
+/** @typedef { z.input<typeof CouchConfig> } CouchConfigInput */
