@@ -4,6 +4,7 @@ import { spawn } from 'node:child_process'
 import needle from 'needle'
 import { TrackedEmitter } from './impl/trackedEmitter.mjs'
 import { bindConfig, bulkSaveTransaction, get } from './index.mts'
+import z from 'zod'
 import { setTimeout } from 'node:timers/promises'
 
 const PORT = 8985
@@ -73,6 +74,34 @@ suite('Database Tests', () => {
       assert.strictEqual(results.rows[1].error, 'not_found')
       console.log(results)
     })
+    await t.test('bulk get validates docs with schema', async () => {
+      await db.put({ _id: 'schema-doc', kind: 'example', data: 'hello' })
+
+      const schema = z.looseObject({
+        _id: z.string(),
+        kind: z.literal('example'),
+        data: z.string()
+      })
+
+      const validated = await db.bulkGet(['schema-doc'], {
+        validate: {
+          docSchema: schema
+        }
+      })
+      assert.strictEqual(validated.rows[0].doc?.kind, 'example', 'doc schema applied')
+
+      await assert.rejects(
+        async () => db.bulkGet(['schema-doc'], {
+          validate: {
+            docSchema: z.object({
+              _id: z.string(),
+              data: z.number()
+            })
+          }
+        }),
+        (err: any) => err?.name === 'ZodError'
+      )
+    })
     let _rev: string | null | undefined = null
     await t.test('a transaction', async () => {
       const docs = [{ _id: 'a', data: 'something' }]
@@ -107,7 +136,7 @@ suite('Database Tests', () => {
     await t.test('testing a rollback where one doc was interfered with in the transaction', async () => {
       const _config = config
       const emitter = new TrackedEmitter({ delay: 300 })
-      config._emitter = emitter
+      config["~emitter"] = emitter
       const docs = [
         { _id: 'a', data: 'before-rollback', _rev }, // this doc gets interfered with in-between commit - so will be 'interfered'
         { _id: 'rollback2', data: 'new doc' }, // this doc will get removed

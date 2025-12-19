@@ -278,17 +278,27 @@ Get multiple documents by ID.
 
 - `config`: Object with `couch` URL string
 - `ids`: Array of document ID strings
-- Returns: Promise resolving to array of documents
+- `options` *(optional)*:
+  - `validate.docSchema`: zod v4 schema applied to each found document before returning.
+- Returns: Promise resolving to the optionally validated bulk response
 
 Warning: documents that are not found will still have a row in the results. The doc property will be null, and the error property will be set.
 
 ```javascript
+import z from 'zod'
+
 const config = { couch: 'http://localhost:5984/mydb' }
 const ids = ['doc1', 'doc2', 'doesNotExist']
-const docs = await bulkGet(config, ids)
+const docs = await bulkGet(config, ids, {
+  docSchema: z.looseObject({
+    _id: z.string(),
+    type: z.string(),
+    name: z.string()
+  })
+})
 // rows: [
-//   { _id: 'doc1', _rev: '1-abc123', type: 'user', name: 'Alice' },
-//   { _id: 'doc2', _rev: '1-def456', type: 'user', name: 'Bob' },
+//   { id: 'doc1', doc: { _id: 'doc1', type: 'user', name: 'Alice' } },
+//   { id: 'doc2', doc: { _id: 'doc2', type: 'user', name: 'Bob' } },
 //   { key: 'doesNotExist', error: 'not_found' }
 // ]
 ```
@@ -363,6 +373,8 @@ Adds convenience to bulkGet. Organizes found and notFound documents into propert
 
 - `config`: Object with `couch` URL string
 - `ids`: Array of document ID strings to get
+- `options` *(optional)*:
+  - `validate.docSchema`: zod v4 schema applied to each found document before returning.
 - Returns: Promise resolving to an object with found and notFound properties.
 
 *found* looks like
@@ -383,9 +395,16 @@ Adds convenience to bulkGet. Organizes found and notFound documents into propert
 ```
 
 ```javascript
+import z from 'zod'
+
 const config = { couch: 'http://localhost:5984/mydb' }
 const ids = ['doc1', 'doc2', 'doesNotExist']
-const results = await bulkGetDictionary(config, ids)
+const results = await bulkGetDictionary(config, ids, {
+  docSchema: z.looseObject({
+    _id: z.string(),
+    data: z.record(z.any())
+  })
+})
 // results: {
 //   found: {
 //     doc1: { _id: 'doc2', _rev: '1-221', data: {} },

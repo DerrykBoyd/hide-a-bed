@@ -1,19 +1,27 @@
-import { bulkGet, bulkSave, bulkRemove, bulkRemoveMap, bulkGetDictionary, bulkSaveTransaction } from './impl/bulk.mjs'
-import { get, put, getAtRev, remove } from './impl/crud.mjs'
+import { bulkGet, bulkGetDictionary } from './impl/bulkGet.mts'
+import { bulkSaveTransaction } from './impl/bulkSave.mjs'
+import { bulkRemoveMap } from './impl/bulkRemove.mjs'
+import { bulkRemove } from './impl/bulkRemove.mjs'
+import { bulkSave } from './impl/bulkSave.mjs'
+import { remove } from './impl/remove.mjs'
+import { put } from './impl/put.mjs'
+import { getAtRev } from './impl/get.mjs'
+import { get } from './impl/get.mjs'
 import { patch, patchDangerously } from './impl/patch.mjs'
 import { createLock, removeLock } from './impl/sugar/lock.mjs'
 import { watchDocs } from './impl/sugar/watch.mjs'
 import { query } from './impl/query.mts'
 import { queryStream } from './impl/stream.mts'
-import { createQuery } from './impl/queryBuilder.mts'
+import { createQuery } from './impl/utils/queryBuilder.mts'
 import { withRetry } from './impl/retry.mts'
 
 import { CouchConfig, type CouchConfigSchema } from './schema/config.mjs'
-import { QueryBuilder } from './impl/queryBuilder.mts'
+import { QueryBuilder } from './impl/utils/queryBuilder.mts'
 import type z from 'zod'
 import type { BoundQuery } from './schema/query.mts'
 import { getDBInfo } from './impl/utils/getDBInfo.mts'
-import { NotFoundError, RetryableError, type NetworkError } from './impl/errors.mts'
+import { NotFoundError, RetryableError, type NetworkError } from './impl/utils/errors.mts'
+import type { BoundBulkGet } from './schema/bulkGet.mts'
 
 /**
  * Bind core CouchDB operations to a specific configuration, optionally applying retry wrappers.
@@ -29,6 +37,7 @@ function doBind(config: CouchConfigSchema) {
   }
 
   const queryBound = ((view: Parameters<typeof query>[1], options: Parameters<typeof query>[2]) => query(config, view, options)) as BoundQuery
+  const bulkGetBound = ((ids: Parameters<typeof bulkGet>[1], options: Parameters<typeof bulkGet>[2]) => bulkGet(config, ids, options)) as BoundBulkGet
 
   // Create the object without the config property first
   const result = {
@@ -36,7 +45,7 @@ function doBind(config: CouchConfigSchema) {
     getAtRev: config.bindWithRetry ? withRetry(getAtRev.bind(null, config), retryOptions) : getAtRev.bind(null, config),
     put: config.bindWithRetry ? withRetry(put.bind(null, config), retryOptions) : put.bind(null, config),
     remove: config.bindWithRetry ? withRetry(remove.bind(null, config), retryOptions) : remove.bind(null, config),
-    bulkGet: config.bindWithRetry ? withRetry(bulkGet.bind(null, config), retryOptions) : bulkGet.bind(null, config),
+    bulkGet: config.bindWithRetry ? withRetry(bulkGetBound, retryOptions) as BoundBulkGet : bulkGetBound,
     bulkSave: config.bindWithRetry ? withRetry(bulkSave.bind(null, config), retryOptions) : bulkSave.bind(null, config),
     // query updated with inferred types and validation for POC
     query: config.bindWithRetry ? withRetry(queryBound, retryOptions) as BoundQuery : queryBound,
@@ -106,6 +115,7 @@ export {
   bulkGetDictionary,
   bulkSaveTransaction,
 
+  // binding
   bindConfig,
   withRetry,
   QueryBuilder,
@@ -115,9 +125,16 @@ export {
 
   // Error types
   NotFoundError,
-  RetryableError,
-
+  RetryableError
 }
+
+export type {
+  BulkGetOptions,
+  BulkGetDictionaryOptions,
+  BulkGetDictionaryResult,
+  BulkGetResponse
+} from './impl/bulkGet.mts'
+
 
 export type {
   ViewString,
@@ -128,4 +145,7 @@ export type {
   DefaultRowSchema
 } from './schema/query.mts'
 export type { RetryOptions } from './impl/retry.mts'
-export type { NetworkError } from './impl/errors.mts'
+export type { NetworkError } from './impl/utils/errors.mts'
+export type { BoundInstance }
+export type { OnRow } from './impl/stream.mts'
+export type { CouchConfig } from './schema/config.mjs'

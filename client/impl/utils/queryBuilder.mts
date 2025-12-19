@@ -1,4 +1,4 @@
-import type { SimpleViewOptions } from '../schema/query.mts'
+import type { SimpleViewOptions } from '../../schema/query.mts'
 
 /**
  * A builder class for constructing CouchDB view query options.

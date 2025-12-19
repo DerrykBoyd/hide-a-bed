@@ -1,6 +1,5 @@
 import needle, { type BodyData, type NeedleHttpVerbs } from 'needle'
 import { SimpleViewOptions, SimpleViewQueryResponse, type SimpleViewQueryResponseValidated, type ViewString } from '../schema/query.mts'
-import { RetryableError } from './errors.mts'
 import { createLogger } from './logger.mts'
 
 import { CouchConfig, type CouchConfigInput } from '../schema/config.mjs'
@@ -8,6 +7,8 @@ import * as z4 from "zod/v4/core"
 import z from 'zod'
 import { queryString } from './utils/queryString.mts'
 import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts'
+import { RetryableError } from './utils/errors.mts'
+import type { ZodError } from 'zod'
 
 export async function query(
   config: CouchConfigInput,
@@ -58,9 +59,9 @@ export async function query<DocSchema extends z4.$ZodType, KeySchema extends z4.
  *
  * @returns The parsed view response with rows validated against the supplied schemas.
  *
- * @throws {@link RetryableError} When a retryable HTTP status code is encountered or no response is received.
- * @throws {@link z.ZodError} When the configuration or validation schemas fail to parse.
- * @throws {@link Error} When CouchDB returns a non-retryable error payload.
+ * @throws {RetryableError} When a retryable HTTP status code is encountered or no response is received.
+ * @throws {ZodError} When the configuration or validation schemas fail to parse.
+ * @throws {Error} When CouchDB returns a non-retryable error payload.
  */
 export async function query<DocSchema extends z4.$ZodType, KeySchema extends z4.$ZodType, ValueSchema extends z4.$ZodType>(_config: CouchConfigInput, view: ViewString, options: SimpleViewOptions & {
   validate?: {

@@ -1,4 +1,5 @@
 import { z, ZodType } from 'zod'
+import type { ZodTypeAny } from 'zod/v3'
 
 export type ViewString = "_all_docs" | `_design/${string}/_view/${string}`
 
@@ -17,7 +18,7 @@ export const DefaultRowSchema = z.object({
 })
 export type DefaultRowSchema = z.infer<typeof DefaultRowSchema>
 
-export type ViewRow<DocSchema, KeySchema, ValueSchema> = {
+export type ViewRow<DocSchema, KeySchema = ZodTypeAny, ValueSchema = ZodTypeAny> = {
   id?: string
   key: z.output<KeySchema>
   value: z.output<ValueSchema>
@@ -34,7 +35,7 @@ export const SimpleViewQueryResponse = z.object({
 })
 export type SimpleViewQueryResponse = z.infer<typeof SimpleViewQueryResponse>
 
-export type SimpleViewQueryResponseValidated<DocSchema, KeySchema, ValueSchema> = Omit<SimpleViewQueryResponse, 'rows'> & {
+export type SimpleViewQueryResponseValidated<DocSchema, KeySchema = ZodTypeAny, ValueSchema = ZodTypeAny> = Omit<SimpleViewQueryResponse, 'rows'> & {
   rows: Array<ViewRow<DocSchema, KeySchema, ValueSchema>>
 }
 

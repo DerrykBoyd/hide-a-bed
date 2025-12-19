@@ -54,9 +54,9 @@ export const CouchConfig = z.looseObject({
   backoffFactor: z.number().optional().default(2).describe('multiplier for exponential backoff'),
   useConsoleLogger: z.boolean().optional().default(false).describe('turn on console as a fallback logger'),
   logger: LoggerSchema.optional().describe('logging interface supporting winston-like or simple function interface'),
-  _emitter: z.any().optional().describe('emitter for events'),
-  _normalizedLogger: z.any().optional(), // Internal property for caching normalized logger
-  needleOpts: NeedleOptions.optional()
+  needleOpts: NeedleOptions.optional(),
+  "~emitter": z.any().optional().describe('emitter for events'),
+  "~normalizedLogger": z.any().optional(), // Internal property for caching normalized logger
 }).describe('The std config object')
 
 /** @typedef { z.infer<typeof CouchConfig> } CouchConfigSchema */

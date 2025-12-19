@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import * as z4 from "zod/v4/core"
 import { CouchConfig } from './config.mjs'
 import { SimpleViewQueryResponse, DefaultRowSchema } from './query.mts'
 import { CouchDoc, CouchDocResponse } from './crud.mjs'
@@ -28,16 +29,25 @@ export const BulkSave = z.function({ input: [CouchConfig, z.array(OptionalIdCouc
 export const BulkSaveBound = z.function({ input: [z.array(OptionalIdCouchDoc)], output: z.promise(BulkSaveResponseSchema) })
 /** @typedef { z.infer<typeof BulkSaveBound> } BulkSaveBoundSchema */
 
-export const BulkGet = z.function({ input: [CouchConfig, z.array(z.string().describe('the ids to get'))], output: z.promise(SimpleViewQueryResponse) })
+export const BulkGetOptions = z.object({
+  includeDocs: z.boolean().optional().describe('include docs in the response'),
+  validate: z.object({
+    docSchema: z.any().optional().describe('optional zod schema to validate docs')
+  }).optional()
+})
+/** @typedef { z.infer<typeof BulkGetOptions> } BulkGetOptionsSchema */
+
+export const BulkGetDictionaryOptions = BulkGetOptions.omit({ includeDocs: true })
+/** @typedef { z.infer<typeof BulkGetDictionaryOptions> } BulkGetDictionaryOptionsSchema */
+
+export const BulkGet = z.function({ input: [CouchConfig, z.array(z.string().describe('the ids to get')), BulkGetOptions.optional()], output: z.promise(SimpleViewQueryResponse) })
 /** @typedef { z.infer<typeof BulkGet> } BulkGetSchema */
 
-export const BulkGetBound = z.function({ input: [z.array(z.string().describe('the ids to get'))], output: z.promise(SimpleViewQueryResponse) })
+export const BulkGetBound = z.function({ input: [z.array(z.string().describe('the ids to get')), BulkGetOptions.optional()], output: z.promise(SimpleViewQueryResponse) })
 /** @typedef { z.infer<typeof BulkGetBound> } BulkGetBoundSchema */
 
 export const BulkGetWithOptions = z.function({
-  input: [CouchConfig, z.array(z.string().describe('the ids to get')), z.object({
-    includeDocs: z.boolean().optional().describe('the couch doc revision')
-  })],
+  input: [CouchConfig, z.array(z.string().describe('the ids to get')), BulkGetOptions.optional()],
   output: z.promise(SimpleViewQueryResponse)
 })
 /** @typedef { z.infer<typeof BulkGetWithOptions> } BulkGetWithOptionsSchema */
@@ -60,10 +70,10 @@ export const BulkGetDictionaryResponse = z.object({
 })
 /** @typedef { z.infer<typeof BulkGetDictionaryResponse> } BulkGetDictionaryResponseSchema */
 
-export const BulkGetDictionary = z.function({ input: [CouchConfig, z.array(z.string().describe('the ids to get'))], output: z.promise(BulkGetDictionaryResponse) })
+export const BulkGetDictionary = z.function({ input: [CouchConfig, z.array(z.string().describe('the ids to get')), BulkGetDictionaryOptions.optional()], output: z.promise(BulkGetDictionaryResponse) })
 /** @typedef { z.infer<typeof BulkGetDictionary> } BulkGetDictionarySchema */
 
-export const BulkGetDictionaryBound = z.function({ input: [z.array(z.string().describe('the ids to get'))], output: z.promise(BulkGetDictionaryResponse) })
+export const BulkGetDictionaryBound = z.function({ input: [z.array(z.string().describe('the ids to get')), BulkGetDictionaryOptions.optional()], output: z.promise(BulkGetDictionaryResponse) })
 /** @typedef { z.infer<typeof BulkGetDictionaryBound> } BulkGetDictionaryBoundSchema */
 
 export const BulkSaveTransaction = z.function({ input: [CouchConfig, z.string().describe('transaction id'), z.array(CouchDoc)], output: z.promise(BulkSaveResponseSchema) })
@@ -71,3 +81,4 @@ export const BulkSaveTransaction = z.function({ input: [CouchConfig, z.string().
 
 export const BulkSaveTransactionBound = z.function({ input: [z.string().describe('transaction id'), z.array(CouchDoc)], output: z.promise(BulkSaveResponseSchema) })
 /** @typedef { z.infer<typeof BulkSaveTransactionBound> } BulkSaveTransactionBoundSchema */
+

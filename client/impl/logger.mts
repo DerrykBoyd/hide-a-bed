@@ -11,10 +11,6 @@ export type Logger = {
 
 type FunctionLogger = (level: keyof Logger, ...args: unknown[]) => void
 
-type LoggerConfig = CouchConfigInput & {
-  _normalizedLogger?: Logger
-}
-
 const noop: LoggerMethod = () => { }
 
 const createConsoleLogger = (): Logger => ({
@@ -31,14 +27,14 @@ const createNoopLogger = (): Logger => ({
   debug: noop
 })
 
-export function createLogger(config: LoggerConfig): Logger {
-  if (config._normalizedLogger) {
-    return config._normalizedLogger
+export function createLogger(config: CouchConfigInput): Logger {
+  if (config["~normalizedLogger"]) {
+    return config["~normalizedLogger"]
   }
 
   if (!config.logger) {
     const normalized = config.useConsoleLogger ? createConsoleLogger() : createNoopLogger()
-    config._normalizedLogger = normalized
+    config["~normalizedLogger"] = normalized
     return normalized
   }
 
@@ -50,7 +46,7 @@ export function createLogger(config: LoggerConfig): Logger {
       info: (...args) => loggerFn('info', ...args),
       debug: (...args) => loggerFn('debug', ...args)
     }
-    config._normalizedLogger = normalized
+    config["~normalizedLogger"] = normalized
     return normalized
   }
 
@@ -61,6 +57,6 @@ export function createLogger(config: LoggerConfig): Logger {
     info: loggerObj.info ?? noop,
     debug: loggerObj.debug ?? noop
   }
-  config._normalizedLogger = normalized
+  config["~normalizedLogger"] = normalized
   return normalized
 }

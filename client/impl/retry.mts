@@ -1,6 +1,5 @@
 import { setTimeout } from 'node:timers/promises'
-
-import { RetryableError } from './errors.mts'
+import { RetryableError } from './utils/errors.mts'
 
 /**
  * Settings that control how retry attempts are scheduled.

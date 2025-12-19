@@ -5,7 +5,7 @@ import Parser from 'stream-json/Parser.js'
 import Pick from 'stream-json/filters/Pick.js'
 import StreamArray from 'stream-json/streamers/StreamArray.js'
 import { CouchConfig, type CouchConfigInput } from '../schema/config.mjs'
-import { RetryableError } from './errors.mts'
+import { RetryableError } from './utils/errors.mts'
 import { createLogger } from './logger.mts'
 import type { DefaultRowSchema, SimpleViewOptions } from '../schema/query.mts'
 import { queryString } from './utils/queryString.mts'
@@ -16,7 +16,7 @@ type StreamArrayChunk<Row> = {
   value: Row
 }
 
-type OnRow = (row: DefaultRowSchema) => void // TODO: make generic with validation and infer types
+export type OnRow = (row: DefaultRowSchema) => void // TODO: make generic with validation and infer types
 type HttpMethod = 'GET' | 'POST'
 
 /**

@@ -3,11 +3,7 @@ import test, { suite } from 'node:test'
 import type { CouchConfigInput } from '../schema/config.mjs'
 import { createLogger, type Logger } from './logger.mts'
 
-type TestConfig = CouchConfigInput & {
-  _normalizedLogger?: Logger
-}
-
-const baseConfig = (): TestConfig => ({
+const baseConfig = (): CouchConfigInput => ({
   couch: 'http://localhost:5984'
 })
 
@@ -19,9 +15,9 @@ suite('createLogger', () => {
       info: () => { },
       debug: () => { }
     }
-    const config: TestConfig = {
+    const config: CouchConfigInput = {
       ...baseConfig(),
-      _normalizedLogger: cached
+      "~normalizedLogger": cached
     }
 
     const logger = createLogger(config)
@@ -46,7 +42,7 @@ suite('createLogger', () => {
     console.debug = (...args: unknown[]) => { debugCalls.push(args) }
 
     try {
-      const config: TestConfig = {
+      const config: CouchConfigInput = {
         ...baseConfig(),
         useConsoleLogger: true
       }
@@ -58,7 +54,7 @@ suite('createLogger', () => {
       logger.info('info')
       logger.debug('debug')
 
-      assert.strictEqual(config._normalizedLogger, logger)
+      assert.strictEqual(config["~normalizedLogger"], logger)
       assert.deepStrictEqual(errorCalls, [['boom']])
       assert.deepStrictEqual(warnCalls, [['warn', 123]])
       assert.deepStrictEqual(infoCalls, [['info']])
@@ -75,7 +71,7 @@ suite('createLogger', () => {
     const config = baseConfig()
     const logger = createLogger(config)
 
-    assert.strictEqual(config._normalizedLogger, logger)
+    assert.strictEqual(config["~normalizedLogger"], logger)
     assert.doesNotThrow(() => logger.error('noop'))
     assert.doesNotThrow(() => logger.warn('noop'))
     assert.doesNotThrow(() => logger.info('noop'))
@@ -88,7 +84,7 @@ suite('createLogger', () => {
       calls.push({ level, args })
     }
 
-    const config: TestConfig = {
+    const config: CouchConfigInput = {
       ...baseConfig(),
       logger: fnLogger
     }
@@ -105,7 +101,7 @@ suite('createLogger', () => {
 
   test('fills missing methods on object logger', () => {
     let warnCount = 0
-    const config: TestConfig = {
+    const config: CouchConfigInput = {
       ...baseConfig(),
       logger: {
         warn: () => {

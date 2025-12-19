@@ -1,7 +1,7 @@
 // @ts-nocheck // TODO fix the types
 import needle from 'needle'
 import { EventEmitter } from 'events'
-import { RetryableError } from '../errors.mts'
+import { RetryableError } from '../utils/errors.mts'
 import { createLogger } from '../logger.mts'
 import { WatchDocs } from '../../schema/sugar/watch.mjs'
 import { mergeNeedleOpts } from '../utils/mergeNeedleOpts.mts'
