@@ -5,14 +5,14 @@ import { withRetry } from './retry.mjs'
 import { put, remove } from './crud.mjs'
 import { RetryableError } from './errors.mjs'
 import { TransactionSetupError, TransactionVersionConflictError, TransactionBulkOperationError, TransactionRollbackError } from './transactionErrors.mjs'
-import { createLogger } from './logger.mjs'
+import { createLogger } from './logger.mts'
 import { CouchDoc } from '../schema/crud.mjs'
 import { setupEmitter } from './trackedEmitter.mjs'
-import { mergeNeedleOpts } from './util.mjs'
+import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts'
 
 /** @type { import('../schema/bulk.mjs').BulkSaveSchema } */
 export const bulkSave = BulkSave.implementAsync(async (config, docs) => {
-  /** @type {import('./logger.mjs').Logger }  */
+  /** @type {import('./logger.mts').Logger }  */
   const logger = createLogger(config)
 
   if (!docs) {
@@ -163,7 +163,7 @@ export const bulkGetDictionary = BulkGetDictionary.implementAsync(async (config,
         return
       }
       try {
-      /** @type { import('../schema/crud.mjs').CouchDocSchema } doc */
+        /** @type { import('../schema/crud.mjs').CouchDocSchema } doc */
         const doc = CouchDoc.parse(row.doc)
         results.found[doc._id] = doc
       } catch (e) {
@@ -314,7 +314,7 @@ export const bulkSaveTransaction = BulkSaveTransaction.implementAsync(async (con
     }
     throw new TransactionRollbackError(
       'Transaction failed and rollback was unsuccessful',
-      /** @type {Error} */ (error),
+      /** @type {Error} */(error),
       bulkRollbackResult
     )
   }

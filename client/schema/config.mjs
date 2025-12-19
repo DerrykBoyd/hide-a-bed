@@ -1,12 +1,12 @@
 import { z } from 'zod'
 
-const anyArgs = z.tuple([]).rest(z.any())
+const anyArgs = z.array(z.any())
 
 const LoggerSchema = z.object({
-  error: z.function().optional({ input: anyArgs, output: z.void() }),
-  warn: z.function().optional({ input: anyArgs, output: z.void() }),
-  info: z.function().optional({ input: anyArgs, output: z.void() }),
-  debug: z.function().optional({ input: anyArgs, output: z.void() })
+  error: z.function({ input: anyArgs, output: z.void() }).optional(),
+  warn: z.function({ input: anyArgs, output: z.void() }).optional(),
+  info: z.function({ input: anyArgs, output: z.void() }).optional(),
+  debug: z.function({ input: anyArgs, output: z.void() }).optional()
 }).or(z.function({ input: anyArgs, output: z.void() }))
 
 export const NeedleBaseOptions = z.object({

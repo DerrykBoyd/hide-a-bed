@@ -6,15 +6,17 @@ import { watchDocs } from './impl/sugar/watch.mjs'
 import { query } from './impl/query.mts'
 import { queryStream } from './impl/stream.mts'
 import { createQuery } from './impl/queryBuilder.mjs'
-import { getDBInfo } from './impl/util.mjs'
 import { withRetry } from './impl/retry.mjs'
 
 import { CouchConfig, type CouchConfigSchema } from './schema/config.mjs'
 import type z from 'zod'
 import type { BoundQuery } from './schema/query.mts'
+import { getDBInfo } from './impl/utils/getDBInfo.mts'
 
 /**
  * Bind core CouchDB operations to a specific configuration, optionally applying retry wrappers.
+ * @param config The CouchDB configuration
+ * @returns An object with CouchDB operations bound to the provided configuration
  */
 function doBind(config: CouchConfigSchema) {
   // Default retry options
@@ -60,6 +62,8 @@ type BoundInstance = ReturnType<typeof doBind> & {
 
 /**
  * Build a validated binding that exposes CouchDB helpers plus an options() helper for overrides.
+ * @param config The CouchDB configuration
+ * @returns A bound instance with CouchDB operations and an options() method for overrides
  */
 const bindConfig = (
   config: z.input<typeof CouchConfig>

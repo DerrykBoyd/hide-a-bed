@@ -1,10 +1,11 @@
+// @ts-nocheck // TODO fix the types
 import needle from 'needle'
 import { EventEmitter } from 'events'
 import { RetryableError } from '../errors.mjs'
-import { createLogger } from '../logger.mjs'
-import { sleep } from '../patch.mjs'
+import { createLogger } from '../logger.mts'
 import { WatchDocs } from '../../schema/sugar/watch.mjs'
-import { mergeNeedleOpts } from '../util.mjs'
+import { mergeNeedleOpts } from '../utils/mergeNeedleOpts.mts'
+import { setTimeout } from 'node:timers/promises'
 
 // watch the doc for any changes
 export const watchDocs = WatchDocs.implement((config, docIds, onChange, options = {}) => {
@@ -71,7 +72,7 @@ export const watchDocs = WatchDocs.implement((config, docIds, onChange, options 
         currentRequest.abort()
         handleReconnect()
       } else {
-      // Reset retry count on successful connection
+        // Reset retry count on successful connection
         retryCount = 0
       }
     })
@@ -96,7 +97,7 @@ export const watchDocs = WatchDocs.implement((config, docIds, onChange, options 
     })
 
     currentRequest.on('end', () => {
-    // Process any remaining data in buffer
+      // Process any remaining data in buffer
       if (buffer.trim()) {
         try {
           const change = JSON.parse(buffer)
@@ -129,7 +130,7 @@ export const watchDocs = WatchDocs.implement((config, docIds, onChange, options 
     retryCount++
 
     logger.info(`Attempting to reconnect in ${delay}ms (attempt ${retryCount} of ${maxRetries})`)
-    await sleep(delay)
+    await setTimeout(delay)
 
     try {
       connect()

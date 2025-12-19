@@ -1,8 +1,7 @@
 import { get, put } from './crud.mjs'
 import { Patch, PatchDangerously } from '../schema/patch.mjs'
-import { createLogger } from './logger.mjs'
-
-export const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
+import { createLogger } from './logger.mts'
+import { setTimeout } from "node:timers/promises";
 
 /** @type { import('../schema/patch.mjs').PatchSchema } */
 export const patch = Patch.implementAsync(async (config, id, properties) => {
@@ -11,13 +10,14 @@ export const patch = Patch.implementAsync(async (config, id, properties) => {
   logger.info(`Starting patch operation for document ${id}`)
   logger.debug('Patch properties:', properties)
   const doc = await get(config, id)
-  if (doc._rev !== properties._rev) {
+  if (doc?._rev !== properties._rev) {
     const result = {}
     result.ok = false
     result.error = 'conflict'
     result.statusCode = 409
     return result
   }
+
   const updatedDoc = { ...doc, ...properties }
   logger.debug('Merged document:', updatedDoc)
   const result = await put(config, updatedDoc)
@@ -26,6 +26,7 @@ export const patch = Patch.implementAsync(async (config, id, properties) => {
 })
 
 /** @type { import('../schema/patch.mjs').PatchDangerouslySchema } */
+// @ts-ignore // TODO fix the types
 export const patchDangerously = PatchDangerously.implementAsync(async (config, id, properties) => {
   const logger = createLogger(config)
   const maxRetries = config.maxRetries || 5
@@ -63,11 +64,11 @@ export const patchDangerously = PatchDangerously.implementAsync(async (config, i
       }
 
       logger.warn(`Conflict detected for ${id}, retrying (attempt ${attempts})`)
-      await sleep(delay)
-      delay *= config.backoffFactor
+      await setTimeout(delay)
+      delay *= config.backoffFactor || 2
       logger.debug(`Next retry delay: ${delay}ms`)
     } catch (err) {
-      if (err.message === 'not_found') {
+      if (typeof err === 'object' && err !== null && "message" in err && err.message === 'not_found') {
         logger.warn(`Document ${id} not found during patch operation`)
         return { ok: false, statusCode: 404, error: 'not_found' }
       }
@@ -75,13 +76,13 @@ export const patchDangerously = PatchDangerously.implementAsync(async (config, i
       // Handle other errors (network, etc)
       attempts++
       if (attempts > maxRetries) {
-        const error = `Failed to patch after ${maxRetries} attempts: ${err.message}`
+        const error = `Failed to patch after ${maxRetries} attempts: ${err}`
         logger.error(error)
         return { ok: false, statusCode: 500, error }
       }
 
-      logger.warn(`Error during patch attempt ${attempts}: ${err.message}`)
-      await sleep(delay)
+      logger.warn(`Error during patch attempt ${attempts}: ${err}`)
+      await setTimeout(delay)
       logger.debug(`Retrying after ${delay}ms`)
     }
   }

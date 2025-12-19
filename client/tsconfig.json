@@ -1,7 +1,16 @@
 {
-  "exclude": ["node_modules", "dist", "types/output"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "types/output"
+  ],
   "compilerOptions": {
-    "lib": ["ESNext", "ESNext.Array", "ESNext.Collection", "ESNext.Iterator"],
+    "lib": [
+      "ESNext",
+      "ESNext.Array",
+      "ESNext.Collection",
+      "ESNext.Iterator"
+    ],
     "module": "nodenext",
     "target": "esnext",
     "erasableSyntaxOnly": true,
@@ -10,7 +19,7 @@
     "verbatimModuleSyntax": true,
     "strict": true,
     "allowJs": true,
-    // "checkJs": true, // TODO: enable later
+    "checkJs": true,
     "skipLibCheck": true,
     "declaration": true,
     "emitDeclarationOnly": true,

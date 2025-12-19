@@ -1,12 +1,13 @@
 import needle from 'needle'
 import { SimpleViewOptions, SimpleViewQueryResponse, ViewDoc, type SimpleViewQueryResponseValidated, type ViewOptions, type ViewRow, type ViewString } from '../schema/query.mts'
 import { RetryableError } from './errors.mjs'
-import { createLogger } from './logger.mjs'
+import { createLogger } from './logger.mts'
 
-import { mergeNeedleOpts } from './util.mjs'
 import { CouchConfig, type CouchConfigInput } from '../schema/config.mjs'
 import * as z4 from "zod/v4/core"
 import z from 'zod'
+import { queryString } from './utils/queryString.mts'
+import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts'
 
 export async function query(
   config: CouchConfigInput,
@@ -40,7 +41,27 @@ export async function query<DocSchema extends z4.$ZodType, KeySchema extends z4.
 ): Promise<SimpleViewQueryResponseValidated<DocSchema, KeySchema, ValueSchema>>
 
 /**
- * Execute a CouchDB view query with optional POST fallback when keys would exceed URL limits.
+ * Executes a CouchDB view query with optional schema validation and automatic handling
+ * of HTTP method selection, query string construction, and retryable errors.
+ *
+ * @remarks
+ * The helper intentionally omits `descending` and `skip` from the list of keys that are
+ * JSON-stringified in the query string because CouchDB accepts them as primitive values,
+ * so they do not require the quoting workaround used for compound parameters like `keys`.
+ *
+ * @template DocSchema - Zod schema used to validate each returned `doc`, if provided.
+ * @template KeySchema - Zod schema used to validate each row `key`, if provided.
+ * @template ValueSchema - Zod schema used to validate each row `value`, if provided.
+ *
+ * @param _config - CouchDB configuration data that is validated before use.
+ * @param view - Fully qualified design document and view identifier (e.g., `_design/foo/_view/bar`).
+ * @param options - CouchDB view options, including optional validation schemas.
+ *
+ * @returns The parsed view response with rows validated against the supplied schemas.
+ *
+ * @throws {@link RetryableError} When a retryable HTTP status code is encountered or no response is received.
+ * @throws {z.ZodError} When the configuration or validation schemas fail to parse.
+ * @throws {Error} When CouchDB returns a non-retryable error payload.
  */
 export async function query<DocSchema extends z4.$ZodType, KeySchema extends z4.$ZodType, ValueSchema extends z4.$ZodType>(_config: CouchConfigInput, view: ViewString, options: ViewOptions & {
   validate?: {
@@ -61,7 +82,7 @@ export async function query<DocSchema extends z4.$ZodType, KeySchema extends z4.
 
   const config = configParseResult.data
 
-  let qs = queryString(SimpleViewOptions.parse(options || {}), ['key', 'startkey', 'endkey', 'reduce', 'group', 'group_level', 'stale', 'limit'])
+  let qs = queryString(options)
   let method = 'GET'
   let payload = null
   const opts = {
@@ -79,9 +100,9 @@ export async function query<DocSchema extends z4.$ZodType, KeySchema extends z4.
     // according to http://stackoverflow.com/a/417184/680742,
     // the de facto URL length limit is 2000 characters
 
-    const _options = JSON.parse(JSON.stringify(options))
+    const _options = structuredClone(options)
     delete _options.keys
-    qs = queryString(SimpleViewOptions.parse(_options || {}), ['key', 'startkey', 'endkey', 'reduce', 'group', 'group_level', 'stale', 'limit']) // dont need descending or skip, those will work
+    qs = queryString(_options) // dont need descending or skip, those will work
 
     const keysAsString = `keys=${JSON.stringify(options.keys)}`
 
@@ -144,31 +165,4 @@ export async function query<DocSchema extends z4.$ZodType, KeySchema extends z4.
   return body
 }
 
-/**
- * Serialize CouchDB view options into a URL-safe query string, quoting values CouchDB expects as JSON.
- */
-export function queryString(options = {}, params: string[]) {
-  const searchParams = new URLSearchParams()
-  Object.entries(options).forEach(([key, rawValue]) => {
-    let value = rawValue
-    if (params.includes(key)) {
-      if (typeof value === 'string' && key !== 'stale') value = `"${value}"`
-      if (Array.isArray(value)) {
-        value =
-          '[' +
-          value
-            .map((i) => {
-              if (i === null) return 'null'
-              if (typeof i === 'string') return `"${i}"`
-              if (typeof i === 'object' && Object.keys(i).length === 0) return '{}'
-              if (typeof i === 'object') return JSON.stringify(i)
-              return i
-            })
-            .join(',') +
-          ']'
-      }
-    }
-    searchParams.set(key, String(value))
-  })
-  return searchParams.toString()
-}
+

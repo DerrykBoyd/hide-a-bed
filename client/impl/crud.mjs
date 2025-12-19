@@ -2,8 +2,8 @@
 import needle from 'needle'
 import { CouchGet, CouchPut, CouchGetWithOptions, CouchGetAtRev, CouchRemove } from '../schema/crud.mjs'
 import { RetryableError, NotFoundError } from './errors.mjs'
-import { createLogger } from './logger.mjs'
-import { mergeNeedleOpts } from './util.mjs'
+import { createLogger } from './logger.mts'
+import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts'
 
 /** @type { import('../schema/crud.mjs').CouchGetWithOptionsSchema } */
 const _getWithOptions = CouchGetWithOptions.implementAsync(async (config, id, getOpts) => {

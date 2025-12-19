@@ -5,20 +5,27 @@ import Parser from 'stream-json/Parser.js'
 import Pick from 'stream-json/filters/Pick.js'
 import StreamArray from 'stream-json/streamers/StreamArray.js'
 import { CouchConfig, type CouchConfigInput } from '../schema/config.mjs'
-import { queryString } from './query.mts'
 import { RetryableError } from './errors.mjs'
-import { createLogger } from './logger.mjs'
-import { mergeNeedleOpts } from './util.mjs'
+import { createLogger } from './logger.mts'
 import type { DefaultRowSchema, ViewOptions } from '../schema/query.mts'
+import { queryString } from './utils/queryString.mts'
+import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts'
 
 type StreamArrayChunk<Row> = {
   key: number
   value: Row
 }
 
-type OnRow = (row: DefaultRowSchema) => void
+type OnRow = (row: DefaultRowSchema) => void // TODO: make generic with validation and infer types
 type HttpMethod = 'GET' | 'POST'
 
+/**
+ * Execute a CouchDB view query and stream rows as they are received.
+ * @param rawConfig CouchDB configuration
+ * @param view The CouchDB view to query
+ * @param options Query options
+ * @param onRow Callback invoked for each row received
+ */
 export async function queryStream(
   rawConfig: CouchConfigInput,
   view: string,
@@ -35,7 +42,7 @@ export async function queryStream(
 
     let method: HttpMethod = 'GET'
     let payload: Record<string, unknown> | null = null
-    let qs = queryString(queryOptions, ['key', 'startkey', 'endkey', 'reduce', 'group', 'group_level', 'stale', 'limit'])
+    let qs = queryString(queryOptions)
     logger.debug('Generated query string:', qs)
 
     if (typeof queryOptions.keys !== 'undefined') {
