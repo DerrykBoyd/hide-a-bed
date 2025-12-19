@@ -53,19 +53,6 @@ const services = { db } // see example below
 const doc = await db.get('doc-123')
 ```
 
-If you need to enable autocompletion and type-checking, you can add the following JSDoc to help your editor
-
-```
-  function doSomething (services) {
-    /**  @type { import('hide-a-bed').DB} db */
-    const db = services.db;
-  }
-```
-
-Here is an example of compiler warnings:
-
-![jsdoc type def](docs/compiler.png)
-
 ##### Config Overrides
 
 You also can quickly override (or more) config settings for a particular call using db.options(optionOverrides)
