@@ -1,11 +1,13 @@
 import { z } from 'zod'
 
+const any_args = z.tuple([]).rest(z.any())
+
 const LoggerSchema = z.object({
-  error: z.function().optional({ input: [z.any()], output: z.void() }),
-  warn: z.function().optional({ input: [z.any()], output: z.void() }),
-  info: z.function().optional({ input: [z.any()], output: z.void() }),
-  debug: z.function().optional({ input: [z.any()], output: z.void() })
-}).or(z.function({ input: [z.string(), z.any()], output: z.void() }))
+  error: z.function().optional({ input: any_args, output: z.void() }),
+  warn: z.function().optional({ input: any_args, output: z.void() }),
+  info: z.function().optional({ input: any_args, output: z.void() }),
+  debug: z.function().optional({ input: any_args, output: z.void() })
+}).or(z.function({ input: any_args, output: z.void() }))
 
 export const NeedleBaseOptions = z.object({
   json: z.boolean(),
@@ -52,7 +54,7 @@ export const CouchConfig = z.looseObject({
   backoffFactor: z.number().optional().default(2).describe('multiplier for exponential backoff'),
   useConsoleLogger: z.boolean().optional().default(false).describe('turn on console as a fallback logger'),
   logger: LoggerSchema.optional().describe('logging interface supporting winston-like or simple function interface'),
-  // _emitter: z.any().optional().describe('emitter for events'),
+  _emitter: z.any().optional().describe('emitter for events'),
   _normalizedLogger: z.any().optional(), // Internal property for caching normalized logger
   needleOpts: NeedleOptions.optional()
 }).describe('The std config object')

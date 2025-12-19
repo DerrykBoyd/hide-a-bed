@@ -30,7 +30,7 @@ export const mergeNeedleOpts = MergeNeedleOpts.implement(
 )
 
 /** @type { import('../schema/util.mjs').GetDBInfoSchema} */
-export const getDBInfo = GetDBInfo.implement(async (config) => {
+export const getDBInfo = GetDBInfo.implementAsync(async (config) => {
   const logger = createLogger(config)
   const url = `${config.couch}`
   const opts = {

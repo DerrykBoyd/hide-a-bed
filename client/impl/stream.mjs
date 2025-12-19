@@ -1,7 +1,7 @@
 // @ts-check
 import needle from 'needle'
 import { CouchConfig } from '../schema/config.mjs'
-import { queryString } from './query.mjs'
+import { queryString } from './query.mts'
 import { RetryableError } from './errors.mjs'
 import { createLogger } from './logger.mjs'
 // @ts-ignore

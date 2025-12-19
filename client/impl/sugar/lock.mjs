@@ -3,7 +3,7 @@ import { put, get } from '../crud.mjs'
 import { createLogger } from '../logger.mjs'
 
 /** @type {import('../../schema/sugar/lock.mjs').CreateLockSchema} */
-export const createLock = CreateLock.implement(async (config, docId, options) => {
+export const createLock = CreateLock.implementAsync(async (config, docId, options) => {
   const logger = createLogger(config)
 
   if (!options.enableLocking) {
@@ -35,7 +35,7 @@ export const createLock = CreateLock.implement(async (config, docId, options) =>
 })
 
 /** @type {import('../../schema/sugar/lock.mjs').RemoveLockSchema} */
-export const removeLock = RemoveLock.implement(async (config, docId, options) => {
+export const removeLock = RemoveLock.implementAsync(async (config, docId, options) => {
   const logger = createLogger(config)
 
   if (!options.enableLocking) {

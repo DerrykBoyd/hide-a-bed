@@ -3,16 +3,15 @@ import { get, put, getAtRev, remove } from './impl/crud.mjs'
 import { patch, patchDangerously } from './impl/patch.mjs'
 import { createLock, removeLock } from './impl/sugar/lock.mjs'
 import { watchDocs } from './impl/sugar/watch.mjs'
-import { query } from './impl/query.mjs'
+import { query } from './impl/query.mts'
 import { queryStream } from './impl/stream.mjs'
 import { createQuery } from './impl/queryBuilder.mjs'
 import { getDBInfo } from './impl/util.mjs'
 import { withRetry } from './impl/retry.mjs'
 
-import { Bind } from './schema/bind.mjs'
 import { CouchConfig, type CouchConfigSchema } from './schema/config.mjs'
 import type z from 'zod'
-import type { BoundQuery, ViewString } from './schema/query.mjs'
+import type { BoundQuery } from './schema/query.mts'
 
 /**
  * Bind core CouchDB operations to a specific configuration, optionally applying retry wrappers.
@@ -35,7 +34,9 @@ function doBind(config: CouchConfigSchema) {
     remove: config.bindWithRetry ? withRetry(remove.bind(null, config), retryOptions) : remove.bind(null, config),
     bulkGet: config.bindWithRetry ? withRetry(bulkGet.bind(null, config), retryOptions) : bulkGet.bind(null, config),
     bulkSave: config.bindWithRetry ? withRetry(bulkSave.bind(null, config), retryOptions) : bulkSave.bind(null, config),
+    // query updated with inferred types and validation for POC
     query: config.bindWithRetry ? withRetry(queryBound, retryOptions) as BoundQuery : queryBound,
+    // 
     queryStream: config.bindWithRetry ? withRetry(queryStream.bind(null, config), retryOptions) : queryStream.bind(null, config),
     // Sugar Methods
     patch: config.bindWithRetry ? withRetry(patch.bind(null, config), retryOptions) : patch.bind(null, config),

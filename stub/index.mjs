@@ -32,24 +32,24 @@ export const setup = async (designDocs, dbname) => {
     await db.bulkDocs(convert(designDocs))
   }
 
-  const bulkSave = BulkSave.implement(async (_config, docs) => {
+  const bulkSave = BulkSave.implementAsync(async (_config, docs) => {
     const results = await db.bulkDocs(docs)
     return results
   })
 
-  const bulkGet = BulkGet.implement(async (_config, ids) => {
+  const bulkGet = BulkGet.implementAsync(async (_config, ids) => {
     const options = { include_docs: true, keys: ids }
     const resp = await db.allDocs(options)
     return resp
   })
 
-  const put = CouchPut.implement(async (_config, doc) => {
+  const put = CouchPut.implementAsync(async (_config, doc) => {
     const result = await db.put(doc)
     result.statusCode = 201
     return result
   })
 
-  const query = SimpleViewQuery.implement(async (_config, view, options) => {
+  const query = SimpleViewQuery.implementAsync(async (_config, view, options) => {
     const query = cloneDeep(options)
     // views com in full couch views, convert to pouch '_design/tick/_view/byDripTS'
     const parts = view.split('/')
@@ -62,7 +62,7 @@ export const setup = async (designDocs, dbname) => {
     return results
   })
 
-  const get = CouchGet.implement(async (_config, id) => {
+  const get = CouchGet.implementAsync(async (_config, id) => {
     try {
       return await db.get(id)
     } catch (error) {
@@ -73,7 +73,7 @@ export const setup = async (designDocs, dbname) => {
     }
   })
 
-  const patch = Patch.implement(async (_config, id, properties) => {
+  const patch = Patch.implementAsync(async (_config, id, properties) => {
     try {
       const doc = await db.get(id)
       if (!doc) return null
@@ -95,7 +95,7 @@ export const setup = async (designDocs, dbname) => {
     }
   })
 
-  const bulkRemove = BulkRemove.implement(async (_config, ids) => {
+  const bulkRemove = BulkRemove.implementAsync(async (_config, ids) => {
     const resp = await bulkGet(_config, ids)
     const rows = resp.rows || []
     const deleteDocs = rows.map(row => ({
@@ -106,7 +106,7 @@ export const setup = async (designDocs, dbname) => {
     return results
   })
 
-  const queryStream = SimpleViewQueryStream.implement(async (_config, view, options, onRow) => {
+  const queryStream = SimpleViewQueryStream.implementAsync(async (_config, view, options, onRow) => {
     const query = cloneDeep(options)
     const parts = view.split('/')
     const pouchView = [parts[1], parts[3]].join('/')
@@ -120,7 +120,7 @@ export const setup = async (designDocs, dbname) => {
     }
   })
 
-  const getAtRev = CouchGetAtRev.implement(async (_config, id, rev) => {
+  const getAtRev = CouchGetAtRev.implementAsync(async (_config, id, rev) => {
     try {
       return await db.get(id, { rev })
     } catch (error) {
@@ -130,7 +130,7 @@ export const setup = async (designDocs, dbname) => {
     }
   })
 
-  const bulkGetDictionary = BulkGetDictionary.implement(async (_config, ids) => {
+  const bulkGetDictionary = BulkGetDictionary.implementAsync(async (_config, ids) => {
     const resp = await bulkGet(_config, ids)
     const results = { found: {}, notFound: {} }
 
@@ -150,7 +150,7 @@ export const setup = async (designDocs, dbname) => {
     return results
   })
 
-  const bulkSaveTransaction = BulkSaveTransaction.implement(async (_config, docs) => {
+  const bulkSaveTransaction = BulkSaveTransaction.implementAsync(async (_config, docs) => {
     const results = await bulkSave(_config, docs)
     const errors = results.filter(result => !result.ok)
     if (errors.length) {

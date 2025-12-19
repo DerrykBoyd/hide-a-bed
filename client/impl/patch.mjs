@@ -5,7 +5,7 @@ import { createLogger } from './logger.mjs'
 export const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 /** @type { import('../schema/patch.mjs').PatchSchema } */
-export const patch = Patch.implement(async (config, id, properties) => {
+export const patch = Patch.implementAsync(async (config, id, properties) => {
   const logger = createLogger(config)
 
   logger.info(`Starting patch operation for document ${id}`)
@@ -26,7 +26,7 @@ export const patch = Patch.implement(async (config, id, properties) => {
 })
 
 /** @type { import('../schema/patch.mjs').PatchDangerouslySchema } */
-export const patchDangerously = PatchDangerously.implement(async (config, id, properties) => {
+export const patchDangerously = PatchDangerously.implementAsync(async (config, id, properties) => {
   const logger = createLogger(config)
   const maxRetries = config.maxRetries || 5
   let delay = config.initialDelay || 1000

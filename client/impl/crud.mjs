@@ -6,7 +6,7 @@ import { createLogger } from './logger.mjs'
 import { mergeNeedleOpts } from './util.mjs'
 
 /** @type { import('../schema/crud.mjs').CouchGetWithOptionsSchema } */
-const _getWithOptions = CouchGetWithOptions.implement(async (config, id, getOpts) => {
+const _getWithOptions = CouchGetWithOptions.implementAsync(async (config, id, getOpts) => {
   const logger = createLogger(config)
   const rev = getOpts?.rev
   const path = rev ? `${id}?rev=${rev}` : id
@@ -53,19 +53,19 @@ const _getWithOptions = CouchGetWithOptions.implement(async (config, id, getOpts
 })
 
 /** @type { import('../schema/crud.mjs').CouchGetSchema } */
-export const get = CouchGet.implement(async (config, id) => {
+export const get = CouchGet.implementAsync(async (config, id) => {
   const getOptions = {}
   return _getWithOptions(config, id, getOptions)
 })
 
 /** @type { import('../schema/crud.mjs').CouchGetAtRevSchema } */
-export const getAtRev = CouchGetAtRev.implement(async (config, id, rev) => {
+export const getAtRev = CouchGetAtRev.implementAsync(async (config, id, rev) => {
   const getOptions = { rev }
   return _getWithOptions(config, id, getOptions)
 })
 
 /** @type { import('../schema/crud.mjs').CouchPutSchema } */
-export const put = CouchPut.implement(async (config, doc) => {
+export const put = CouchPut.implementAsync(async (config, doc) => {
   const logger = createLogger(config)
   const url = `${config.couch}/${doc._id}`
   const body = doc
@@ -111,7 +111,7 @@ export const put = CouchPut.implement(async (config, doc) => {
 })
 
 /** @type { import('../schema/crud.mjs').CouchRemoveSchema } */
-export const remove = CouchRemove.implement(async (config, id, rev) => {
+export const remove = CouchRemove.implementAsync(async (config, id, rev) => {
   const logger = createLogger(config)
   const url = `${config.couch}/${id}?rev=${rev}`
   const opts = {

@@ -11,7 +11,7 @@ import { setupEmitter } from './trackedEmitter.mjs'
 import { mergeNeedleOpts } from './util.mjs'
 
 /** @type { import('../schema/bulk.mjs').BulkSaveSchema } */
-export const bulkSave = BulkSave.implement(async (config, docs) => {
+export const bulkSave = BulkSave.implementAsync(async (config, docs) => {
   /** @type {import('./logger.mjs').Logger }  */
   const logger = createLogger(config)
 
@@ -58,7 +58,7 @@ export const bulkSave = BulkSave.implement(async (config, docs) => {
 })
 
 /** @type { import('../schema/bulk.mjs').BulkGetWithOptionsSchema } */
-const _bulkGetWithOptions = BulkGetWithOptions.implement(async (config, ids, { includeDocs = true }) => {
+const _bulkGetWithOptions = BulkGetWithOptions.implementAsync(async (config, ids, { includeDocs = true }) => {
   const logger = createLogger(config)
   const keys = ids
 
@@ -91,20 +91,20 @@ const _bulkGetWithOptions = BulkGetWithOptions.implement(async (config, ids, { i
     logger.error(`Unexpected status code: ${resp.statusCode}`)
     throw new Error('could not fetch')
   }
-  /** @type { import('../schema/query.mjs').SimpleViewQueryResponse } body */
+  /** @type { import('../schema/query.mts').SimpleViewQueryResponse } body */
   const body = resp.body
   return body
 })
 
 /** @type { import('../schema/bulk.mjs').BulkGetSchema } */
-export const bulkGet = BulkGet.implement(async (config, ids) => {
+export const bulkGet = BulkGet.implementAsync(async (config, ids) => {
   const getOptions = { includeDocs: true }
   return _bulkGetWithOptions(config, ids, getOptions)
 })
 // sugar methods
 
 /** @type { import('../schema/bulk.mjs').BulkRemoveSchema } */
-export const bulkRemove = BulkRemove.implement(async (config, ids) => {
+export const bulkRemove = BulkRemove.implementAsync(async (config, ids) => {
   const logger = createLogger(config)
   logger.info(`Starting bulk remove for ${ids.length} documents`)
   const resp = await bulkGet(config, ids)
@@ -126,7 +126,7 @@ export const bulkRemove = BulkRemove.implement(async (config, ids) => {
 })
 
 /** @type { import('../schema/bulk.mjs').BulkRemoveMapSchema } */
-export const bulkRemoveMap = BulkRemoveMap.implement(async (config, ids) => {
+export const bulkRemoveMap = BulkRemoveMap.implementAsync(async (config, ids) => {
   const logger = createLogger(config)
   logger.info(`Starting bulk remove map for ${ids.length} documents`)
 
@@ -148,14 +148,14 @@ export const bulkRemoveMap = BulkRemoveMap.implement(async (config, ids) => {
 })
 
 /** @type { import('../schema/bulk.mjs').BulkGetDictionarySchema } */
-export const bulkGetDictionary = BulkGetDictionary.implement(async (config, ids) => {
+export const bulkGetDictionary = BulkGetDictionary.implementAsync(async (config, ids) => {
   const resp = await bulkGet(config, ids)
 
   /** @type { import('../schema/bulk.mjs').BulkGetDictionaryResponseSchema } results */
   const results = { found: {}, notFound: {} }
 
   resp.rows.forEach(
-    /** @param { import('../schema/query.mjs').DefaultRowSchema } row */
+    /** @param { import('../schema/query.mts').DefaultRowSchema } row */
     row => {
       if (!row.key) return
       if (row.error) {
@@ -174,7 +174,7 @@ export const bulkGetDictionary = BulkGetDictionary.implement(async (config, ids)
 })
 
 /** @type { import('../schema/bulk.mjs').BulkSaveTransactionSchema } bulkSaveTransaction */
-export const bulkSaveTransaction = BulkSaveTransaction.implement(async (config, transactionId, docs) => {
+export const bulkSaveTransaction = BulkSaveTransaction.implementAsync(async (config, transactionId, docs) => {
   const emitter = setupEmitter(config)
   const logger = createLogger(config)
   const retryOptions = {

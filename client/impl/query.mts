@@ -1,5 +1,5 @@
 import needle from 'needle'
-import { SimpleViewQueryResponse, ViewDoc, type SimpleViewOptions, type SimpleViewQueryResponseValidated, type ViewOptions, type ViewRow, type ViewString } from '../schema/query.mjs'
+import { SimpleViewOptions, SimpleViewQueryResponse, ViewDoc, type SimpleViewQueryResponseValidated, type ViewOptions, type ViewRow, type ViewString } from '../schema/query.mts'
 import { RetryableError } from './errors.mjs'
 import { createLogger } from './logger.mjs'
 
@@ -7,6 +7,7 @@ import pkg from 'lodash'
 import { mergeNeedleOpts } from './util.mjs'
 import { CouchConfig, type CouchConfigInput, type CouchConfigSchema } from '../schema/config.mjs'
 import * as z4 from "zod/v4/core"
+import z from 'zod'
 const { includes } = pkg
 
 export async function query(
@@ -53,7 +54,7 @@ export async function query<DocSchema extends z4.$ZodType, KeySchema extends z4.
   const configParseResult = CouchConfig.safeParse(_config)
   const logger = createLogger(_config)
   logger.info(`Starting view query: ${view}`)
-  logger.debug('Query options:', options)
+  logger.debug('Query options:', SimpleViewOptions.parse(options || {}))
 
   if (!configParseResult.success) {
     logger.error('Invalid configuration provided:', configParseResult.error)
@@ -62,7 +63,7 @@ export async function query<DocSchema extends z4.$ZodType, KeySchema extends z4.
 
   const config = configParseResult.data
 
-  let qs = queryString(options, ['key', 'startkey', 'endkey', 'reduce', 'group', 'group_level', 'stale', 'limit'])
+  let qs = queryString(SimpleViewOptions.parse(options || {}), ['key', 'startkey', 'endkey', 'reduce', 'group', 'group_level', 'stale', 'limit'])
   let method = 'GET'
   let payload = null
   const opts = {
@@ -82,7 +83,7 @@ export async function query<DocSchema extends z4.$ZodType, KeySchema extends z4.
 
     const _options = JSON.parse(JSON.stringify(options))
     delete _options.keys
-    qs = queryString(_options, ['key', 'startkey', 'endkey', 'reduce', 'group', 'group_level', 'stale', 'limit']) // dont need descending or skip, those will work
+    qs = queryString(SimpleViewOptions.parse(_options || {}), ['key', 'startkey', 'endkey', 'reduce', 'group', 'group_level', 'stale', 'limit']) // dont need descending or skip, those will work
 
     const keysAsString = `keys=${JSON.stringify(options.keys)}`
 
@@ -100,7 +101,7 @@ export async function query<DocSchema extends z4.$ZodType, KeySchema extends z4.
   }
 
   logger.debug('Generated query string:', qs)
-  const url = `${config.couch}/${view}?${qs.toString()}`
+  const url = `${config.couch}/${view}?${qs}`
   // @ts-ignore
   let results
   try {
@@ -124,8 +125,20 @@ export async function query<DocSchema extends z4.$ZodType, KeySchema extends z4.
   }
 
   if (body.error) {
-    logger.error(`Query error: ${body.error}`)
-    throw new Error(body.error)
+    logger.error(`Query error: ${body}`)
+    throw new Error(`CouchDB query error: ${body.error} - ${body.reason || ''}`)
+  }
+
+  // If validation schemas are provided, validate each row accordingly
+  if (options.validate) {
+    const { docSchema, keySchema, valueSchema } = options.validate
+
+    body.rows = z.array(z.looseObject({
+      id: z.string(),
+      key: keySchema ? keySchema : z.any(),
+      value: valueSchema ? valueSchema : z.any(),
+      doc: docSchema ? docSchema : z.any().optional(),
+    })).parse(body.rows)
   }
 
   logger.info(`Successfully executed view query: ${view}`)

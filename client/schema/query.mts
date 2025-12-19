@@ -12,7 +12,7 @@ export const DefaultRowSchema = z.object({
   id: z.string().optional(),
   key: z.any().nullish(),
   value: z.any().nullish(),
-  doc: ViewDoc.optional(),
+  doc: ViewDoc.nullish(),
   error: z.string().optional().describe('usually not_found, if something is wrong with this doc')
 })
 export type DefaultRowSchema = z.infer<typeof DefaultRowSchema>
@@ -29,14 +29,12 @@ export const SimpleViewQueryResponse = z.object({
   total_rows: z.number().nonnegative().optional().describe('total rows in the view'),
   offset: z.number().nonnegative().optional().describe('the offset of the first row in this result set'),
   error: z.string().optional().describe('if something is wrong'),
-  rows: z.array(DefaultRowSchema)
+  rows: z.array(DefaultRowSchema).optional().describe('the rows returned by the view'),
+  update_seq: z.number().optional().describe('the update sequence of the database at the time of the query')
 })
 export type SimpleViewQueryResponse = z.infer<typeof SimpleViewQueryResponse>
 
-export type SimpleViewQueryResponseValidated<DocSchema, KeySchema, ValueSchema> = {
-  total_rows?: number
-  offset?: number
-  error?: string
+export type SimpleViewQueryResponseValidated<DocSchema, KeySchema, ValueSchema> = Omit<SimpleViewQueryResponse, 'rows'> & {
   rows: Array<ViewRow<DocSchema, KeySchema, ValueSchema>>
 }
 
@@ -53,7 +51,7 @@ export const SimpleViewOptions = z.object({
   group: z.boolean().optional().describe('group the results'),
   group_level: z.number().positive().optional().describe('group the results at this level'),
 }).describe('base options for a CouchDB view query')
-export type ViewOptions = z.input<typeof SimpleViewOptions> 
+export type ViewOptions = z.input<typeof SimpleViewOptions>
 
 // export const SimpleViewQuery = z.function({ input: [CouchConfig, z.string().describe('the view name'), SimpleViewOptions], output: z.promise(SimpleViewQueryResponse) })
 // export type SimpleViewQuery = z.infer<typeof SimpleViewQuery>

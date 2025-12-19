@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { CouchConfig } from './config.mjs'
-import { SimpleViewQueryResponse, DefaultRowSchema } from './query.mjs'
+import { SimpleViewQueryResponse, DefaultRowSchema } from './query.mts'
 import { CouchDoc, CouchDocResponse } from './crud.mjs'
 
 export const BulkSaveRow = z.object({
