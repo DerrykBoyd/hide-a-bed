@@ -17,7 +17,7 @@ export const getAtRev = CouchGetAtRev.implementAsync(async (config, id, rev) => 
 });
 /** @type { import('../schema/crud.mjs').CouchGetWithOptionsSchema } */
 
-export const _getWithOptions = CouchGetWithOptions.implementAsync(async (config, id, getOpts) => {
+const _getWithOptions = CouchGetWithOptions.implementAsync(async (config, id, getOpts) => {
   const logger = createLogger(config)
   const rev = getOpts?.rev
   const path = rev ? `${id}?rev=${rev}` : id

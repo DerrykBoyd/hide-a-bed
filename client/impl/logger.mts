@@ -1,6 +1,6 @@
 import type { CouchConfigInput } from '../schema/config.mjs'
 
-export type LoggerMethod = (...args: unknown[]) => void
+type LoggerMethod = (...args: unknown[]) => void
 
 export type Logger = {
   error: LoggerMethod

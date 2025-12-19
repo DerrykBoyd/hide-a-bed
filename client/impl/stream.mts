@@ -132,8 +132,9 @@ export async function queryStream(
       } catch (retryErr) {
         settleReject(retryErr as Error)
         return
+      } finally {
+        settleReject(err)
       }
-      settleReject(err)
     })
 
     request.pipe(parserPipeline)
