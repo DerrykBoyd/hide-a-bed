@@ -2,8 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { createServer } from 'node:http'
 import type { AddressInfo } from 'node:net'
-import { queryStream } from './stream.mjs'
-import exp from 'node:constants'
+import { queryStream } from './stream.mts'
 import { bindConfig } from '../index.mts'
 
 const startServer = async (handler: Parameters<typeof createServer>[0]) => {
