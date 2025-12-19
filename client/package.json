@@ -1,6 +1,6 @@
 {
   "name": "@brivity/hide-a-bed",
-  "version": "7.0.0-test.6",
+  "version": "7.0.0-test.7",
   "description": "An abstraction over couchdb calls that includes easy mock/stubs with pouchdb",
   "type": "module",
   "main": "./dist/cjs/index.cjs",
@@ -21,8 +21,12 @@
   "scripts": {
     "clean": "rm -rf types/output && rm -rf dist && (find . -name \"log.txt\" -type f -delete || true)",
     "build": "npm run clean && tsc && tsdown",
+    "build:docs": "typedoc ./index.mts",
     "test": "node --test",
+    "lint": "standard",
     "lint:fix": "standard --fix",
+    "typecheck": "tsc --noEmit",
+    "typecheck:watch": "tsc --noEmit --watch",
     "prepublishOnly": "npm run build",
     "full": "npm run lint:fix && npm run build && npm run clean"
   },

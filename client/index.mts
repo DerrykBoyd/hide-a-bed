@@ -110,3 +110,5 @@ export {
   createLock,
   removeLock
 }
+
+export type { ViewString, ViewRow, ViewOptions, SimpleViewQueryResponse, SimpleViewQueryResponseValidated } from './schema/query.mts'

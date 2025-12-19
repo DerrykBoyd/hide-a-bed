@@ -45,9 +45,8 @@ export async function query<DocSchema extends z4.$ZodType, KeySchema extends z4.
  * of HTTP method selection, query string construction, and retryable errors.
  *
  * @remarks
- * The helper intentionally omits `descending` and `skip` from the list of keys that are
- * JSON-stringified in the query string because CouchDB accepts them as primitive values,
- * so they do not require the quoting workaround used for compound parameters like `keys`.
+ * When using the validation feature, each row in the response will be validated against the provided
+ * Types will be inferred from the Zod schemas supplied in the `options.validate` object.
  *
  * @template DocSchema - Zod schema used to validate each returned `doc`, if provided.
  * @template KeySchema - Zod schema used to validate each row `key`, if provided.
@@ -60,8 +59,8 @@ export async function query<DocSchema extends z4.$ZodType, KeySchema extends z4.
  * @returns The parsed view response with rows validated against the supplied schemas.
  *
  * @throws {@link RetryableError} When a retryable HTTP status code is encountered or no response is received.
- * @throws {z.ZodError} When the configuration or validation schemas fail to parse.
- * @throws {Error} When CouchDB returns a non-retryable error payload.
+ * @throws {@link z.ZodError} When the configuration or validation schemas fail to parse.
+ * @throws {@link Error} When CouchDB returns a non-retryable error payload.
  */
 export async function query<DocSchema extends z4.$ZodType, KeySchema extends z4.$ZodType, ValueSchema extends z4.$ZodType>(_config: CouchConfigInput, view: ViewString, options: ViewOptions & {
   validate?: {
