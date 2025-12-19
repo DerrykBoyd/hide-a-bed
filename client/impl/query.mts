@@ -3,12 +3,10 @@ import { SimpleViewOptions, SimpleViewQueryResponse, ViewDoc, type SimpleViewQue
 import { RetryableError } from './errors.mjs'
 import { createLogger } from './logger.mjs'
 
-import pkg from 'lodash'
 import { mergeNeedleOpts } from './util.mjs'
 import { CouchConfig, type CouchConfigInput, type CouchConfigSchema } from '../schema/config.mjs'
 import * as z4 from "zod/v4/core"
 import z from 'zod'
-const { includes } = pkg
 
 export async function query(
   config: CouchConfigInput,
@@ -153,7 +151,7 @@ export function queryString(options = {}, params: string[]) {
   const searchParams = new URLSearchParams()
   Object.entries(options).forEach(([key, rawValue]) => {
     let value = rawValue
-    if (includes(params, key)) {
+    if (params.includes(key)) {
       if (typeof value === 'string' && key !== 'stale') value = `"${value}"`
       if (Array.isArray(value)) {
         value =
