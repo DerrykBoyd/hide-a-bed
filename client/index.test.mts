@@ -2,8 +2,8 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { spawn } from 'node:child_process'
 import needle from 'needle'
-import { TrackedEmitter } from '../impl/trackedEmitter.mjs'
-import { bindConfig, bulkSaveTransaction, get } from '../index.mts'
+import { TrackedEmitter } from './impl/trackedEmitter.mjs'
+import { bindConfig, bulkSaveTransaction, get } from './index.mts'
 import { setTimeout } from 'node:timers/promises'
 
 const PORT = 8985

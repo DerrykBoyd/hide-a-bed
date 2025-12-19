@@ -4,9 +4,11 @@ import { CouchConfig } from '../schema/config.mjs'
 import { queryString } from './query.mts'
 import { RetryableError } from './errors.mjs'
 import { createLogger } from './logger.mjs'
-// @ts-ignore
-import JSONStream from 'JSONStream'
 import { mergeNeedleOpts } from './util.mjs'
+import Chain from 'stream-chain'
+import Parser from 'stream-json/Parser.js'
+import Pick from 'stream-json/filters/Pick.js'
+import StreamArray from 'stream-json/streamers/StreamArray.js'
 
 /** @type { import('../schema/stream.mjs').SimpleViewQueryStreamSchema } queryStream */
 export const queryStream = (rawConfig, view, options, onRow) => new Promise((resolve, reject) => {
@@ -46,55 +48,72 @@ export const queryStream = (rawConfig, view, options, onRow) => new Promise((res
   }
   const mergedOpts = mergeNeedleOpts(config, opts)
 
-  const streamer = JSONStream.parse('rows.*')
+  const parserPipeline = Chain.chain([
+    new Parser(),
+    new Pick({ filter: 'rows' }),
+    new StreamArray()
+  ])
 
   let rowCount = 0
-  streamer.on('data', /** @param {any} row */ row => {
-    rowCount++
-    onRow(row)
-  })
+  let settled = false
+  const settleReject = /** @param {any} err */ err => {
+    if (settled) return
+    settled = true
+    reject(err)
+  }
+  const settleResolve = () => {
+    if (settled) return
+    settled = true
+    resolve(undefined)
+  }
 
-  streamer.on('error', /** @param {Error} err */ err => {
-    logger.error('Stream parsing error:', err)
-    reject(new Error(`Stream parsing error: ${err.message}`))
-  })
+  /** @type {import('needle').ReadableStream} */let request
 
-  streamer.on('done', /** @param {Error|null} err */ err => {
+  parserPipeline.on('data', /** @param {{key:number,value:any}} chunk */ chunk => {
     try {
-      RetryableError.handleNetworkError(err)
-    } catch (e) {
-      reject(e)
+      rowCount++
+      onRow(chunk.value)
+    } catch (callbackErr) {
+      const err = callbackErr instanceof Error ? callbackErr : new Error(String(callbackErr))
+      parserPipeline.destroy(err)
+      settleReject(err)
     }
   })
 
-  streamer.on('end', () => {
-    logger.info(`Stream completed, processed ${rowCount} rows`)
-    resolve(undefined) // all work should be done in the stream
+  parserPipeline.on('error', /** @param {Error} err */ err => {
+    logger.error('Stream parsing error:', err)
+    settleReject(new Error(`Stream parsing error: ${err.message}`, { cause: err }))
   })
 
-  const req = method === 'GET'
+  parserPipeline.on('end', () => {
+    logger.info(`Stream completed, processed ${rowCount} rows`)
+    settleResolve()
+  })
+
+  request = method === 'GET'
     ? needle.get(url, mergedOpts)
     : needle.post(url, payload, mergedOpts)
 
-  req.on('response', response => {
+  request.on('response', response => {
     logger.debug(`Received response with status code: ${response.statusCode}`)
     if (RetryableError.isRetryableStatusCode(response.statusCode)) {
       logger.warn(`Retryable status code received: ${response.statusCode}`)
-      reject(new RetryableError('retryable error during stream query', response.statusCode))
+      settleReject(new RetryableError('retryable error during stream query', response.statusCode))
       // req.abort()
     }
   })
 
-  req.on('error', err => {
+  request.on('error', err => {
     logger.error('Network error during stream query:', err)
+    parserPipeline.destroy(err)
     try {
       RetryableError.handleNetworkError(err)
     } catch (retryErr) {
-      reject(retryErr)
+      settleReject(retryErr)
       return
     }
-    reject(err)
+    settleReject(err)
   })
 
-  req.pipe(streamer)
+  request.pipe(parserPipeline)
 })
