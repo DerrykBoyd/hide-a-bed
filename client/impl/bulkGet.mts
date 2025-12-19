@@ -5,44 +5,41 @@ import { DefaultRowSchema, type SimpleViewQueryResponseValidated, type ViewRow }
 import { createLogger } from './logger.mts'
 import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts'
 import { RetryableError } from './utils/errors.mts'
-import * as z4 from "zod/v4/core"
 import { z } from 'zod'
 
-export type BulkGetResponse<DocSchema extends z4.$ZodType> = SimpleViewQueryResponseValidated<DocSchema, z4.$ZodType, z4.$ZodObject<{
-  rev: z4.$ZodString;
+export type BulkGetResponse<DocSchema extends z.ZodType> = SimpleViewQueryResponseValidated<DocSchema, z.ZodType, z.ZodObject<{
+  rev: z.ZodString;
 }>>
 
-export type BulkGetOptions<DocSchema extends z4.$ZodType> = {
+export type BulkGetOptions<DocSchema extends z.ZodType> = {
   includeDocs?: boolean
   validate?: {
     docSchema?: DocSchema
   }
 }
 
-export type BulkGetDictionaryOptions<DocSchema extends z4.$ZodType> = Omit<BulkGetOptions<DocSchema>, 'includeDocs'>
+export type BulkGetDictionaryOptions<DocSchema extends z.ZodType> = Omit<BulkGetOptions<DocSchema>, 'includeDocs'>
 
-export type BulkGetDictionaryResult<DocSchema extends z4.$ZodType> = {
-  found: Record<string, z4.output<DocSchema>>
-  notFound: Record<string, z4.infer<typeof DefaultRowSchema>>
+export type BulkGetDictionaryResult<DocSchema extends z.ZodType> = {
+  found: Record<string, z.output<DocSchema>>
+  notFound: Record<string, z.infer<typeof DefaultRowSchema>>
 }
 
-function parseRows<DocSchema extends z4.$ZodType>(
+function parseRows<DocSchema extends z.ZodType>(
   rows: unknown,
   includeDocs: boolean,
-  docSchema: DocSchema | undefined
+  docSchema: DocSchema
 ): Array<ViewRow<DocSchema>> {
   if (!includeDocs) {
     const fallbackRows = z.array(DefaultRowSchema).parse(rows ?? [])
     return fallbackRows as Array<ViewRow<DocSchema>>
   }
 
-  const docType = (docSchema ?? z.any()) as z4.$ZodType
-
   const parsedRows = z.array(z.looseObject({
     id: z.string().optional(),
     key: z.any().nullish(),
     value: z.any().nullish(),
-    doc: docType,
+    doc: docSchema.nullish(), // allow errors to pass validation
     error: z.string().optional()
   })).parse(rows ?? [])
 
@@ -93,19 +90,19 @@ export async function _bulkGetWithOptions(
   options?: { includeDocs?: boolean }
 ): Promise<BulkGetResponse<typeof CouchDoc>>
 
-export async function _bulkGetWithOptions<DocSchema extends z4.$ZodType>(
+export async function _bulkGetWithOptions<DocSchema extends z.ZodType>(
   config: CouchConfigInput,
   ids: string[],
   options: { includeDocs: false }
 ): Promise<BulkGetResponse<typeof CouchDoc>>
 
-export async function _bulkGetWithOptions<DocSchema extends z4.$ZodType>(
+export async function _bulkGetWithOptions<DocSchema extends z.ZodType>(
   config: CouchConfigInput,
   ids: string[],
   options: { includeDocs: true; validate?: { docSchema?: DocSchema } }
 ): Promise<BulkGetResponse<DocSchema>>
 
-export async function _bulkGetWithOptions<DocSchema extends z4.$ZodType>(
+export async function _bulkGetWithOptions<DocSchema extends z.ZodType>(
   config: CouchConfigInput,
   ids: string[],
   options: BulkGetOptions<DocSchema> = {}
@@ -121,7 +118,7 @@ export async function _bulkGetWithOptions<DocSchema extends z4.$ZodType>(
     throw new Error(typeof body.reason === 'string' ? body.reason : 'could not fetch')
   }
 
-  const docSchema = options.validate?.docSchema
+  const docSchema = options.validate?.docSchema || CouchDoc
   const rows = parseRows(body.rows, includeDocs, docSchema)
 
   return {
@@ -135,36 +132,35 @@ export async function bulkGet(
   ids: string[]
 ): Promise<BulkGetResponse<typeof CouchDoc>>
 
-export async function bulkGet<DocSchema extends z4.$ZodType>(
+export async function bulkGet<DocSchema extends z.ZodType>(
   config: CouchConfigInput,
   ids: string[],
   options: BulkGetOptions<DocSchema>
 ): Promise<BulkGetResponse<DocSchema>>
 
-export async function bulkGet<DocSchema extends z4.$ZodType>(
+export async function bulkGet<DocSchema extends z.ZodType>(
   config: CouchConfigInput,
   ids: string[],
   options: BulkGetOptions<DocSchema> = {}
 ): Promise<BulkGetResponse<DocSchema>> {
-  const nextOptions: BulkGetOptions<DocSchema> = { ...options, includeDocs: true }
   return _bulkGetWithOptions<DocSchema>(config, ids, {
     includeDocs: true,
     validate: options.validate
   })
 }
 
-export async function bulkGetDictionary<DocSchema extends z4.$ZodType>(
+export async function bulkGetDictionary<DocSchema extends z.ZodType>(
   config: CouchConfigInput,
   ids: string[],
 ): Promise<BulkGetDictionaryResult<DocSchema>>
 
-export async function bulkGetDictionary<DocSchema extends z4.$ZodType>(
+export async function bulkGetDictionary<DocSchema extends z.ZodType>(
   config: CouchConfigInput,
   ids: string[],
   options: BulkGetDictionaryOptions<DocSchema>
 ): Promise<BulkGetDictionaryResult<DocSchema>>
 
-export async function bulkGetDictionary<DocSchema extends z4.$ZodType>(
+export async function bulkGetDictionary<DocSchema extends z.ZodType>(
   config: CouchConfigInput,
   ids: string[],
   options: BulkGetDictionaryOptions<DocSchema> = {}

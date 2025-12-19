@@ -62,25 +62,22 @@ const bound = bindConfig({
 
 const boundRes = await bound.options({
   maxRetries: 5,
-}).query('_design/trackedUrls/_view/tracked_listing_urls_created_by_agent_person_uuid', {
-  include_docs: true, reduce: false, limit: 10, validate: {
+}).bulkGet(["test-doc"], {
+  includeDocs: true, validate: {
     docSchema: z.object({
       _id: z.string(),
       accountUuid: z.string(),
       leadPersonUuid: z.string(),
-    }),
-    keySchema: z.tuple([z.string(), z.number()]),
-    valueSchema: z.null(),
+    })
   }
 })
 
-// boundRes.rows.forEach((row) => {
-//   row.key
-//   row.value
-//   if (row.doc) {
-//     console.log(row.key[0] + ' ' + row.key[1])
-//     console.log(row.doc.accountUuid + ' ' + row.doc.leadPersonUuid)
-//   }
-// })
+boundRes.rows.forEach((row) => {
+  row.key
+  row.value
+  if (row.doc) {
+    console.log(row.doc.accountUuid + ' ' + row.doc.leadPersonUuid)
+  }
+})
 
 
