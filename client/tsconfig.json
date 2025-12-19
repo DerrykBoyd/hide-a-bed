@@ -2,7 +2,8 @@
   "exclude": [
     "node_modules",
     "dist",
-    "types/output"
+    "types/output",
+    "docs"
   ],
   "compilerOptions": {
     "lib": [
