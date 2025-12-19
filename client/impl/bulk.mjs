@@ -110,7 +110,7 @@ export const bulkRemove = BulkRemove.implementAsync(async (config, ids) => {
   const resp = await bulkGet(config, ids)
   /** @type { Array<import('../schema/crud.mjs').CouchDocSchema> } toRemove */
   const toRemove = []
-  resp.rows.forEach(row => {
+  resp.rows?.forEach(row => {
     if (!row.doc) return
     try {
       const d = CouchDoc.parse(row.doc)
@@ -133,7 +133,7 @@ export const bulkRemoveMap = BulkRemoveMap.implementAsync(async (config, ids) =>
   const { rows } = await _bulkGetWithOptions(config, ids, { includeDocs: false })
 
   const results = []
-  for (const row of rows) {
+  for (const row of rows || []) {
     try {
       if (!row.value?.rev) throw new Error(`no rev found for doc ${row.id}`)
       if (!row.id) { throw new Error(`no id found for doc ${row}`) }
@@ -154,7 +154,7 @@ export const bulkGetDictionary = BulkGetDictionary.implementAsync(async (config,
   /** @type { import('../schema/bulk.mjs').BulkGetDictionaryResponseSchema } results */
   const results = { found: {}, notFound: {} }
 
-  resp.rows.forEach(
+  resp.rows?.forEach(
     /** @param { import('../schema/query.mts').DefaultRowSchema } row */
     row => {
       if (!row.key) return
