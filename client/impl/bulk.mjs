@@ -1,14 +1,14 @@
 // @ts-check
 import needle from 'needle'
 import { BulkSave, BulkGet, BulkRemove, BulkRemoveMap, BulkGetDictionary, BulkSaveTransaction, BulkGetWithOptions } from '../schema/bulk.mjs'
-import { withRetry } from './retry.mjs'
+import { withRetry } from './retry.mts'
 import { put, remove } from './crud.mjs'
-import { RetryableError } from './errors.mjs'
-import { TransactionSetupError, TransactionVersionConflictError, TransactionBulkOperationError, TransactionRollbackError } from './transactionErrors.mjs'
+import { RetryableError } from './errors.mts'
 import { createLogger } from './logger.mts'
 import { CouchDoc } from '../schema/crud.mjs'
 import { setupEmitter } from './trackedEmitter.mjs'
 import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts'
+import { TransactionSetupError, TransactionVersionConflictError, TransactionBulkOperationError, TransactionRollbackError } from './transactionErrors.mjs'
 
 /** @type { import('../schema/bulk.mjs').BulkSaveSchema } */
 export const bulkSave = BulkSave.implementAsync(async (config, docs) => {
@@ -202,7 +202,7 @@ export const bulkSaveTransaction = BulkSaveTransaction.implementAsync(async (con
   if (txnresp.error) {
     throw new TransactionSetupError('Failed to create transaction document', {
       error: txnresp.error,
-      response: txnresp.body
+      response: txnresp
     })
   }
 
@@ -265,6 +265,7 @@ export const bulkSaveTransaction = BulkSaveTransaction.implementAsync(async (con
 
     // Update transaction status to completed
     txnDoc.status = 'completed'
+    // @ts-ignore TODO fix this
     txnDoc._rev = txnresp.rev
     txnresp = await _put(txnDoc)
     logger.info('Transaction completed:', txnDoc)
@@ -305,6 +306,7 @@ export const bulkSaveTransaction = BulkSaveTransaction.implementAsync(async (con
 
     // Update transaction status to rolled back
     txnDoc.status = status
+    // @ts-ignore TODO fix this
     txnDoc._rev = txnresp.rev
     txnresp = await _put(txnDoc)
     logger.warn('Transaction rollback status updated:', txnDoc)

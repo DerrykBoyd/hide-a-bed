@@ -1,6 +1,6 @@
-import needle from 'needle'
-import { SimpleViewOptions, SimpleViewQueryResponse, ViewDoc, type SimpleViewQueryResponseValidated, type ViewOptions, type ViewRow, type ViewString } from '../schema/query.mts'
-import { RetryableError } from './errors.mjs'
+import needle, { type BodyData, type NeedleHttpVerbs } from 'needle'
+import { SimpleViewOptions, SimpleViewQueryResponse, type SimpleViewQueryResponseValidated, type ViewString } from '../schema/query.mts'
+import { RetryableError } from './errors.mts'
 import { createLogger } from './logger.mts'
 
 import { CouchConfig, type CouchConfigInput } from '../schema/config.mjs'
@@ -12,13 +12,13 @@ import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts'
 export async function query(
   config: CouchConfigInput,
   view: ViewString,
-  options?: ViewOptions,
+  options?: SimpleViewOptions,
 ): Promise<SimpleViewQueryResponse>
 
 export async function query<DocSchema extends z4.$ZodType, KeySchema extends z4.$ZodType, ValueSchema extends z4.$ZodType>(
   config: CouchConfigInput,
   view: ViewString,
-  options: ViewOptions & {
+  options: SimpleViewOptions & {
     include_docs: false,
     validate?: {
       keySchema?: KeySchema,
@@ -30,7 +30,7 @@ export async function query<DocSchema extends z4.$ZodType, KeySchema extends z4.
 export async function query<DocSchema extends z4.$ZodType, KeySchema extends z4.$ZodType, ValueSchema extends z4.$ZodType>(
   config: CouchConfigInput,
   view: ViewString,
-  options: ViewOptions & {
+  options: SimpleViewOptions & {
     include_docs: true,
     validate?: {
       docSchema?: DocSchema,
@@ -62,7 +62,7 @@ export async function query<DocSchema extends z4.$ZodType, KeySchema extends z4.
  * @throws {@link z.ZodError} When the configuration or validation schemas fail to parse.
  * @throws {@link Error} When CouchDB returns a non-retryable error payload.
  */
-export async function query<DocSchema extends z4.$ZodType, KeySchema extends z4.$ZodType, ValueSchema extends z4.$ZodType>(_config: CouchConfigInput, view: ViewString, options: ViewOptions & {
+export async function query<DocSchema extends z4.$ZodType, KeySchema extends z4.$ZodType, ValueSchema extends z4.$ZodType>(_config: CouchConfigInput, view: ViewString, options: SimpleViewOptions & {
   validate?: {
     docSchema?: DocSchema,
     keySchema?: KeySchema,
@@ -75,21 +75,23 @@ export async function query<DocSchema extends z4.$ZodType, KeySchema extends z4.
   logger.debug('Query options:', SimpleViewOptions.parse(options || {}))
 
   if (!configParseResult.success) {
-    logger.error('Invalid configuration provided:', configParseResult.error)
+    logger.error(`Invalid configuration provided: ${z.prettifyError(configParseResult.error)}`)
     throw configParseResult.error
   }
 
   const config = configParseResult.data
 
   let qs = queryString(options)
-  let method = 'GET'
-  let payload = null
+  let method: NeedleHttpVerbs = 'get'
+  let payload: BodyData = null
+
   const opts = {
     json: true,
     headers: {
       'Content-Type': 'application/json'
     }
   }
+
   const mergedOpts = mergeNeedleOpts(config, opts)
 
   // If keys are supplied, issue a POST to circumvent GET query string limits
@@ -101,30 +103,30 @@ export async function query<DocSchema extends z4.$ZodType, KeySchema extends z4.
 
     const _options = structuredClone(options)
     delete _options.keys
-    qs = queryString(_options) // dont need descending or skip, those will work
+    qs = queryString(_options)
 
     const keysAsString = `keys=${JSON.stringify(options.keys)}`
 
     if (keysAsString.length + qs.length + 1 <= MAX_URL_LENGTH) {
       // If the keys are short enough, do a GET. we do this to work around
       // Safari not understanding 304s on POSTs (see pouchdb/pouchdb#1239)
-      method = 'GET'
+      method = 'get'
       if (qs.length > 0) qs += '&'
       else qs = ''
       qs += keysAsString
     } else {
-      method = 'POST'
+      method = 'post'
       payload = { keys: options.keys }
     }
   }
 
   logger.debug('Generated query string:', qs)
   const url = `${config.couch}/${view}?${qs}`
-  // @ts-ignore
   let results
+
   try {
     logger.debug(`Sending ${method} request to: ${url}`)
-    results = (method === 'GET') ? await needle('get', url, mergedOpts) : await needle('post', url, payload, mergedOpts)
+    results = (method === 'get') ? await needle('get', url, mergedOpts) : await needle('post', url, payload, mergedOpts)
   } catch (err) {
     logger.error('Network error during query:', err)
     RetryableError.handleNetworkError(err)
@@ -143,7 +145,7 @@ export async function query<DocSchema extends z4.$ZodType, KeySchema extends z4.
   }
 
   if (body.error) {
-    logger.error(`Query error: ${body}`)
+    logger.error(`Query error: ${JSON.stringify(body)}`)
     throw new Error(`CouchDB query error: ${body.error} - ${body.reason || ''}`)
   }
 
@@ -161,6 +163,7 @@ export async function query<DocSchema extends z4.$ZodType, KeySchema extends z4.
 
   logger.info(`Successfully executed view query: ${view}`)
   logger.debug('Query response:', body)
+
   return body
 }
 

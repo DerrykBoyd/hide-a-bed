@@ -34,7 +34,7 @@ suite('Database Tests', () => {
       const doc = await db.put({ _id: 'test-doc', data: 'hello world' })
       assert.ok(doc.ok, 'Document created')
       const fetched = await db.get('test-doc')
-      assert.strictEqual(fetched.data, 'hello world', 'Fetched document matches')
+      assert.strictEqual(fetched?.data, 'hello world', 'Fetched document matches')
     })
     await t.test('get with no document', async () => {
       const notThereDoc = await get(config, 'test-doc-not-there')
@@ -68,7 +68,7 @@ suite('Database Tests', () => {
     })
     await t.test('bulk get, including one doc that does not exist', async () => {
       const results = await db.bulkGet(['test-doc', 'notThereDoc'])
-      assert.strictEqual(results.rows.length, 2, 'two rows returned')
+      assert.strictEqual(results.rows?.length, 2, 'two rows returned')
       assert.strictEqual(results.rows[0].id, 'test-doc')
       assert.strictEqual(results.rows[1].error, 'not_found')
       console.log(results)
@@ -130,10 +130,10 @@ suite('Database Tests', () => {
 
         // lets make sure doc a has data from before, and
         const finalDocs = await db.bulkGet(['a', 'rollback2', 'b'])
-        assert.strictEqual(finalDocs.rows.length, 3, 'two rows returned')
-        assert.strictEqual(finalDocs.rows[0].doc.data, 'interfered', 'doc has the interfered data')
+        assert.strictEqual(finalDocs.rows?.length, 3, 'two rows returned')
+        assert.strictEqual(finalDocs.rows[0].doc?.data, 'interfered', 'doc has the interfered data')
         assert.ok(!finalDocs.rows[1].doc, 'doc b was deleted, and not saved')
-        assert.strictEqual(finalDocs.rows[2].doc.data, 'new doc', 'doc b was rolled back')
+        assert.strictEqual(finalDocs.rows[2].doc?.data, 'new doc', 'doc b was rolled back')
       }
     })
     await t.test('TransactionVersionConflictError test', async () => {
@@ -293,10 +293,10 @@ suite('Database Tests', () => {
 
       // Verify the document exists
       const fetchedDoc = await db.get('delete-test-doc')
-      assert.strictEqual(fetchedDoc.data, 'to be deleted', 'Document exists and has correct data')
+      assert.strictEqual(fetchedDoc?.data, 'to be deleted', 'Document exists and has correct data')
 
       // Delete the document
-      const deleteResult = await db.remove('delete-test-doc', fetchedDoc._rev)
+      const deleteResult = await db.remove('delete-test-doc', fetchedDoc._rev as string)
       assert.ok(deleteResult.ok, 'Document deleted successfully')
 
       // Verify the document no longer exists

@@ -1,7 +1,7 @@
 // @ts-check
 import needle from 'needle'
 import { CouchGet, CouchPut, CouchGetWithOptions, CouchGetAtRev, CouchRemove } from '../schema/crud.mjs'
-import { RetryableError, NotFoundError } from './errors.mjs'
+import { RetryableError, NotFoundError } from './errors.mts'
 import { createLogger } from './logger.mts'
 import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts'
 

@@ -5,9 +5,9 @@ import Parser from 'stream-json/Parser.js'
 import Pick from 'stream-json/filters/Pick.js'
 import StreamArray from 'stream-json/streamers/StreamArray.js'
 import { CouchConfig, type CouchConfigInput } from '../schema/config.mjs'
-import { RetryableError } from './errors.mjs'
+import { RetryableError } from './errors.mts'
 import { createLogger } from './logger.mts'
-import type { DefaultRowSchema, ViewOptions } from '../schema/query.mts'
+import type { DefaultRowSchema, SimpleViewOptions } from '../schema/query.mts'
 import { queryString } from './utils/queryString.mts'
 import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts'
 
@@ -29,7 +29,7 @@ type HttpMethod = 'GET' | 'POST'
 export async function queryStream(
   rawConfig: CouchConfigInput,
   view: string,
-  options: ViewOptions | undefined,
+  options: SimpleViewOptions | undefined,
   onRow: OnRow
 ): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -38,7 +38,7 @@ export async function queryStream(
     logger.info(`Starting view query stream: ${view}`)
     logger.debug('Query options:', options)
 
-    const queryOptions: ViewOptions = options ?? {}
+    const queryOptions: SimpleViewOptions = options ?? {}
 
     let method: HttpMethod = 'GET'
     let payload: Record<string, unknown> | null = null

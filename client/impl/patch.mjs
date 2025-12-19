@@ -1,7 +1,7 @@
 import { get, put } from './crud.mjs'
 import { Patch, PatchDangerously } from '../schema/patch.mjs'
 import { createLogger } from './logger.mts'
-import { setTimeout } from "node:timers/promises";
+import { setTimeout } from 'node:timers/promises'
 
 /** @type { import('../schema/patch.mjs').PatchSchema } */
 export const patch = Patch.implementAsync(async (config, id, properties) => {
@@ -68,7 +68,7 @@ export const patchDangerously = PatchDangerously.implementAsync(async (config, i
       delay *= config.backoffFactor || 2
       logger.debug(`Next retry delay: ${delay}ms`)
     } catch (err) {
-      if (typeof err === 'object' && err !== null && "message" in err && err.message === 'not_found') {
+      if (typeof err === 'object' && err !== null && 'message' in err && err.message === 'not_found') {
         logger.warn(`Document ${id} not found during patch operation`)
         return { ok: false, statusCode: 404, error: 'not_found' }
       }

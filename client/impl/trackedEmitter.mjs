@@ -3,12 +3,12 @@ import { EventEmitter } from 'events'
 
 export class TrackedEmitter extends EventEmitter {
   // create a constructor with some options
-  constructor(options) {
+  constructor (options) {
     super(options)
     if (options.delay) this.delay = options.delay
   }
 
-  emit(event, ...args) {
+  emit (event, ...args) {
     const listeners = this.listeners(event)
     let completed = 0
 

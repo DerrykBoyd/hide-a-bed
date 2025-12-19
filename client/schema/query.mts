@@ -58,19 +58,13 @@ export const SimpleViewOptions = z.object({
   update: z.enum(['true', 'false', 'lazy']).optional().describe('whether to update the view index before returning results, default true'),
   update_seq: z.boolean().optional().describe('include the update sequence in the result'),
 }).describe('base options for a CouchDB view query')
-export type ViewOptions = z.input<typeof SimpleViewOptions>
-
-// export const SimpleViewQuery = z.function({ input: [CouchConfig, z.string().describe('the view name'), SimpleViewOptions], output: z.promise(SimpleViewQueryResponse) })
-// export type SimpleViewQuery = z.infer<typeof SimpleViewQuery>
-
-// export const SimpleViewQueryBound = z.function({ input: [z.string().describe('the view name'), SimpleViewOptions], output: z.promise(SimpleViewQueryResponse) })
-// export type SimpleViewQueryBound = z.infer<typeof SimpleViewQueryBound>
+export type SimpleViewOptions = z.input<typeof SimpleViewOptions>
 
 export type BoundQuery = {
-  (view: ViewString, options?: ViewOptions): Promise<SimpleViewQueryResponse>;
+  (view: ViewString, options?: SimpleViewOptions): Promise<SimpleViewQueryResponse>;
   <DocSchema extends ZodType, KeySchema extends ZodType, ValueSchema extends ZodType>(
     view: ViewString,
-    options: ViewOptions & {
+    options: SimpleViewOptions & {
       include_docs: false;
       validate?: {
         keySchema?: KeySchema;
@@ -80,7 +74,7 @@ export type BoundQuery = {
   ): Promise<SimpleViewQueryResponseValidated<DocSchema, KeySchema, ValueSchema>>;
   <DocSchema extends ZodType, KeySchema extends ZodType, ValueSchema extends ZodType>(
     view: ViewString,
-    options: ViewOptions & {
+    options: SimpleViewOptions & {
       include_docs: true;
       validate?: {
         docSchema?: DocSchema;

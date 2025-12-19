@@ -37,8 +37,8 @@ This document orients automation and AI assistants working in hide-a-bed.
 ## Decision Heuristics for Agents
 
 - Before edits, scan related README.md files for domain context.
-- If touching CouchDB request logic, verify error handling in client/impl/errors.mjs and transactionErrors.mjs.
-- Mirror existing retry/backoff helpers when adding network calls (see client/impl/retry.mjs).
+- If touching CouchDB request logic, verify error handling in client/impl/errors.mts and transactionerrors.mts.
+- Mirror existing retry/backoff helpers when adding network calls (see client/impl/retry.mts).
 - Update or add tests alongside feature changes. Prefer placing new client tests in client/tests/ and stub tests in stub/tests/.
 - For cross-package changes, adjust stub/ and test/ as needed to keep APIs aligned.
 

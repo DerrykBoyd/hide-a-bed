@@ -5,13 +5,15 @@ import { createLock, removeLock } from './impl/sugar/lock.mjs'
 import { watchDocs } from './impl/sugar/watch.mjs'
 import { query } from './impl/query.mts'
 import { queryStream } from './impl/stream.mts'
-import { createQuery } from './impl/queryBuilder.mjs'
-import { withRetry } from './impl/retry.mjs'
+import { createQuery } from './impl/queryBuilder.mts'
+import { withRetry } from './impl/retry.mts'
 
 import { CouchConfig, type CouchConfigSchema } from './schema/config.mjs'
+import { QueryBuilder } from './impl/queryBuilder.mts'
 import type z from 'zod'
 import type { BoundQuery } from './schema/query.mts'
 import { getDBInfo } from './impl/utils/getDBInfo.mts'
+import { NotFoundError, RetryableError, type NetworkError } from './impl/errors.mts'
 
 /**
  * Bind core CouchDB operations to a specific configuration, optionally applying retry wrappers.
@@ -106,9 +108,24 @@ export {
 
   bindConfig,
   withRetry,
+  QueryBuilder,
   createQuery,
   createLock,
-  removeLock
+  removeLock,
+
+  // Error types
+  NotFoundError,
+  RetryableError,
+
 }
 
-export type { ViewString, ViewRow, ViewOptions, SimpleViewQueryResponse, SimpleViewQueryResponseValidated } from './schema/query.mts'
+export type {
+  ViewString,
+  ViewRow,
+  SimpleViewOptions,
+  SimpleViewQueryResponse,
+  SimpleViewQueryResponseValidated,
+  DefaultRowSchema
+} from './schema/query.mts'
+export type { RetryOptions } from './impl/retry.mts'
+export type { NetworkError } from './impl/errors.mts'

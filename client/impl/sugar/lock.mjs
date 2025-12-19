@@ -25,7 +25,7 @@ export const createLock = CreateLock.implementAsync(async (config, docId, option
     logger.info(`Lock created for ${docId} by ${options.username}`)
     return result.ok === true
   } catch (error) {
-    if (typeof error === 'object' && error !== null && "status" in error && error.status === 409) {
+    if (typeof error === 'object' && error !== null && 'status' in error && error.status === 409) {
       logger.warn(`Lock conflict for ${docId} - already locked`)
     } else {
       logger.error(`Error creating lock for ${docId}:`, error)

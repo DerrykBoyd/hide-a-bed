@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import test, { suite } from 'node:test';
 import { queryString } from './queryString.mts';
-import type { ViewOptions } from '../../schema/query.mts';
+import type { SimpleViewOptions } from '../../schema/query.mts';
 
-const keysToQuote: Array<keyof ViewOptions> = [
+const keysToQuote: Array<keyof SimpleViewOptions> = [
   'endkey_docid',
   'endkey',
   'key',
@@ -19,9 +19,9 @@ suite('queryString', () => {
 
     for (const key of keysToQuote) {
       if (key === 'keys') continue;
-      const optionValue: ViewOptions = {
+      const optionValue: SimpleViewOptions = {
         [key]: key === 'update' ? 'lazy' : 'banana'
-      } as ViewOptions;
+      } as SimpleViewOptions;
       const encoded = queryString(optionValue);
       const params = new URLSearchParams(encoded);
       encodedByKey.set(key as string, params.get(key as string));
