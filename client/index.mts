@@ -24,11 +24,13 @@ import { NotFoundError, RetryableError, type NetworkError } from './impl/utils/e
 import type { BoundBulkGet } from './schema/bulkGet.mts'
 
 /**
+ * @internal
+ * 
  * Bind core CouchDB operations to a specific configuration, optionally applying retry wrappers.
  * @param config The CouchDB configuration
  * @returns An object with CouchDB operations bound to the provided configuration
  */
-function doBind(config: CouchConfigSchema) {
+export function doBind(config: CouchConfigSchema) {
   // Default retry options
   const retryOptions = {
     maxRetries: config.maxRetries ?? 10,
@@ -142,10 +144,10 @@ export type {
   SimpleViewOptions,
   SimpleViewQueryResponse,
   SimpleViewQueryResponseValidated,
-  DefaultRowSchema
+  DefaultRowSchema, BoundQuery
 } from './schema/query.mts'
 export type { RetryOptions } from './impl/retry.mts'
 export type { NetworkError } from './impl/utils/errors.mts'
-export type { BoundInstance }
+export type { BoundInstance, BoundBulkGet }
 export type { OnRow } from './impl/stream.mts'
 export type { CouchConfig } from './schema/config.mjs'
