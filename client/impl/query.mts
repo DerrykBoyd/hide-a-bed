@@ -4,7 +4,7 @@ import { RetryableError } from './errors.mjs'
 import { createLogger } from './logger.mjs'
 
 import { mergeNeedleOpts } from './util.mjs'
-import { CouchConfig, type CouchConfigInput, type CouchConfigSchema } from '../schema/config.mjs'
+import { CouchConfig, type CouchConfigInput } from '../schema/config.mjs'
 import * as z4 from "zod/v4/core"
 import z from 'zod'
 
