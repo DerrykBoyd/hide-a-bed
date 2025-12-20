@@ -1,10 +1,10 @@
 import needle from 'needle';
 import { RetryableError, NotFoundError } from '../index.mts';
-import { CouchGet, CouchGetAtRev, CouchGetWithOptions } from '../schema/crud.mjs';
+import { CouchGet, CouchGetAtRev, CouchGetWithOptions } from '../schema/couch.schema.mjs';
 import { createLogger } from './logger.mts';
 import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts';
 
-/** @type { import('../schema/crud.mjs').CouchGetSchema } */
+/** @type { import('../schema/couch.schema.mjs').CouchGetSchema } */
 
 export const get = CouchGet.implementAsync(async (config, id) => {
   const getOptions = {};
@@ -15,7 +15,7 @@ export const getAtRev = CouchGetAtRev.implementAsync(async (config, id, rev) => 
   const getOptions = { rev }
   return _getWithOptions(config, id, getOptions)
 });
-/** @type { import('../schema/crud.mjs').CouchGetWithOptionsSchema } */
+/** @type { import('../schema/couch.schema.mjs').CouchGetWithOptionsSchema } */
 
 const _getWithOptions = CouchGetWithOptions.implementAsync(async (config, id, getOpts) => {
   const logger = createLogger(config)

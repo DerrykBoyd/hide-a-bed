@@ -1,5 +1,5 @@
 import { BulkRemove, BulkRemoveMap } from '../schema/bulk.mjs';
-import { CouchDoc } from '../schema/crud.mjs';
+import { CouchDoc } from '../schema/couch.schema.mts';
 import { _bulkGetWithOptions, bulkGet } from './bulkGet.mts';
 import { bulkSave } from './bulkSave.mjs';
 import { createLogger } from './logger.mts';
@@ -11,7 +11,7 @@ export const bulkRemove = BulkRemove.implementAsync(async (config, ids) => {
   const logger = createLogger(config);
   logger.info(`Starting bulk remove for ${ids.length} documents`);
   const resp = await bulkGet(config, ids);
-  /** @type { Array<import('../schema/crud.mjs').CouchDocSchema> } toRemove */
+  /** @type { Array<import('../schema/couch.schema.mts').CouchDocSchema> } toRemove */
   const toRemove = [];
   resp.rows?.forEach(row => {
     if (!row.doc) return;

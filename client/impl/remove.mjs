@@ -1,10 +1,10 @@
 import needle from 'needle';
 import { RetryableError } from '../index.mts';
-import { CouchRemove } from '../schema/crud.mjs';
+import { CouchRemove } from '../schema/couch.schema.mts';
 import { createLogger } from './logger.mts';
 import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts';
 
-/** @type { import('../schema/crud.mjs').CouchRemoveSchema } */
+/** @type { import('../schema/couch.schema.mts').CouchRemoveSchema } */
 
 export const remove = CouchRemove.implementAsync(async (config, id, rev) => {
   const logger = createLogger(config);

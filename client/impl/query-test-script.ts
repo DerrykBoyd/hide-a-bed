@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { query } from "./query.mts"
-import { bindConfig, queryStream } from "../index.mts"
+import { bindConfig, get, queryStream } from "../index.mts"
 
 const config = {
   couch: "http://localhost:5984/plumber",
@@ -11,7 +11,7 @@ const config = {
   logger: console,
 } satisfies Parameters<typeof query>[0];
 
-const res = await queryStream(
+const resStream = await queryStream(
   config,
   '_all_docs',
   {
@@ -36,13 +36,66 @@ const res = await queryStream(
   }
 )
 
-// res.rows.forEach((row) => {
-//   row.key
-//   row.value
-//   if (row.doc) {
-//     row.doc.values
-//   }
-// })
+const res = await query(
+  config,
+  '_all_docs',
+  {
+    include_docs: true,
+    limit: 20,
+    validate: {
+      docSchema: z.looseObject({
+        _id: z.string(),
+        _rev: z.string(),
+        foo: z.string(),
+      }),
+      keySchema: z.string(),
+      valueSchema: z.number(),
+    }
+  }
+)
+
+res.rows.forEach((row) => {
+  row.key
+  row.value
+  if (row.doc) {
+    row.doc.foo
+  }
+})
+
+const boundQuery = bindConfig({
+  ...config,
+  couch: "http://localhost:5984/hide-a-bed-test",
+  bindWithRetry: true,
+})
+
+const boundRes2 = await boundQuery.query(
+  '_all_docs',
+  {
+    include_docs: true,
+    limit: 10,
+    validate: {
+      docSchema: z.looseObject({
+        _id: z.string(),
+        _rev: z.string(),
+        foo: z.string(),
+        nested: z.object({
+          a: z.number(),
+          b: z.string(),
+        })
+      }),
+      keySchema: z.string(),
+      valueSchema: z.number(),
+    }
+  }
+)
+
+boundRes2.rows.forEach((row) => {
+  row.key
+  row.value
+  if (row.doc) {
+    row.doc.foo
+  }
+})
 
 // const res2 = await query(
 //   config,
@@ -60,24 +113,34 @@ const bound = bindConfig({
   bindWithRetry: true,
 })
 
-const boundRes = await bound.options({
+const boundGetRes = await bound.options({
   maxRetries: 5,
-}).bulkGet(["test-doc"], {
-  includeDocs: true, validate: {
+}).get("test-doc", {
+  validate: {
     docSchema: z.object({
       _id: z.string(),
       accountUuid: z.string(),
       leadPersonUuid: z.string(),
+      test: z.object({
+        nested: z.string(),
+      })
     })
   }
 })
 
-boundRes.rows.forEach((row) => {
-  row.key
-  row.value
-  if (row.doc) {
-    console.log(row.doc.accountUuid + ' ' + row.doc.leadPersonUuid)
+boundGetRes?.leadPersonUuid
+
+const getRes = await get(config, "test-doc", {
+  validate: {
+    docSchema: z.object({
+      _id: z.string(),
+      accountUuid: z.string(),
+      leadPersonUuid: z.string(),
+      some: z.object({
+        nested: z.string(),
+      })
+    })
   }
 })
 
-
+getRes?.some.nested

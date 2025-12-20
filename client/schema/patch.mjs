@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { CouchConfig } from './config.mjs'
-import { CouchDocResponse } from './crud.mjs'
+import { CouchDocResponse } from './couch.schema.mts'
 
 export const PatchProperties = z.record(z.string(), z.any())
 export const StrictPatchProperties = z.object({

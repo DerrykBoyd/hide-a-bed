@@ -102,6 +102,42 @@ suite('Database Tests', () => {
         (err: any) => err?.name === 'ZodError'
       )
     })
+    await t.test('get validates docs with schema', async () => {
+      const docId = 'get-schema-doc'
+      const { rev } = await db.put({ _id: docId, kind: 'example', data: 'hello' })
+
+      const schema = z.looseObject({
+        _id: z.string(),
+        kind: z.literal('example'),
+        data: z.string()
+      })
+
+      const validated = await db.get(docId, {
+        validate: {
+          docSchema: schema
+        }
+      })
+      assert.strictEqual(validated?.kind, 'example', 'doc schema applied to get')
+
+      const atRev = await db.getAtRev(docId, rev!, {
+        validate: {
+          docSchema: schema
+        }
+      })
+      assert.strictEqual(atRev?.data, 'hello', 'getAtRev also validates doc schema')
+
+      await assert.rejects(
+        async () => get(config, docId, {
+          validate: {
+            docSchema: z.object({
+              _id: z.string(),
+              data: z.number()
+            })
+          }
+        }),
+        (err: any) => err?.name === 'ZodError'
+      )
+    })
     let _rev: string | null | undefined = null
     await t.test('a transaction', async () => {
       const docs = [{ _id: 'a', data: 'something' }]

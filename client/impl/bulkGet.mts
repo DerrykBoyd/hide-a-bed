@@ -1,6 +1,6 @@
 import needle from 'needle'
 import { CouchConfig, type CouchConfigInput } from '../schema/config.mjs'
-import { CouchDoc } from '../schema/crud.mjs'
+import { CouchDoc } from '../schema/couch.schema.mts'
 import { DefaultRowSchema, type SimpleViewQueryResponseValidated, type ViewRow } from '../schema/query.mts'
 import { createLogger } from './logger.mts'
 import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts'
@@ -135,7 +135,7 @@ export async function bulkGet(
 export async function bulkGet<DocSchema extends z.ZodType>(
   config: CouchConfigInput,
   ids: string[],
-  options: BulkGetOptions<DocSchema>
+  options: BulkGetOptions<DocSchema> | undefined
 ): Promise<BulkGetResponse<DocSchema>>
 
 export async function bulkGet<DocSchema extends z.ZodType>(

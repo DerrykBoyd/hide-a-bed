@@ -2,7 +2,7 @@ import { z } from 'zod'
 import * as z4 from "zod/v4/core"
 import { CouchConfig } from './config.mjs'
 import { SimpleViewQueryResponse, DefaultRowSchema } from './query.mts'
-import { CouchDoc, CouchDocResponse } from './crud.mjs'
+import { CouchDoc, CouchDocResponse } from './couch.schema.mts'
 
 export const BulkSaveRow = z.object({
   ok: z.boolean().nullish(),

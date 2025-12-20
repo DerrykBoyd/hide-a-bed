@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { CouchConfig } from '../config.mjs'
-import { CouchDoc } from '../crud.mjs'
+import { CouchDoc } from '../couch.schema.mts'
 
 export const Lock = CouchDoc.extend({
   type: z.literal('lock'),

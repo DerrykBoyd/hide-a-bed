@@ -5,8 +5,8 @@ import { bulkRemove } from './impl/bulkRemove.mjs'
 import { bulkSave } from './impl/bulkSave.mjs'
 import { remove } from './impl/remove.mjs'
 import { put } from './impl/put.mjs'
-import { getAtRev } from './impl/get.mjs'
-import { get } from './impl/get.mjs'
+import { getAtRev, type BoundGet, type BoundGetAtRev } from './impl/get.mts'
+import { get } from './impl/get.mts'
 import { patch, patchDangerously } from './impl/patch.mjs'
 import { createLock, removeLock } from './impl/sugar/lock.mjs'
 import { watchDocs } from './impl/sugar/watch.mjs'
@@ -38,13 +38,15 @@ export function doBind(config: CouchConfigSchema) {
     backoffFactor: config.backoffFactor ?? 2
   }
 
-  const queryBound = ((view: Parameters<typeof query>[1], options: Parameters<typeof query>[2]) => query(config, view, options)) as BoundQuery
   const bulkGetBound = ((ids: Parameters<typeof bulkGet>[1], options: Parameters<typeof bulkGet>[2]) => bulkGet(config, ids, options)) as BoundBulkGet
+  const queryBound = ((view: Parameters<typeof query>[1], options: Parameters<typeof query>[2]) => query(config, view, options)) as BoundQuery
+  const getBound: BoundGet = (id, options) => get(config, id, options)
+  const getAtRevBound: BoundGetAtRev = (id, rev, options) => getAtRev(config, id, rev, options)
 
   // Create the object without the config property first
   const result = {
-    get: config.bindWithRetry ? withRetry(get.bind(null, config), retryOptions) : get.bind(null, config),
-    getAtRev: config.bindWithRetry ? withRetry(getAtRev.bind(null, config), retryOptions) : getAtRev.bind(null, config),
+    get: config.bindWithRetry ? withRetry(getBound, retryOptions) as BoundGet : getBound,
+    getAtRev: config.bindWithRetry ? withRetry(getAtRevBound, retryOptions) as BoundGetAtRev : getAtRevBound,
     put: config.bindWithRetry ? withRetry(put.bind(null, config), retryOptions) : put.bind(null, config),
     remove: config.bindWithRetry ? withRetry(remove.bind(null, config), retryOptions) : remove.bind(null, config),
     bulkGet: config.bindWithRetry ? withRetry(bulkGetBound, retryOptions) as BoundBulkGet : bulkGetBound,
@@ -137,6 +139,8 @@ export type {
   BulkGetResponse
 } from './impl/bulkGet.mts'
 
+export type { GetOptions, BoundGet, BoundGetAtRev } from './impl/get.mts'
+
 
 export type {
   ViewString,
@@ -151,3 +155,4 @@ export type { NetworkError } from './impl/utils/errors.mts'
 export type { BoundInstance, BoundBulkGet }
 export type { OnRow } from './impl/stream.mts'
 export type { CouchConfig } from './schema/config.mjs'
+export type { CouchDoc } from './schema/couch.schema.mts'

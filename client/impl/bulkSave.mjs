@@ -107,10 +107,10 @@ export const bulkSaveTransaction = BulkSaveTransaction.implementAsync(async (con
   logger.debug('Checked document revisions:', existingDocs)
   await emitter.emit('transaction-revs-checked', existingDocs)
 
-  /** @type {Record<string, import('../schema/crud.mjs').CouchDocSchema>} providedDocsById */
+  /** @type {Record<string, import('../schema/couch.schema.mts').CouchDocSchema>} providedDocsById */
   const providedDocsById = {}
   docs.forEach((
-    /** @type {import('../schema/crud.mjs').CouchDocSchema} */ d
+    /** @type {import('../schema/couch.schema.mts').CouchDocSchema} */ d
   ) => {
     if (!d._id) return
     providedDocsById[d._id] = d
@@ -161,7 +161,7 @@ export const bulkSaveTransaction = BulkSaveTransaction.implementAsync(async (con
     logger.error('Transaction failed, attempting rollback:', error)
 
     // Rollback changes
-    /** @type {Array<import('../schema/crud.mjs').CouchDocSchema>} */
+    /** @type {Array<import('../schema/couch.schema.mts').CouchDocSchema>} */
     const toRollback = []
     potentialExistingDocsToRollack.forEach(row => {
       if (!row.id || !row.rev) return

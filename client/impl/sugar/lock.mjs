@@ -1,6 +1,6 @@
 import { CreateLock, RemoveLock } from '../../schema/sugar/lock.mjs'
 import { put } from '../put.mjs'
-import { get } from '../get.mjs'
+import { get } from '../get.mts'
 import { createLogger } from '../logger.mts'
 
 /** @type {import('../../schema/sugar/lock.mjs').CreateLockSchema} */
