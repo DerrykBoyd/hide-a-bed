@@ -4,7 +4,7 @@ import Chain from 'stream-chain'
 import Parser from 'stream-json/Parser.js'
 import Pick from 'stream-json/filters/Pick.js'
 import StreamArray from 'stream-json/streamers/StreamArray.js'
-import { CouchConfig, type CouchConfigInput } from '../schema/config.mjs'
+import { CouchConfig, type CouchConfigInput } from '../schema/config.mts'
 import { RetryableError } from './utils/errors.mts'
 import { createLogger } from './logger.mts'
 import type { DefaultRowSchema, SimpleViewOptions } from '../schema/query.mts'
@@ -121,6 +121,8 @@ export async function queryStream(
       if (RetryableError.isRetryableStatusCode(response.statusCode)) {
         logger.warn(`Retryable status code received: ${response.statusCode}`)
         settleReject(new RetryableError('retryable error during stream query', response.statusCode))
+        // @ts-expect-error bad type?
+        request.destroy()
       }
     })
 

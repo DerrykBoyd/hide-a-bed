@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test, { suite } from 'node:test'
-import type { CouchConfigInput } from '../schema/config.mjs'
+import type { CouchConfigInput } from '../schema/config.mts'
 import { createLogger, type Logger } from './logger.mts'
 
 const baseConfig = (): CouchConfigInput => ({

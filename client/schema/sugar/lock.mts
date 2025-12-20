@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { CouchConfig } from '../config.mjs'
+import { CouchConfig } from '../config.mts'
 import { CouchDoc } from '../couch.schema.mts'
 
 export const Lock = CouchDoc.extend({
@@ -8,21 +8,27 @@ export const Lock = CouchDoc.extend({
   lockedAt: z.string().describe('ISO timestamp when lock was created'),
   lockedBy: z.string().describe('username of who created the lock')
 })
-/** @typedef { z.infer<typeof Lock> } LockSchema */
+export
+  type LockSchema = z.infer<typeof Lock>
 
 export const LockOptions = z.object({
   enableLocking: z.boolean().prefault(true).describe('whether locking is enabled'),
   username: z.string().describe('username to attribute locks to')
 })
-/** @typedef { z.infer<typeof LockOptions> } LockOptionsSchema */
+export
+  type LockOptionsSchema = z.infer<typeof LockOptions>
 
 export const CreateLock = z.function({ input: [CouchConfig, z.string().describe('document ID to lock'), LockOptions], output: z.promise(z.boolean()) })
-/** @typedef { z.infer<typeof CreateLock> } CreateLockSchema */
+export
+  type CreateLockSchema = z.infer<typeof CreateLock>
 export const CreateLockBound = z.function({ input: [z.string().describe('document ID to lock'), LockOptions], output: z.promise(z.boolean()) })
-/** @typedef { z.infer<typeof CreateLockBound> } CreateLockBoundSchema */
+export
+  type CreateLockBoundSchema = z.infer<typeof CreateLockBound>
 
 export const RemoveLock = z.function({ input: [CouchConfig, z.string().describe('document ID to unlock'), LockOptions], output: z.promise(z.void()) })
-/** @typedef { z.infer<typeof RemoveLock> } RemoveLockSchema */
+export
+  type RemoveLockSchema = z.infer<typeof RemoveLock>
 
 export const RemoveLockBound = z.function({ input: [z.string().describe('document ID to unlock'), LockOptions], output: z.promise(z.void()) })
-/** @typedef { z.infer<typeof RemoveLockBound> } RemoveLockBoundSchema */
+export
+  type RemoveLockBoundSchema = z.infer<typeof RemoveLockBound>

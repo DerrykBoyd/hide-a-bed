@@ -1,5 +1,5 @@
 import needle from 'needle'
-import { CouchConfig, type CouchConfigInput } from '../schema/config.mjs'
+import { CouchConfig, type CouchConfigInput } from '../schema/config.mts'
 import { CouchDoc } from '../schema/couch.schema.mts'
 import { DefaultRowSchema, SimpleViewQueryResponse, type SimpleViewQueryResponseValidated, type ViewRow } from '../schema/query.mts'
 import { createLogger } from './logger.mts'
@@ -141,6 +141,23 @@ async function _bulkGetWithOptions<DocSchema extends z.ZodType>(
   } as BulkGetResponse<DocSchema>
 }
 
+export async function bulkGet(
+  config: CouchConfigInput,
+  ids: string[]
+): Promise<BulkGetResponse<typeof CouchDoc>>
+
+export async function bulkGet(
+  config: CouchConfigInput,
+  ids: string[],
+  options: { includeDocs: false }
+): Promise<BulkGetResponse<typeof CouchDoc>>
+
+export async function bulkGet<DocSchema extends z.ZodType>(
+  config: CouchConfigInput,
+  ids: string[],
+  options: { includeDocs?: true; validate?: { docSchema?: DocSchema } }
+): Promise<BulkGetResponse<DocSchema>>
+
 /**
  * Bulk get documents by IDs.
  * 
@@ -160,23 +177,6 @@ async function _bulkGetWithOptions<DocSchema extends z.ZodType>(
  * @throws {ZodError} When the configuration or validation schemas fail to parse.
  * @throws {Error} When CouchDB returns a non-retryable error payload.
  */
-export async function bulkGet(
-  config: CouchConfigInput,
-  ids: string[]
-): Promise<BulkGetResponse<typeof CouchDoc>>
-
-export async function bulkGet(
-  config: CouchConfigInput,
-  ids: string[],
-  options: { includeDocs: false }
-): Promise<BulkGetResponse<typeof CouchDoc>>
-
-export async function bulkGet<DocSchema extends z.ZodType>(
-  config: CouchConfigInput,
-  ids: string[],
-  options: { includeDocs?: true; validate?: { docSchema?: DocSchema } }
-): Promise<BulkGetResponse<DocSchema>>
-
 export async function bulkGet<DocSchema extends z.ZodType>(
   config: CouchConfigInput,
   ids: string[],
@@ -202,7 +202,7 @@ export async function bulkGet<DocSchema extends z.ZodType>(
 /**
  * Bound version of bulkGet with config pre-applied.
  */
-export type BoundBulkGet = {
+export type BulkGetBound = {
   (ids: string[], options?: {
     includeDocs?: boolean,
   }): Promise<SimpleViewQueryResponse>;
@@ -220,21 +220,6 @@ export type BulkGetDictionaryResult<DocSchema extends z.ZodType = typeof CouchDo
   notFound: Record<string, z.infer<typeof DefaultRowSchema>>
 }
 
-/**
- * Bulk get documents by IDs and return a dictionary of found and not found documents.
- * 
- * @template DocSchema - Zod schema used to validate each returned document, if provided. Note: if a document is found and it fails validation this will throw a ZodError.
- *
- * @param config - CouchDB configuration data that is validated before use.
- * @param ids - Array of document IDs to retrieve.
- * @param options - Options for bulk get operation, including validation schema.
- * 
- * @returns An object containing found documents and not found rows.
- * 
- * @throws {RetryableError} When a retryable HTTP status code is encountered or no response is received.
- * @throws {ZodError} When the configuration or validation schemas fail to parse.
- * @throws {Error} When CouchDB returns a non-retryable error payload.
- */
 export async function bulkGetDictionary(
   config: CouchConfigInput,
   ids: string[],
@@ -250,6 +235,21 @@ export async function bulkGetDictionary<DocSchema extends z.ZodType>(
   }
 ): Promise<BulkGetDictionaryResult<DocSchema>>
 
+/**
+ * Bulk get documents by IDs and return a dictionary of found and not found documents.
+ * 
+ * @template DocSchema - Zod schema used to validate each returned document, if provided. Note: if a document is found and it fails validation this will throw a ZodError.
+ *
+ * @param config - CouchDB configuration data that is validated before use.
+ * @param ids - Array of document IDs to retrieve.
+ * @param options - Options for bulk get operation, including validation schema.
+ * 
+ * @returns An object containing found documents and not found rows.
+ * 
+ * @throws {RetryableError} When a retryable HTTP status code is encountered or no response is received.
+ * @throws {ZodError} When the configuration or validation schemas fail to parse.
+ * @throws {Error} When CouchDB returns a non-retryable error payload.
+ */
 export async function bulkGetDictionary<DocSchema extends z.ZodType>(
   config: CouchConfigInput,
   ids: string[],

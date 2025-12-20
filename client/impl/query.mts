@@ -2,7 +2,7 @@ import needle, { type BodyData, type NeedleHttpVerbs } from 'needle'
 import { SimpleViewOptions, SimpleViewQueryResponse, type SimpleViewQueryResponseValidated, type ViewString } from '../schema/query.mts'
 import { createLogger } from './logger.mts'
 
-import { CouchConfig, type CouchConfigInput } from '../schema/config.mjs'
+import { CouchConfig, type CouchConfigInput } from '../schema/config.mts'
 import * as z4 from "zod/v4/core"
 import z from 'zod'
 import { queryString } from './utils/queryString.mts'

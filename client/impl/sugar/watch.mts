@@ -1,20 +1,20 @@
-// @ts-nocheck // TODO fix the types
 import needle from 'needle'
 import { EventEmitter } from 'events'
 import { RetryableError } from '../utils/errors.mts'
 import { createLogger } from '../logger.mts'
-import { WatchDocs } from '../../schema/sugar/watch.mjs'
+import { WatchDocs } from '../../schema/sugar/watch.mts'
 import { mergeNeedleOpts } from '../utils/mergeNeedleOpts.mts'
 import { setTimeout } from 'node:timers/promises'
+import type { NeedleBaseOptionsSchema } from '../../schema/config.mts'
 
 // watch the doc for any changes
 export const watchDocs = WatchDocs.implement((config, docIds, onChange, options = {}) => {
   const logger = createLogger(config)
   const emitter = new EventEmitter()
-  let lastSeq = null || 'now'
+  let lastSeq: null | "now" = null
   let stopping = false
   let retryCount = 0
-  let currentRequest = null
+  let currentRequest: null | ReturnType<typeof needle.get> = null
   const maxRetries = options.maxRetries || 10
   const initialDelay = options.initialDelay || 1000
   const maxDelay = options.maxDelay || 30000
@@ -31,7 +31,8 @@ export const watchDocs = WatchDocs.implement((config, docIds, onChange, options 
     const ids = _docIds.join('","')
     const url = `${config.couch}/_changes?feed=${feed}&since=${lastSeq}&include_docs=${includeDocs}&filter=_doc_ids&doc_ids=["${ids}"]`
 
-    const opts = {
+    const opts: NeedleBaseOptionsSchema = {
+      json: false,
       headers: {
         'Content-Type': 'application/json'
       },
@@ -69,7 +70,8 @@ export const watchDocs = WatchDocs.implement((config, docIds, onChange, options 
       logger.debug(`Received response with status code, watching [${_docIds}]: ${response.statusCode}`)
       if (RetryableError.isRetryableStatusCode(response.statusCode)) {
         logger.warn(`Retryable status code received: ${response.statusCode}`)
-        currentRequest.abort()
+        // @ts-expect-error bad type?
+        currentRequest?.destroy()
         handleReconnect()
       } else {
         // Reset retry count on successful connection
@@ -90,7 +92,7 @@ export const watchDocs = WatchDocs.implement((config, docIds, onChange, options 
           logger.info(`Retryable error, watching [${_docIds}]:`, filteredError.toString())
           handleReconnect()
         } else {
-          logger.error(`Non-retryable error, watching [${_docIds}]`, filteredError.toString())
+          logger.error(`Non-retryable error, watching [${_docIds}]`, filteredError?.toString())
           emitter.emit('error', filteredError)
         }
       }
@@ -151,7 +153,8 @@ export const watchDocs = WatchDocs.implement((config, docIds, onChange, options 
     removeListener: (event, listener) => emitter.removeListener(event, listener),
     stop: () => {
       stopping = true
-      if (currentRequest) currentRequest.abort()
+      // @ts-expect-error bad type?
+      if (currentRequest) currentRequest.destroy()
       emitter.emit('end', { lastSeq })
       emitter.removeAllListeners()
     }

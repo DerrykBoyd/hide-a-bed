@@ -1,5 +1,5 @@
 import needle, { type NeedleResponse } from "needle";
-import { GetDBInfo, type GetDBInfoSchema, type MergeNeedleOptsSchema } from "../../schema/util.mjs";
+import { GetDBInfo, type GetDBInfoSchema, type MergeNeedleOptsSchema } from "../../schema/util.mts";
 import { RetryableError } from '../utils/errors.mts';
 import { createLogger } from "../logger.mts";
 import { mergeNeedleOpts } from "./mergeNeedleOpts.mts";

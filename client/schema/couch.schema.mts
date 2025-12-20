@@ -1,5 +1,5 @@
 import { z, ZodType } from 'zod'
-import { CouchConfig } from './config.mjs'
+import { CouchConfig } from './config.mts'
 
 export const CouchDoc = z.looseObject({
   _id: z.string().describe('the couch doc id'),

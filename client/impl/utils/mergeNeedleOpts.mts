@@ -1,4 +1,4 @@
-import { MergeNeedleOpts } from "../../schema/util.mjs";
+import { MergeNeedleOpts } from "../../schema/util.mts";
 
 export const mergeNeedleOpts = MergeNeedleOpts.implement((config, opts) => {
   if (config.needleOpts) {

@@ -1,6 +1,6 @@
 import needle from 'needle'
 import { z } from 'zod'
-import type { CouchConfigInput } from '../schema/config.mjs'
+import type { CouchConfigInput } from '../schema/config.mts'
 import { CouchDoc, CouchGetOptions } from '../schema/couch.schema.mts'
 import { createLogger } from './logger.mts'
 import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts'
@@ -103,7 +103,7 @@ export async function get<DocSchema extends z.ZodType = typeof CouchDoc>(
   return _getWithOptions<DocSchema>(config, id, options ?? {})
 }
 
-export type BoundGet = <DocSchema extends z.ZodType = typeof CouchDoc>(
+export type GetBound = <DocSchema extends z.ZodType = typeof CouchDoc>(
   id: string,
   options?: GetOptions<DocSchema>
 ) => Promise<z.output<DocSchema> | null>
@@ -130,7 +130,7 @@ export async function getAtRev<DocSchema extends z.ZodType>(
   return _getWithOptions<DocSchema>(config, id, { ...options, rev })
 }
 
-export type BoundGetAtRev = <DocSchema extends z.ZodType = typeof CouchDoc>(
+export type GetAtRevBound = <DocSchema extends z.ZodType = typeof CouchDoc>(
   id: string,
   rev: string,
   options?: GetOptions<DocSchema> | undefined

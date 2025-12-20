@@ -1,16 +1,15 @@
 import needle from 'needle';
-import { put, RetryableError, withRetry } from '../index.mts';
-import { BulkSave, BulkSaveTransaction } from '../schema/bulk.mjs';
+import { put, RetryableError, withRetry, type CouchDoc } from '../index.mts';
+import { BulkSave, BulkSaveTransaction, type Response } from '../schema/bulk.mts';
 import { createLogger } from './logger.mts';
 import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts';
 import { bulkGetDictionary } from './bulkGet.mts';
 import { setupEmitter } from './trackedEmitter.mjs';
 import { TransactionSetupError, TransactionVersionConflictError, TransactionBulkOperationError, TransactionRollbackError } from './transactionErrors.mjs';
-
-/** @type { import('../schema/bulk.mjs').BulkSaveSchema } */
+import type z from 'zod';
+import type { CouchDocSchema } from '../schema/couch.schema.mts';
 
 export const bulkSave = BulkSave.implementAsync(async (config, docs) => {
-  /** @type {import('./logger.mts').Logger }  */
   const logger = createLogger(config);
 
   if (!docs) {
@@ -53,7 +52,7 @@ export const bulkSave = BulkSave.implementAsync(async (config, docs) => {
   }
   const results = resp?.body || [];
   return results;
-});/** @type { import('../schema/bulk.mjs').BulkSaveTransactionSchema } bulkSaveTransaction */
+});
 
 export const bulkSaveTransaction = BulkSaveTransaction.implementAsync(async (config, transactionId, docs) => {
   const emitter = setupEmitter(config)
@@ -67,7 +66,7 @@ export const bulkSaveTransaction = BulkSaveTransaction.implementAsync(async (con
   logger.info(`Starting bulk save transaction ${transactionId} for ${docs.length} documents`)
 
   // Create transaction document
-  const txnDoc = {
+  const transactionDoc = {
     _id: `txn:${transactionId}`,
     _rev: null,
     type: 'transaction',
@@ -77,13 +76,13 @@ export const bulkSaveTransaction = BulkSaveTransaction.implementAsync(async (con
   }
 
   // Save transaction document
-  let txnresp = await _put(txnDoc)
-  logger.debug('Transaction document created:', txnDoc, txnresp)
-  await emitter.emit('transaction-created', { txnresp, txnDoc })
-  if (txnresp.error) {
+  let transactionResponse = await _put(transactionDoc)
+  logger.debug('Transaction document created:', transactionDoc, transactionResponse)
+  await emitter.emit('transaction-created', { transactionResponse, txnDoc: transactionDoc })
+  if (transactionResponse.error) {
     throw new TransactionSetupError('Failed to create transaction document', {
-      error: txnresp.error,
-      response: txnresp
+      error: transactionResponse.error,
+      response: transactionResponse
     })
   }
 
@@ -93,8 +92,8 @@ export const bulkSaveTransaction = BulkSaveTransaction.implementAsync(async (con
   await emitter.emit('transaction-revs-fetched', existingDocs)
 
   /** @type {string[]} */
-  const revErrors = []
-  // if any of the existingDocs, and the docs provided dont match on rev, then throw an error
+  const revErrors: string[] = []
+  // if any of the existingDocs, and the docs provided do not match on rev, then throw an error
   docs.forEach(d => {
     // @ts-ignore
     if (existingDocs.found[d._id] && existingDocs.found[d._id]._rev !== d._rev) revErrors.push(d._id)
@@ -107,25 +106,19 @@ export const bulkSaveTransaction = BulkSaveTransaction.implementAsync(async (con
   logger.debug('Checked document revisions:', existingDocs)
   await emitter.emit('transaction-revs-checked', existingDocs)
 
-  /** @type {Record<string, import('../schema/couch.schema.mts').CouchDocSchema>} providedDocsById */
-  const providedDocsById = {}
-  docs.forEach((
-    /** @type {import('../schema/couch.schema.mts').CouchDocSchema} */ d
-  ) => {
+  const providedDocsById: Record<string, z.infer<typeof CouchDoc>> = {}
+  docs.forEach((d) => {
     if (!d._id) return
     providedDocsById[d._id] = d
   })
 
-  /** @type {import('../schema/bulk.mjs').Response} */
-  const newDocsToRollback = []
-  /** @type {import('../schema/bulk.mjs').Response} */
-  const potentialExistingDocsToRollack = []
-  /** @type {import('../schema/bulk.mjs').Response} */
-  const failedDocs = []
+  const newDocsToRollback: Response = []
+  const potentialExistingDocsToRollback: Response = []
+  const failedDocs: Response = []
 
   try {
-    logger.info('Transaction started:', txnDoc)
-    await emitter.emit('transaction-started', txnDoc)
+    logger.info('Transaction started:', transactionDoc)
+    await emitter.emit('transaction-started', transactionDoc)
     // Apply updates
     const results = await bulkSave(config, docs)
     logger.info('Transaction updates applied:', results)
@@ -136,7 +129,7 @@ export const bulkSaveTransaction = BulkSaveTransaction.implementAsync(async (con
       if (!r.id) return // not enough info
       if (!r.error) {
         if (existingDocs.notFound[r.id]) newDocsToRollback.push(r)
-        if (existingDocs.found[r.id]) potentialExistingDocsToRollack.push(r)
+        if (existingDocs.found[r.id]) potentialExistingDocsToRollback.push(r)
       } else {
         failedDocs.push(r)
       }
@@ -146,13 +139,13 @@ export const bulkSaveTransaction = BulkSaveTransaction.implementAsync(async (con
     }
 
     // Update transaction status to completed
-    txnDoc.status = 'completed'
+    transactionDoc.status = 'completed'
     // @ts-ignore TODO fix this
-    txnDoc._rev = txnresp.rev
-    txnresp = await _put(txnDoc)
-    logger.info('Transaction completed:', txnDoc)
-    await emitter.emit('transaction-completed', { txnresp, txnDoc })
-    if (txnresp.statusCode !== 201) {
+    transactionDoc._rev = transactionResponse.rev
+    transactionResponse = await _put(transactionDoc)
+    logger.info('Transaction completed:', transactionDoc)
+    await emitter.emit('transaction-completed', { transactionResponse, transactionDoc })
+    if (transactionResponse.statusCode !== 201) {
       logger.error('Failed to update transaction status to completed')
     }
 
@@ -161,14 +154,11 @@ export const bulkSaveTransaction = BulkSaveTransaction.implementAsync(async (con
     logger.error('Transaction failed, attempting rollback:', error)
 
     // Rollback changes
-    /** @type {Array<import('../schema/couch.schema.mts').CouchDocSchema>} */
-    const toRollback = []
-    potentialExistingDocsToRollack.forEach(row => {
+    const toRollback: CouchDocSchema[] = []
+    potentialExistingDocsToRollback.forEach(row => {
       if (!row.id || !row.rev) return
       const doc = existingDocs.found[row.id]
-      // @ts-ignore
       doc._rev = row.rev
-      // @ts-ignore
       toRollback.push(doc)
     })
     newDocsToRollback.forEach(d => {
@@ -189,18 +179,18 @@ export const bulkSaveTransaction = BulkSaveTransaction.implementAsync(async (con
     await emitter.emit('transaction-rolled-back', { bulkRollbackResult, status })
 
     // Update transaction status to rolled back
-    txnDoc.status = status
+    transactionDoc.status = status
     // @ts-ignore TODO fix this
-    txnDoc._rev = txnresp.rev
-    txnresp = await _put(txnDoc)
-    logger.warn('Transaction rollback status updated:', txnDoc)
-    await emitter.emit('transaction-rolled-back-status', { txnresp, txnDoc })
-    if (txnresp.statusCode !== 201) {
+    transactionDoc._rev = transactionResponse.rev
+    transactionResponse = await _put(transactionDoc)
+    logger.warn('Transaction rollback status updated:', transactionDoc)
+    await emitter.emit('transaction-rolled-back-status', { transactionResponse, transactionDoc })
+    if (transactionResponse.statusCode !== 201) {
       logger.error('Failed to update transaction status to rolled_back')
     }
     throw new TransactionRollbackError(
       'Transaction failed and rollback was unsuccessful',
-            /** @type {Error} */(error),
+      (error as Error),
       bulkRollbackResult
     )
   }

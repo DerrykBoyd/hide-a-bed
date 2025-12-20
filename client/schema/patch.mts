@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { CouchConfig } from './config.mjs'
+import { CouchConfig } from './config.mts'
 import { CouchDocResponse } from './couch.schema.mts'
 
 export const PatchProperties = z.record(z.string(), z.any())
@@ -8,13 +8,13 @@ export const StrictPatchProperties = z.object({
 }).and(PatchProperties)
 
 export const Patch = z.function({ input: [CouchConfig, z.string().describe('the couch doc id'), StrictPatchProperties], output: z.promise(CouchDocResponse) })
-/** @typedef { z.infer<typeof Patch> } PatchSchema */
+export type PatchSchema = z.infer<typeof Patch>
 
 export const PatchBound = z.function({ input: [z.string().describe('the couch doc id'), StrictPatchProperties], output: z.promise(CouchDocResponse) })
-/** @typedef { z.infer<typeof PatchBound> } PatchBoundSchema */
+export type PatchBoundSchema = z.infer<typeof PatchBound>
 
 export const PatchDangerously = z.function({ input: [CouchConfig, z.string().describe('the couch doc id'), PatchProperties], output: z.promise(CouchDocResponse) })
-/** @typedef { z.infer<typeof PatchDangerously> } PatchDangerouslySchema */
+export type PatchDangerouslySchema = z.infer<typeof PatchDangerously>
 
 export const PatchDangerouslyBound = z.function({ input: [z.string().describe('the couch doc id'), PatchProperties], output: z.promise(CouchDocResponse) })
-/** @typedef { z.infer<typeof PatchDangerouslyBound> } PatchDangerouslyBoundSchema */
+export type PatchDangerouslyBoundSchema = z.infer<typeof PatchDangerouslyBound>

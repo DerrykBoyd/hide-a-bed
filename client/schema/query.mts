@@ -61,7 +61,7 @@ export const SimpleViewOptions = z.object({
 }).describe('base options for a CouchDB view query')
 export type SimpleViewOptions = z.input<typeof SimpleViewOptions>
 
-export type BoundQuery = {
+export type QueryBound = {
   (view: ViewString, options?: SimpleViewOptions): Promise<SimpleViewQueryResponse>;
   <DocSchema extends ZodType, KeySchema extends ZodType, ValueSchema extends ZodType>(
     view: ViewString,

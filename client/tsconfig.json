@@ -6,12 +6,6 @@
     "docs"
   ],
   "compilerOptions": {
-    "lib": [
-      "ESNext",
-      "ESNext.Array",
-      "ESNext.Collection",
-      "ESNext.Iterator"
-    ],
     "module": "nodenext",
     "target": "esnext",
     "erasableSyntaxOnly": true,

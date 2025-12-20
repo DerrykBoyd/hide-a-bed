@@ -14,8 +14,7 @@ export const NeedleBaseOptions = z.object({
   headers: z.record(z.string(), z.string()),
   parse_response: z.boolean().optional()
 })
-
-/** @typedef { z.infer<typeof NeedleBaseOptions> } NeedleBaseOptionsSchema */
+export type NeedleBaseOptionsSchema = z.infer<typeof NeedleBaseOptions>
 
 export const NeedleOptions = z.object({
   json: z.boolean().optional(),
@@ -59,5 +58,5 @@ export const CouchConfig = z.looseObject({
   "~normalizedLogger": z.any().optional(), // Internal property for caching normalized logger
 }).describe('The std config object')
 
-/** @typedef { z.infer<typeof CouchConfig> } CouchConfigSchema */
-/** @typedef { z.input<typeof CouchConfig> } CouchConfigInput */
+export type CouchConfigSchema = z.infer<typeof CouchConfig>
+export type CouchConfigInput = z.input<typeof CouchConfig>

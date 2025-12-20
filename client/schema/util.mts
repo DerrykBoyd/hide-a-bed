@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { CouchConfig, NeedleBaseOptions, NeedleOptions } from './config.mjs'
+import { CouchConfig, NeedleBaseOptions, NeedleOptions } from './config.mts'
 
 /** example of dbinfo
  * {
@@ -26,11 +26,11 @@ export const DBInfo = z.looseObject({
 })
 
 export const GetDBInfo = z.function({ input: [CouchConfig], output: z.promise(DBInfo) })
-/** @typedef { z.infer<typeof GetDBInfo> } GetDBInfoSchema */
+export type GetDBInfoSchema = z.infer<typeof GetDBInfo>
 
 export const GetDBInfoBound = z.function({ input: [], output: z.promise(DBInfo) })
-/** @typedef { z.infer<typeof GetDBInfoBound> } GetDBInfoBoundSchema */
+export type GetDBInfoBoundSchema = z.infer<typeof GetDBInfoBound>
 
 export const MergeNeedleOpts = z
   .function({ input: [CouchConfig, NeedleBaseOptions], output: NeedleOptions })
-/** @typedef { z.infer<typeof MergeNeedleOpts> } MergeNeedleOptsSchema */
+export type MergeNeedleOptsSchema = z.infer<typeof MergeNeedleOpts>

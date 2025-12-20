@@ -1,18 +1,17 @@
-import { BulkRemove, BulkRemoveMap } from '../schema/bulk.mjs';
+import type { z } from 'zod';
+import { BulkRemove, BulkRemoveMap } from '../schema/bulk.mts';
 import { CouchDoc } from '../schema/couch.schema.mts';
 import { bulkGet } from './bulkGet.mts';
-import { bulkSave } from './bulkSave.mjs';
+import { bulkSave } from './bulkSave.mts';
 import { createLogger } from './logger.mts';
 import { remove } from './remove.mjs';
 
-// sugar methods
-/** @type { import('../schema/bulk.mjs').BulkRemoveSchema } */
 export const bulkRemove = BulkRemove.implementAsync(async (config, ids) => {
   const logger = createLogger(config);
   logger.info(`Starting bulk remove for ${ids.length} documents`);
   const resp = await bulkGet(config, ids);
   /** @type { Array<import('../schema/couch.schema.mts').CouchDocSchema> } toRemove */
-  const toRemove = [];
+  const toRemove: Array<z.infer<typeof CouchDoc>> = [];
   resp.rows?.forEach(row => {
     if (!row.doc) return;
     try {
@@ -26,7 +25,8 @@ export const bulkRemove = BulkRemove.implementAsync(async (config, ids) => {
   if (!toRemove.length) return [];
   const result = await bulkSave(config, toRemove);
   return result;
-});/** @type { import('../schema/bulk.mjs').BulkRemoveMapSchema } */
+});
+
 export const bulkRemoveMap = BulkRemoveMap.implementAsync(async (config, ids) => {
   const logger = createLogger(config)
   logger.info(`Starting bulk remove map for ${ids.length} documents`)

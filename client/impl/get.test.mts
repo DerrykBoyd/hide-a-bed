@@ -4,7 +4,7 @@ import test, { suite } from 'node:test'
 import needle from 'needle'
 import { setTimeout as delay } from 'node:timers/promises'
 import { z } from 'zod'
-import type { CouchConfigInput } from '../schema/config.mjs'
+import type { CouchConfigInput } from '../schema/config.mts'
 import { get, getAtRev } from './get.mts'
 import { NotFoundError, RetryableError } from './utils/errors.mts'
 

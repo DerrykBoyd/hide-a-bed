@@ -1,9 +1,8 @@
-import { CreateLock, RemoveLock } from '../../schema/sugar/lock.mjs'
+import { CreateLock, RemoveLock } from '../../schema/sugar/lock.mts'
 import { put } from '../put.mjs'
 import { get } from '../get.mts'
 import { createLogger } from '../logger.mts'
 
-/** @type {import('../../schema/sugar/lock.mjs').CreateLockSchema} */
 export const createLock = CreateLock.implementAsync(async (config, docId, options) => {
   const logger = createLogger(config)
 
@@ -35,7 +34,6 @@ export const createLock = CreateLock.implementAsync(async (config, docId, option
   }
 })
 
-/** @type {import('../../schema/sugar/lock.mjs').RemoveLockSchema} */
 export const removeLock = RemoveLock.implementAsync(async (config, docId, options) => {
   const logger = createLogger(config)
 

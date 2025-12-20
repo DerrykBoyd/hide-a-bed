@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { CouchConfig } from '../../client/schema/config.mjs'
+import { CouchConfig } from '../../client/schema/config.mts'
 import { CouchDoc } from '../../client/schema/crud.mjs'
 
 export const ChangesOptions = z.object({
