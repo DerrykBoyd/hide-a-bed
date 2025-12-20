@@ -6,7 +6,7 @@ import { setTimeout as delay } from 'node:timers/promises'
 import type { CouchConfigInput } from '../schema/config.mjs'
 import { z } from 'zod'
 import { RetryableError } from './utils/errors.mts'
-import { bulkGet, _bulkGetWithOptions, bulkGetDictionary } from './bulkGet.mts'
+import { bulkGet, bulkGetDictionary } from './bulkGet.mts'
 
 const PORT = 8990
 const DB_URL = `http://localhost:${PORT}/bulk-get-test`
@@ -45,7 +45,7 @@ suite('bulkGet', () => {
     })
 
     await t.test('supports includeDocs=false via _bulkGetWithOptions', async () => {
-      const response = await _bulkGetWithOptions(config, ['doc-1'], { includeDocs: false })
+      const response = await bulkGet(config, ['doc-1'], { includeDocs: false })
       assert.strictEqual(response.rows.length, 1)
       const [row] = response.rows
       assert.strictEqual(row?.id, 'doc-1')
@@ -95,6 +95,25 @@ suite('bulkGet', () => {
       assert.strictEqual(result.found['doc-valid'].count, 7)
       assert.deepStrictEqual(Object.keys(result.notFound), ['doc-missing'])
       assert.strictEqual(result.notFound['doc-missing'].error, 'not_found')
+    })
+
+    await t.test('bulkGetDictionary with validation schema', async () => {
+      const schema = z.looseObject({
+        _id: z.string(),
+        _rev: z.string().optional(),
+        count: z.number()
+      })
+
+      const result = await bulkGetDictionary(config, ['doc-valid', 'doc-not-there'], {
+        validate: {
+          docSchema: schema
+        }
+      })
+
+      assert.deepStrictEqual(Object.keys(result.found), ['doc-valid'])
+      assert.strictEqual(result.found['doc-valid'].count, 7)
+      assert.deepStrictEqual(Object.keys(result.notFound), ['doc-not-there'])
+      assert.strictEqual(result.notFound['doc-not-there'].error, 'not_found')
     })
   })
 })

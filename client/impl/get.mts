@@ -92,15 +92,15 @@ export async function get(
 export async function get<DocSchema extends z.ZodType>(
   config: CouchConfigInput,
   id: string,
-  options: GetOptions<DocSchema> | undefined
+  options: GetOptions<DocSchema>
 ): Promise<z.output<DocSchema> | null>
 
 export async function get<DocSchema extends z.ZodType = typeof CouchDoc>(
   config: CouchConfigInput,
   id: string,
-  options: GetOptions<DocSchema> = {}
+  options?: GetOptions<DocSchema>
 ): Promise<z.output<DocSchema> | null> {
-  return _getWithOptions<DocSchema>(config, id, options)
+  return _getWithOptions<DocSchema>(config, id, options ?? {})
 }
 
 export type BoundGet = <DocSchema extends z.ZodType = typeof CouchDoc>(
@@ -118,14 +118,14 @@ export async function getAtRev<DocSchema extends z.ZodType>(
   config: CouchConfigInput,
   id: string,
   rev: string,
-  options: GetOptions<DocSchema> | undefined
+  options: GetOptions<DocSchema>
 ): Promise<z.output<DocSchema> | null>
 
-export async function getAtRev<DocSchema extends z.ZodType = typeof CouchDoc>(
+export async function getAtRev<DocSchema extends z.ZodType>(
   config: CouchConfigInput,
   id: string,
   rev: string,
-  options: GetOptions<DocSchema> = {}
+  options?: GetOptions<DocSchema>
 ): Promise<z.output<DocSchema> | null> {
   return _getWithOptions<DocSchema>(config, id, { ...options, rev })
 }

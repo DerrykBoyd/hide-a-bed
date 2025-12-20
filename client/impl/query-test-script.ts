@@ -128,7 +128,7 @@ const boundGetRes = await bound.options({
   }
 })
 
-boundGetRes?.leadPersonUuid
+boundGetRes?.test.nested
 
 const getRes = await get(config, "test-doc", {
   validate: {
