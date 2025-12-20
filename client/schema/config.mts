@@ -45,18 +45,18 @@ export const NeedleOptions = z.object({
 })
 
 export const CouchConfig = z.looseObject({
-  throwOnGetNotFound: z.boolean().optional().default(false).describe('if a get is 404 should we throw or return undefined'),
-  couch: z.string().describe('the url of the couch db'),
-  bindWithRetry: z.boolean().optional().default(true).describe('should we bind with retry'),
-  maxRetries: z.number().optional().default(3).describe('maximum number of retry attempts'),
-  initialDelay: z.number().optional().default(1000).describe('initial retry delay in milliseconds'),
   backoffFactor: z.number().optional().default(2).describe('multiplier for exponential backoff'),
-  useConsoleLogger: z.boolean().optional().default(false).describe('turn on console as a fallback logger'),
+  bindWithRetry: z.boolean().optional().default(true).describe('should we bind with retry'),
+  couch: z.string().describe('the url of the couch db'),
+  initialDelay: z.number().optional().default(1000).describe('initial retry delay in milliseconds'),
   logger: LoggerSchema.optional().describe('logging interface supporting winston-like or simple function interface'),
+  maxRetries: z.number().optional().default(3).describe('maximum number of retry attempts'),
   needleOpts: NeedleOptions.optional(),
+  throwOnGetNotFound: z.boolean().optional().default(false).describe('if a get is 404 should we throw or return undefined'),
+  useConsoleLogger: z.boolean().optional().default(false).describe('turn on console as a fallback logger'),
   "~emitter": z.any().optional().describe('emitter for events'),
   "~normalizedLogger": z.any().optional(), // Internal property for caching normalized logger
 }).describe('The std config object')
 
-export type CouchConfigSchema = z.infer<typeof CouchConfig>
-export type CouchConfigInput = z.input<typeof CouchConfig>
+export interface CouchConfigSchema extends z.infer<typeof CouchConfig> { }
+export interface CouchConfigInput extends z.input<typeof CouchConfig> { }

@@ -18,7 +18,7 @@ import { CouchConfig, type CouchConfigSchema } from './schema/config.mts'
 import { QueryBuilder } from './impl/utils/queryBuilder.mts'
 import type z from 'zod'
 import type { QueryBound } from './schema/query.mts'
-import { getDBInfo } from './impl/utils/getDBInfo.mts'
+import { getDBInfo } from './impl/getDBInfo.mts'
 import { NotFoundError, RetryableError, type NetworkError } from './impl/utils/errors.mts'
 import type { BulkGetBound } from "./impl/bulkGet.mts"
 
@@ -145,10 +145,13 @@ export {
   bulkRemoveMap,
   bulkGetDictionary,
   bulkSaveTransaction,
+  watchDocs,
 
   // binding
   bindConfig,
   withRetry,
+
+  // utils
   QueryBuilder,
   createQuery,
   createLock,
@@ -156,7 +159,10 @@ export {
 
   // Error types
   NotFoundError,
-  RetryableError
+  RetryableError,
+
+  // Schemas
+  CouchConfig
 }
 
 export type {
@@ -179,5 +185,7 @@ export type { RetryOptions } from './impl/retry.mts'
 export type { NetworkError } from './impl/utils/errors.mts'
 export type { BulkGetBound, BulkGetDictionaryBound } from './impl/bulkGet.mts'
 export type { OnRow } from './impl/stream.mts'
-export type { CouchConfig } from './schema/config.mts'
+export type { CouchConfigInput, CouchConfigSchema } from './schema/config.mts'
 export type { CouchDoc } from './schema/couch.schema.mts'
+export type { LockOptionsSchema, LockOptionsInput, LockDocSchema } from './schema/sugar/lock.mts'
+export type { WatchOptionsSchema, WatchOptionsInput } from './schema/sugar/watch.mts'

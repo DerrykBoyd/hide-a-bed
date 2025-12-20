@@ -122,3 +122,9 @@ export class RetryableError extends Error {
     throw err
   }
 }
+
+export function isConflictError(err: unknown): boolean {
+  if (typeof err !== 'object' || err === null) return false
+  const candidate = err as { statusCode?: unknown }
+  return candidate.statusCode === 409
+}

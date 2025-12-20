@@ -2,13 +2,26 @@ import needle from 'needle'
 import { EventEmitter } from 'events'
 import { RetryableError } from '../utils/errors.mts'
 import { createLogger } from '../logger.mts'
-import { WatchDocs } from '../../schema/sugar/watch.mts'
+import { WatchOptions, type WatchOptionsInput } from '../../schema/sugar/watch.mts'
 import { mergeNeedleOpts } from '../utils/mergeNeedleOpts.mts'
 import { setTimeout } from 'node:timers/promises'
-import type { NeedleBaseOptionsSchema } from '../../schema/config.mts'
+import { CouchConfig, type CouchConfigInput, type NeedleBaseOptionsSchema } from '../../schema/config.mts'
 
-// watch the doc for any changes
-export const watchDocs = WatchDocs.implement((config, docIds, onChange, options = {}) => {
+/**
+ * Watch for changes to specified document IDs in CouchDB.
+ * Calls the onChange callback for each change detected.
+ * Returns an emitter with methods to listen for events and stop watching.
+ * 
+ * @param configInput CouchDB configuration
+ * @param docIds Document ID or array of document IDs to watch
+ * @param onChange Callback function called on each change
+ * @param optionsInput Watch options
+ * 
+ * @return WatchEmitter with methods to manage the watch
+ */
+export function watchDocs(configInput: CouchConfigInput, docIds: string | string[], onChange: (change: any) => void, optionsInput: WatchOptionsInput = {}) {
+  const config = CouchConfig.parse(configInput)
+  const options = WatchOptions.parse(optionsInput)
   const logger = createLogger(config)
   const emitter = new EventEmitter()
   let lastSeq: null | "now" = null
@@ -149,8 +162,8 @@ export const watchDocs = WatchDocs.implement((config, docIds, onChange, options 
   emitter.on('change', onChange)
 
   return {
-    on: (event, listener) => emitter.on(event, listener),
-    removeListener: (event, listener) => emitter.removeListener(event, listener),
+    on: (event: string, listener: EventListener) => emitter.on(event, listener),
+    removeListener: (event: string, listener: EventListener) => emitter.removeListener(event, listener),
     stop: () => {
       stopping = true
       // @ts-expect-error bad type?
@@ -159,4 +172,4 @@ export const watchDocs = WatchDocs.implement((config, docIds, onChange, options 
       emitter.removeAllListeners()
     }
   }
-})
+}

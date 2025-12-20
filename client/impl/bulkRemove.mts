@@ -10,7 +10,6 @@ export const bulkRemove = BulkRemove.implementAsync(async (config, ids) => {
   const logger = createLogger(config);
   logger.info(`Starting bulk remove for ${ids.length} documents`);
   const resp = await bulkGet(config, ids);
-  /** @type { Array<import('../schema/couch.schema.mts').CouchDocSchema> } toRemove */
   const toRemove: Array<z.infer<typeof CouchDoc>> = [];
   resp.rows?.forEach(row => {
     if (!row.doc) return;

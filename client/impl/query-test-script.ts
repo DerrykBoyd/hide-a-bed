@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { query } from "./query.mts"
-import { bindConfig, get, queryStream } from "../index.mts"
+import { bindConfig, createLock, get, put, queryStream } from "../index.mts"
 
 const config = {
   couch: "http://localhost:5984/plumber",
@@ -62,13 +62,13 @@ res.rows.forEach((row) => {
   }
 })
 
-const boundQuery = bindConfig({
+const boundOptions = bindConfig({
   ...config,
   couch: "http://localhost:5984/hide-a-bed-test",
   bindWithRetry: true,
 })
 
-const boundRes2 = await boundQuery.query(
+const boundRes2 = await boundOptions.query(
   '_all_docs',
   {
     include_docs: true,
@@ -144,3 +144,13 @@ const getRes = await get(config, "test-doc", {
 })
 
 getRes?.some.nested
+
+
+/**
+ * Things todo:
+ * - add lots more tests
+ * - move remaining zod function definitions to normal function with internal validation for cleaner type hints
+ * - organize exports and types better
+ * - maybe add configuration for what to do on validation errors (throw, skip, log, etc)
+ * - wish: move to standard schema for user validation and drop zod peer dependency?
+ */

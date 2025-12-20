@@ -1,8 +1,8 @@
 import needle, { type NeedleResponse } from "needle";
-import { GetDBInfo, type GetDBInfoSchema, type MergeNeedleOptsSchema } from "../../schema/util.mts";
-import { RetryableError } from '../utils/errors.mts';
-import { createLogger } from "../logger.mts";
-import { mergeNeedleOpts } from "./mergeNeedleOpts.mts";
+import { GetDBInfo, type GetDBInfoSchema, type MergeNeedleOptsSchema } from "../schema/util.mts";
+import { RetryableError } from './utils/errors.mts';
+import { createLogger } from "./logger.mts";
+import { mergeNeedleOpts } from "./utils/mergeNeedleOpts.mts";
 
 type NeedleOptionsInput = Parameters<MergeNeedleOptsSchema>[1]
 type GetDBInfoReturn = Awaited<ReturnType<GetDBInfoSchema>>
