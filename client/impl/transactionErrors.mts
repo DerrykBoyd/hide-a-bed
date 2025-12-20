@@ -1,9 +1,7 @@
 export class TransactionSetupError extends Error {
-  /**
-   * @param {string} message
-   * @param {Record<string, any>} details
-   */
-  constructor (message, details = {}) {
+  details: Record<string, any>
+
+  constructor(message: string, details: Record<string, any> = {}) {
     super(message)
     this.name = 'TransactionSetupError'
     this.details = details
@@ -11,10 +9,9 @@ export class TransactionSetupError extends Error {
 }
 
 export class TransactionVersionConflictError extends Error {
-  /**
-   * @param {string[]} conflictingIds
-   */
-  constructor (conflictingIds) {
+  conflictingIds: string[]
+
+  constructor(conflictingIds: string[]) {
     super(`Revision mismatch for documents: ${conflictingIds.join(', ')}`)
     this.name = 'TransactionVersionConflictError'
     this.conflictingIds = conflictingIds
@@ -22,10 +19,9 @@ export class TransactionVersionConflictError extends Error {
 }
 
 export class TransactionBulkOperationError extends Error {
-  /**
-   * @param {Array<{ok?: boolean|null, id?: string|null, rev?: string|null, error?: string|null, reason?: string|null}>} failedDocs
-   */
-  constructor (failedDocs) {
+  failedDocs: { ok?: boolean | null; id?: string | null; rev?: string | null; error?: string | null; reason?: string | null }[]
+
+  constructor(failedDocs: Array<{ ok?: boolean | null; id?: string | null; rev?: string | null; error?: string | null; reason?: string | null }>) {
     super(`Failed to save documents: ${failedDocs.map(d => d.id).join(', ')}`)
     this.name = 'TransactionBulkOperationError'
     this.failedDocs = failedDocs
@@ -33,12 +29,10 @@ export class TransactionBulkOperationError extends Error {
 }
 
 export class TransactionRollbackError extends Error {
-  /**
-   * @param {string} message
-   * @param {Error} originalError
-   * @param {Array<{ok?: boolean|null, id?: string|null, rev?: string|null, error?: string|null, reason?: string|null}>} rollbackResults
-   */
-  constructor (message, originalError, rollbackResults) {
+  originalError: Error
+  rollbackResults: { ok?: boolean | null; id?: string | null; rev?: string | null; error?: string | null; reason?: string | null }[]
+
+  constructor(message: string, originalError: Error, rollbackResults: Array<{ ok?: boolean | null; id?: string | null; rev?: string | null; error?: string | null; reason?: string | null }>) {
     super(message)
     this.name = 'TransactionRollbackError'
     this.originalError = originalError

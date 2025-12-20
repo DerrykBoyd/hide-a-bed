@@ -4,8 +4,6 @@ import { CouchPut } from '../schema/couch.schema.mts';
 import { createLogger } from './logger.mts';
 import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts';
 
-/** @type { import('../schema/couch.schema.mts').CouchPutSchema } */
-
 export const put = CouchPut.implementAsync(async (config, doc) => {
   const logger = createLogger(config);
   const url = `${config.couch}/${doc._id}`;

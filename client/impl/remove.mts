@@ -4,8 +4,6 @@ import { CouchRemove } from '../schema/couch.schema.mts';
 import { createLogger } from './logger.mts';
 import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts';
 
-/** @type { import('../schema/couch.schema.mts').CouchRemoveSchema } */
-
 export const remove = CouchRemove.implementAsync(async (config, id, rev) => {
   const logger = createLogger(config);
   const url = `${config.couch}/${id}?rev=${rev}`;

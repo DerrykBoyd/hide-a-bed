@@ -1,4 +1,4 @@
-// @ts-nocheck // TODO fix the types
+// @ts-nocheck
 import { EventEmitter } from 'events'
 
 export class TrackedEmitter extends EventEmitter {

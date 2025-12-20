@@ -4,8 +4,8 @@ import { BulkSave, BulkSaveTransaction, type Response } from '../schema/bulk.mts
 import { createLogger } from './logger.mts';
 import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts';
 import { bulkGetDictionary } from './bulkGet.mts';
-import { setupEmitter } from './trackedEmitter.mjs';
-import { TransactionSetupError, TransactionVersionConflictError, TransactionBulkOperationError, TransactionRollbackError } from './transactionErrors.mjs';
+import { setupEmitter } from './trackedEmitter.mts';
+import { TransactionSetupError, TransactionVersionConflictError, TransactionBulkOperationError, TransactionRollbackError } from './transactionErrors.mts';
 import type z from 'zod';
 import type { CouchDocSchema } from '../schema/couch.schema.mts';
 

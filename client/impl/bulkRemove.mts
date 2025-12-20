@@ -4,7 +4,7 @@ import { CouchDoc } from '../schema/couch.schema.mts';
 import { bulkGet } from './bulkGet.mts';
 import { bulkSave } from './bulkSave.mts';
 import { createLogger } from './logger.mts';
-import { remove } from './remove.mjs';
+import { remove } from './remove.mts';
 
 export const bulkRemove = BulkRemove.implementAsync(async (config, ids) => {
   const logger = createLogger(config);

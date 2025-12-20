@@ -1,10 +1,9 @@
-import { put } from './put.mjs'
+import { put } from './put.mts'
 import { get } from './get.mts'
 import { Patch, PatchDangerously } from '../schema/patch.mts'
 import { createLogger } from './logger.mts'
 import { setTimeout } from 'node:timers/promises'
 
-/** @type { import('../schema/patch.mjs').PatchSchema } */
 export const patch = Patch.implementAsync(async (config, id, properties) => {
   const logger = createLogger(config)
 
@@ -12,11 +11,9 @@ export const patch = Patch.implementAsync(async (config, id, properties) => {
   logger.debug('Patch properties:', properties)
   const doc = await get(config, id)
   if (doc?._rev !== properties._rev) {
-    const result = {}
-    result.ok = false
-    result.error = 'conflict'
-    result.statusCode = 409
-    return result
+    return {
+      statusCode: 409, ok: false, error: 'conflict'
+    }
   }
 
   const updatedDoc = { ...doc, ...properties }
@@ -26,8 +23,6 @@ export const patch = Patch.implementAsync(async (config, id, properties) => {
   return result
 })
 
-/** @type { import('../schema/patch.mjs').PatchDangerouslySchema } */
-// @ts-ignore // TODO fix the types
 export const patchDangerously = PatchDangerously.implementAsync(async (config, id, properties) => {
   const logger = createLogger(config)
   const maxRetries = config.maxRetries || 5

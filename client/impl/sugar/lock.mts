@@ -1,5 +1,5 @@
 import { CreateLock, RemoveLock } from '../../schema/sugar/lock.mts'
-import { put } from '../put.mjs'
+import { put } from '../put.mts'
 import { get } from '../get.mts'
 import { createLogger } from '../logger.mts'
 
