@@ -1,4 +1,4 @@
-import type { SimpleViewOptions } from '../../schema/query.mts'
+import type { ViewOptions } from "../../schema/couch/couch.input.schema.ts"
 
 /**
  * A builder class for constructing CouchDB view query options.
@@ -17,14 +17,14 @@ import type { SimpleViewOptions } from '../../schema/query.mts'
  * @returns The constructed SimpleViewOptions object.
  */
 export class QueryBuilder {
-  #options: SimpleViewOptions = {}
+  #options: ViewOptions = {}
 
   descending(descending = true): this {
     this.#options.descending = descending
     return this
   }
 
-  endkey_docid(endkeyDocId: NonNullable<SimpleViewOptions['endkey_docid']>): this {
+  endkey_docid(endkeyDocId: NonNullable<ViewOptions['endkey_docid']>): this {
     this.#options.endkey_docid = endkeyDocId
     return this
   }
@@ -32,12 +32,12 @@ export class QueryBuilder {
   /**
    * Alias for endkey_docid
    */
-  end_key_doc_id(endkeyDocId: NonNullable<SimpleViewOptions['endkey_docid']>): this {
+  end_key_doc_id(endkeyDocId: NonNullable<ViewOptions['endkey_docid']>): this {
     this.#options.endkey_docid = endkeyDocId
     return this
   }
 
-  endkey(endkey: SimpleViewOptions['endkey']): this {
+  endkey(endkey: ViewOptions['endkey']): this {
     this.#options.endkey = endkey
     return this
   }
@@ -45,7 +45,7 @@ export class QueryBuilder {
   /**
    * Alias for endkey
    */
-  endKey(endkey: SimpleViewOptions['endkey']): this {
+  endKey(endkey: ViewOptions['endkey']): this {
     this.#options.endkey = endkey
     return this
   }
@@ -53,7 +53,7 @@ export class QueryBuilder {
   /**
    * Alias for endkey
    */
-  end_key(endkey: SimpleViewOptions['endkey']): this {
+  end_key(endkey: ViewOptions['endkey']): this {
     this.#options.endkey = endkey
     return this
   }
@@ -63,7 +63,7 @@ export class QueryBuilder {
     return this
   }
 
-  group_level(level: NonNullable<SimpleViewOptions['group_level']>): this {
+  group_level(level: NonNullable<ViewOptions['group_level']>): this {
     this.#options.group_level = level
     return this
   }
@@ -78,17 +78,17 @@ export class QueryBuilder {
     return this
   }
 
-  key(key: SimpleViewOptions['key']): this {
+  key(key: ViewOptions['key']): this {
     this.#options.key = key
     return this
   }
 
-  keys(keys: NonNullable<SimpleViewOptions['keys']>): this {
+  keys(keys: NonNullable<ViewOptions['keys']>): this {
     this.#options.keys = keys
     return this
   }
 
-  limit(limit: NonNullable<SimpleViewOptions['limit']>): this {
+  limit(limit: NonNullable<ViewOptions['limit']>): this {
     this.#options.limit = limit
     return this
   }
@@ -98,7 +98,7 @@ export class QueryBuilder {
     return this
   }
 
-  skip(skip: NonNullable<SimpleViewOptions['skip']>): this {
+  skip(skip: NonNullable<ViewOptions['skip']>): this {
     this.#options.skip = skip
     return this
   }
@@ -113,7 +113,7 @@ export class QueryBuilder {
     return this
   }
 
-  startkey(startkey: SimpleViewOptions['startkey']): this {
+  startkey(startkey: ViewOptions['startkey']): this {
     this.#options.startkey = startkey
     return this
   }
@@ -121,7 +121,7 @@ export class QueryBuilder {
   /**
    * Alias for startkey
    */
-  startKey(startkey: SimpleViewOptions['startkey']): this {
+  startKey(startkey: ViewOptions['startkey']): this {
     this.#options.startkey = startkey
     return this
   }
@@ -129,12 +129,12 @@ export class QueryBuilder {
   /**
    * Alias for startkey
    */
-  start_key(startkey: SimpleViewOptions['startkey']): this {
+  start_key(startkey: ViewOptions['startkey']): this {
     this.#options.startkey = startkey
     return this
   }
 
-  startkey_docid(startkeyDocId: NonNullable<SimpleViewOptions['startkey_docid']>): this {
+  startkey_docid(startkeyDocId: NonNullable<ViewOptions['startkey_docid']>): this {
     this.#options.startkey_docid = startkeyDocId
     return this
   }
@@ -142,12 +142,12 @@ export class QueryBuilder {
   /**
    * Alias for startkey_docid
    */
-  start_key_doc_id(startkeyDocId: NonNullable<SimpleViewOptions['startkey_docid']>): this {
+  start_key_doc_id(startkeyDocId: NonNullable<ViewOptions['startkey_docid']>): this {
     this.#options.startkey_docid = startkeyDocId
     return this
   }
 
-  update(update: NonNullable<SimpleViewOptions['update']>): this {
+  update(update: NonNullable<ViewOptions['update']>): this {
     this.#options.update = update
     return this
   }
@@ -158,15 +158,15 @@ export class QueryBuilder {
   }
 
   /**
-   * Builds and returns the SimpleViewOptions object.
+   * Builds and returns the ViewOptions object.
    */
-  build(): SimpleViewOptions {
+  build(): ViewOptions {
     return { ...this.#options }
   }
 }
 
-type AssertSimpleViewOptionsCovered = Exclude<keyof SimpleViewOptions, keyof QueryBuilder> extends never ? true : never
-const _assertSimpleViewOptionsCovered: AssertSimpleViewOptionsCovered = true
+type AssertViewOptionsCovered = Exclude<keyof ViewOptions, keyof QueryBuilder> extends never ? true : never
+const _assertViewOptionsCovered: AssertViewOptionsCovered = true
 
 export const createQuery = (): QueryBuilder => new QueryBuilder()
 

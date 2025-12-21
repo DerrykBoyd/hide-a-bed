@@ -12,7 +12,7 @@ const PORT = 8990
 const DB_URL = `http://localhost:${PORT}/bulk-get-test`
 
 const config: CouchConfigInput = {
-  couch: DB_URL
+  couch: DB_URL,
 }
 
 async function ensureDoc(id: string, body: Record<string, unknown>) {
@@ -77,6 +77,25 @@ suite('bulkGet', () => {
       )
     })
 
+    await t.test('skips invalid documents when onInvalidDoc=skip', async () => {
+      const schema = z.looseObject({
+        _id: z.string(),
+        _rev: z.string().optional(),
+        count: z.number()
+      })
+
+      const response = await bulkGet(config, ['doc-valid', 'doc-invalid'], {
+        validate: {
+          docSchema: schema,
+          onInvalidDoc: 'skip'
+        }
+      })
+
+      assert.strictEqual(response.rows.length, 1)
+      assert.strictEqual(response.rows[0]?.doc?._id, 'doc-valid')
+      assert.strictEqual(response.rows[0]?.doc?.count, 7)
+    })
+
     await t.test('throws RetryableError for retryable status codes', async () => {
       const offlineConfig: CouchConfigInput = {
         couch: 'http://localhost:6553/offline-db'
@@ -114,6 +133,25 @@ suite('bulkGet', () => {
       assert.strictEqual(result.found['doc-valid'].count, 7)
       assert.deepStrictEqual(Object.keys(result.notFound), ['doc-not-there'])
       assert.strictEqual(result.notFound['doc-not-there'].error, 'not_found')
+    })
+
+    await t.test('bulkGetDictionary skips invalid docs when requested', async () => {
+      const schema = z.looseObject({
+        _id: z.string(),
+        _rev: z.string().optional(),
+        count: z.number()
+      })
+
+      const result = await bulkGetDictionary(config, ['doc-valid', 'doc-invalid'], {
+        validate: {
+          docSchema: schema,
+          onInvalidDoc: 'skip'
+        }
+      })
+
+      assert.deepStrictEqual(Object.keys(result.found), ['doc-valid'])
+      assert.strictEqual(result.found['doc-valid'].count, 7)
+      assert.deepStrictEqual(Object.keys(result.notFound), [])
     })
   })
 })

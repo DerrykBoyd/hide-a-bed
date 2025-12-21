@@ -3,7 +3,7 @@ import test, { suite } from 'node:test'
 import { createServer } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { queryStream } from './stream.mts'
-import { bindConfig } from '../index.mts'
+import { bindConfig } from './bindConfig.mts'
 
 const startServer = async (handler: Parameters<typeof createServer>[0]) => {
   const server = createServer(handler)

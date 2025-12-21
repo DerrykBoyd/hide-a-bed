@@ -1,37 +1,36 @@
 import needle, { type BodyData, type NeedleHttpVerbs } from 'needle'
-import { SimpleViewOptions, SimpleViewQueryResponse, type SimpleViewQueryResponseValidated, type ViewString } from '../schema/query.mts'
 import { createLogger } from './logger.mts'
 
 import { CouchConfig, type CouchConfigInput } from '../schema/config.mts'
-import * as z4 from "zod/v4/core"
 import z from 'zod'
 import { queryString } from './utils/queryString.mts'
 import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts'
 import { RetryableError } from './utils/errors.mts'
-import type { ZodError } from 'zod'
+import { ViewOptions, type ViewString } from '../schema/couch/couch.input.schema.ts'
+import type { ViewQueryResponse, ViewQueryResponseValidated } from '../schema/couch/couch.output.schema.ts'
 
 export async function query(
   config: CouchConfigInput,
   view: ViewString,
-  options?: SimpleViewOptions,
-): Promise<SimpleViewQueryResponse>
+  options?: ViewOptions,
+): Promise<ViewQueryResponse>
 
-export async function query<DocSchema extends z4.$ZodType, KeySchema extends z4.$ZodType, ValueSchema extends z4.$ZodType>(
+export async function query<DocSchema extends z.ZodType, KeySchema extends z.ZodType, ValueSchema extends z.ZodType>(
   config: CouchConfigInput,
   view: ViewString,
-  options: SimpleViewOptions & {
+  options: ViewOptions & {
     include_docs: false,
     validate?: {
       keySchema?: KeySchema,
       valueSchema?: ValueSchema
     },
   }
-): Promise<SimpleViewQueryResponseValidated<DocSchema, KeySchema, ValueSchema>>
+): Promise<ViewQueryResponseValidated<DocSchema, KeySchema, ValueSchema>>
 
-export async function query<DocSchema extends z4.$ZodType, KeySchema extends z4.$ZodType, ValueSchema extends z4.$ZodType>(
+export async function query<DocSchema extends z.ZodType, KeySchema extends z.ZodType, ValueSchema extends z.ZodType>(
   config: CouchConfigInput,
   view: ViewString,
-  options: SimpleViewOptions & {
+  options: ViewOptions & {
     include_docs: true,
     validate?: {
       docSchema?: DocSchema,
@@ -39,7 +38,7 @@ export async function query<DocSchema extends z4.$ZodType, KeySchema extends z4.
       valueSchema?: ValueSchema
     }
   }
-): Promise<SimpleViewQueryResponseValidated<DocSchema, KeySchema, ValueSchema>>
+): Promise<ViewQueryResponseValidated<DocSchema, KeySchema, ValueSchema>>
 
 /**
  * Executes a CouchDB view query with optional schema validation and automatic handling
@@ -63,18 +62,17 @@ export async function query<DocSchema extends z4.$ZodType, KeySchema extends z4.
  * @throws {ZodError} When the configuration or validation schemas fail to parse.
  * @throws {Error} When CouchDB returns a non-retryable error payload.
  */
-export async function query<DocSchema extends z4.$ZodType, KeySchema extends z4.$ZodType, ValueSchema extends z4.$ZodType>(_config: CouchConfigInput, view: ViewString, options: SimpleViewOptions & {
+export async function query<DocSchema extends z.ZodType, KeySchema extends z.ZodType, ValueSchema extends z.ZodType>(_config: CouchConfigInput, view: ViewString, options: ViewOptions & {
   validate?: {
     docSchema?: DocSchema,
     keySchema?: KeySchema,
     valueSchema?: ValueSchema
   }
-} = {}): Promise<SimpleViewQueryResponseValidated<DocSchema, KeySchema, ValueSchema>> {
+} = {}): Promise<ViewQueryResponseValidated<DocSchema, KeySchema, ValueSchema>> {
   const configParseResult = CouchConfig.safeParse(_config)
   const logger = createLogger(_config)
   logger.info(`Starting view query: ${view}`)
-  logger.debug('Query options:', SimpleViewOptions.parse(options || {}))
-
+  logger.debug('Query options:', ViewOptions.parse(options || {}))
   if (!configParseResult.success) {
     logger.error(`Invalid configuration provided: ${z.prettifyError(configParseResult.error)}`)
     throw configParseResult.error

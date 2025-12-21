@@ -55,10 +55,15 @@ export {
   CouchConfig
 }
 
+
 export type {
-  BulkGetOptions,
+  BulkGetBound,
+  BulkGetDictionaryBound,
   BulkGetDictionaryOptions,
-  BulkGetResponse
+  BulkGetDictionaryResult,
+  BulkGetOptions,
+  BulkGetResponse,
+  OnInvalidDocAction,
 } from './impl/bulkGet.mts'
 export type { GetOptions, GetBound, GetAtRevBound } from './impl/get.mts'
 export type {
@@ -66,16 +71,20 @@ export type {
 } from './schema/query.mts'
 export type {
   ViewString,
-  SimpleViewOptions,
+  ViewOptions as SimpleViewOptions,
 } from './schema/couch/couch.input.schema.ts'
 export type {
   DefaultRowSchema,
+  ViewDoc,
+  ViewQueryResponse,
+  ViewQueryResponseValidated,
+  ViewRowValidated,
 } from './schema/couch/couch.output.schema.ts'
 export type { RetryOptions } from './impl/retry.mts'
 export type { NetworkError } from './impl/utils/errors.mts'
-export type { BulkGetBound, BulkGetDictionaryBound } from './impl/bulkGet.mts'
 export type { OnRow } from './impl/stream.mts'
 export type { CouchConfigInput, CouchConfigSchema } from './schema/config.mts'
 export type { CouchDoc } from './schema/couch.schema.mts'
 export type { LockOptionsSchema, LockOptionsInput, LockDocSchema } from './schema/sugar/lock.mts'
 export type { WatchOptionsSchema, WatchOptionsInput } from './schema/sugar/watch.mts'
+export type { BoundInstance } from './impl/bindConfig.mts'

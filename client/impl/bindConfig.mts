@@ -15,7 +15,7 @@ import { remove } from './remove.mts';
 import { createLock, removeLock } from './sugar/lock.mts';
 import { watchDocs } from './sugar/watch.mts';
 
-type BoundInstance = ReturnType<typeof doBind> & {
+export type BoundInstance = ReturnType<typeof doBind> & {
   options(overrides: Partial<z.input<typeof CouchConfig>>): BoundInstance
 }
 

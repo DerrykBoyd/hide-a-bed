@@ -7,9 +7,10 @@ import StreamArray from 'stream-json/streamers/StreamArray.js'
 import { CouchConfig, type CouchConfigInput } from '../schema/config.mts'
 import { RetryableError } from './utils/errors.mts'
 import { createLogger } from './logger.mts'
-import type { DefaultRowSchema, SimpleViewOptions } from '../schema/query.mts'
 import { queryString } from './utils/queryString.mts'
 import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts'
+import type { DefaultRowSchema } from '../schema/couch/couch.output.schema.ts'
+import type { ViewOptions } from '../schema/couch/couch.input.schema.ts'
 
 type StreamArrayChunk<Row> = {
   key: number
@@ -29,7 +30,7 @@ type HttpMethod = 'GET' | 'POST'
 export async function queryStream(
   rawConfig: CouchConfigInput,
   view: string,
-  options: SimpleViewOptions | undefined,
+  options: ViewOptions | undefined,
   onRow: OnRow
 ): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -38,7 +39,7 @@ export async function queryStream(
     logger.info(`Starting view query stream: ${view}`)
     logger.debug('Query options:', options)
 
-    const queryOptions: SimpleViewOptions = options ?? {}
+    const queryOptions: ViewOptions = options ?? {}
 
     let method: HttpMethod = 'GET'
     let payload: Record<string, unknown> | null = null

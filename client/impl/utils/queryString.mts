@@ -1,6 +1,6 @@
-import { SimpleViewOptions } from "../../schema/query.mts";
+import { ViewOptions } from "../../schema/couch/couch.input.schema.ts";
 
-const KEYS_TO_QUOTE: (keyof SimpleViewOptions)[] = [
+const KEYS_TO_QUOTE: (keyof ViewOptions)[] = [
   'endkey_docid',
   'endkey',
   'key',
@@ -16,12 +16,12 @@ const KEYS_TO_QUOTE: (keyof SimpleViewOptions)[] = [
  * @param params The list of option keys that require JSON quoting
  * @returns The serialized query string
  */
-export function queryString(options: SimpleViewOptions = {}): string {
+export function queryString(options: ViewOptions = {}): string {
   const searchParams = new URLSearchParams();
-  const parsedOptions = SimpleViewOptions.parse(options);
+  const parsedOptions = ViewOptions.parse(options);
   Object.entries(parsedOptions).forEach(([key, rawValue]) => {
     let value = rawValue;
-    if (KEYS_TO_QUOTE.includes(key as keyof SimpleViewOptions)) {
+    if (KEYS_TO_QUOTE.includes(key as keyof ViewOptions)) {
       if (typeof value === 'string') value = `"${value}"`;
       if (Array.isArray(value)) {
         value =

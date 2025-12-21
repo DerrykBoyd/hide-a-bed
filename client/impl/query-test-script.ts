@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { query } from "./query.mts"
-import { bindConfig, createLock, get, put, queryStream } from "../index.mts"
+import { get, queryStream } from "../index.mts"
+import { bindConfig } from './bindConfig.mts';
 
 const config = {
   couch: "http://localhost:5984/plumber",
