@@ -44,7 +44,7 @@ export const NeedleOptions = z.object({
   keepAlive: z.boolean().optional()
 })
 
-export const CouchConfig = z.looseObject({
+export const CouchConfig = z.strictObject({
   backoffFactor: z.number().optional().default(2).describe('multiplier for exponential backoff'),
   bindWithRetry: z.boolean().optional().default(true).describe('should we bind with retry'),
   couch: z.string().describe('the url of the couch db'),
