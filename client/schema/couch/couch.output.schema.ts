@@ -1,10 +1,11 @@
 import z from "zod"
+import type { StandardSchemaV1 } from "../../types/standard-schema.ts"
 
 export const ViewDoc = z.looseObject({
   _id: z.string(),
   _rev: z.string()
 }).describe('A document returned in a view when include_docs is true')
-export interface ViewDoc extends z.infer<typeof ViewDoc> { }
+export interface ViewDoc extends StandardSchemaV1.InferOutput<typeof ViewDoc> { }
 
 export const DefaultRowSchema = z.object({
   id: z.string().optional(),
@@ -13,13 +14,15 @@ export const DefaultRowSchema = z.object({
   doc: ViewDoc.nullish(),
   error: z.string().optional().describe('usually not_found, if something is wrong with this doc')
 })
-export interface DefaultRowSchema extends z.infer<typeof DefaultRowSchema> { }
+// export interface DefaultRowSchema extends z.infer<typeof DefaultRowSchema> { }
+export interface DefaultRowSchema extends StandardSchemaV1.InferOutput<typeof DefaultRowSchema> { }
 
-export type ViewRowValidated<DocSchema extends z.ZodType, KeySchema extends z.ZodType = z.ZodAny, ValueSchema extends z.ZodType = z.ZodAny> = {
+
+export type ViewRowValidated<DocSchema extends StandardSchemaV1, KeySchema extends StandardSchemaV1, ValueSchema extends StandardSchemaV1> = {
   id?: string
-  key?: z.output<KeySchema>
-  value?: z.output<ValueSchema>
-  doc?: z.output<DocSchema>
+  key?: StandardSchemaV1.InferOutput<KeySchema>
+  value?: StandardSchemaV1.InferOutput<ValueSchema>
+  doc?: StandardSchemaV1.InferOutput<DocSchema>
   error?: string
 }
 
@@ -32,6 +35,6 @@ export const ViewQueryResponse = z.object({
 })
 export interface ViewQueryResponse extends z.infer<typeof ViewQueryResponse> { }
 
-export type ViewQueryResponseValidated<DocSchema extends z.ZodType, KeySchema extends z.ZodType = z.ZodAny, ValueSchema extends z.ZodType = z.ZodAny> = Omit<ViewQueryResponse, 'rows'> & {
+export type ViewQueryResponseValidated<DocSchema extends StandardSchemaV1, KeySchema extends StandardSchemaV1 = StandardSchemaV1<unknown>, ValueSchema extends StandardSchemaV1 = StandardSchemaV1<unknown>> = Omit<ViewQueryResponse, 'rows'> & {
   rows: Array<ViewRowValidated<DocSchema, KeySchema, ValueSchema>>
 }

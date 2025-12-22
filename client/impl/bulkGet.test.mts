@@ -73,7 +73,11 @@ suite('bulkGet', () => {
             docSchema: schema
           }
         }),
-        (err: unknown) => (err as Error)?.name === 'ZodError'
+        (err: unknown) => {
+          assert.ok(Array.isArray(err))
+          assert.match(err[0]?.message, /Invalid input:/)
+          return true
+        }
       )
     })
 

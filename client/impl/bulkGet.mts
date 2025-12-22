@@ -6,14 +6,15 @@ import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts'
 import { RetryableError } from './utils/errors.mts'
 import { z } from 'zod'
 import { DefaultRowSchema, ViewDoc, ViewQueryResponse, type ViewQueryResponseValidated } from '../schema/couch/couch.output.schema.ts'
+import type { StandardSchemaV1 } from '../types/standard-schema.ts'
 
-export type BulkGetResponse<DocSchema extends z.ZodType = typeof CouchDoc> = ViewQueryResponseValidated<DocSchema, z.ZodType, z.ZodObject<{
+export type BulkGetResponse<DocSchema extends StandardSchemaV1 = StandardSchemaV1<ViewDoc>> = ViewQueryResponseValidated<DocSchema, z.ZodType, z.ZodObject<{
   rev: z.ZodString;
 }>>
 
 export type OnInvalidDocAction = 'throw' | 'skip'
 
-export type BulkGetOptions<DocSchema extends z.ZodType> = {
+export type BulkGetOptions<DocSchema extends StandardSchemaV1> = {
   includeDocs?: boolean
   validate?: {
     docSchema: DocSchema
@@ -21,44 +22,76 @@ export type BulkGetOptions<DocSchema extends z.ZodType> = {
   }
 }
 
-function parseRows<DocSchema extends z.ZodType>(
+async function parseRows<DocSchema extends StandardSchemaV1>(
   rows: unknown,
   includeDocs: boolean,
   schema: DocSchema,
   onInvalidDoc: OnInvalidDocAction = 'throw'
 ) {
   if (!Array.isArray(rows)) {
-    return []
+    throw new Error('invalid rows format')
   }
 
-  if (!includeDocs) {
-    const fallbackRows = z.array(DefaultRowSchema).parse(rows ?? [])
-    return fallbackRows
+  type FinalRow = {
+    id?: string
+    key?: string
+    value?: unknown
+    doc?: StandardSchemaV1.InferOutput<DocSchema>
+    error?: string
   }
+  type RowResult = FinalRow
+    | "skip"
+  const isFinalRow = (row: RowResult): row is FinalRow => row !== "skip"
 
-  let parsedRows = []
-  for (const row of rows ?? []) {
-    const parsed = z.looseObject({
-      id: z.string().optional(),
-      key: z.any().nullish(),
-      value: z.any().nullish(),
-      doc: schema.nullish(), // allow errors to pass validation
-      error: z.string().optional()
-    }).safeParse(row)
+  const parsedRows: Array<RowResult> = await Promise.all(rows.map(async (row: any) => {
+    try {
+      /** 
+       * If no doc is present, return the row as-is (without validation).
+       * This allows handling of not-found documents or rows without docs.
+       */
+      if (row.doc == null || !includeDocs) {
+        return z.looseObject({
+          id: z.string().optional(),
+          key: z.any().nullish(),
+          doc: z.any().nullish(),
+          value: z.any().nullish(),
+          error: z.string().optional()
+        }).parse(row)
+      }
 
-    if (!parsed.success) {
+      const parsedDoc = await schema['~standard'].validate(row.doc)
+
+      if (parsedDoc.issues) {
+        if (onInvalidDoc === 'throw') {
+          throw parsedDoc.issues
+        } else {
+          // skip invalid doc
+          return "skip"
+        }
+      } else {
+        const parsedRow = z.looseObject({
+          id: z.string().optional(),
+          key: z.any().nullish(),
+          value: z.any().nullish(),
+          error: z.string().optional()
+        }).parse(row)
+
+        return ({
+          ...parsedRow,
+          doc: parsedDoc.value
+        })
+      }
+    } catch (e) {
       if (onInvalidDoc === 'throw') {
-        throw parsed.error
+        throw e
       } else {
         // skip invalid doc
-        continue
+        return "skip"
       }
     }
+  }))
 
-    parsedRows.push(parsed.data)
-  }
-
-  return parsedRows
+  return parsedRows.filter(isFinalRow)
 }
 
 /**
@@ -126,19 +159,19 @@ async function executeBulkGet(_config: CouchConfigInput, ids: string[], includeD
  * @throws {ZodError} When the configuration or validation schemas fail to parse.
  * @throws {Error} When CouchDB returns a non-retryable error payload.
  */
-async function _bulkGetWithOptions<DocSchema extends z.ZodType>(
+async function _bulkGetWithOptions<DocSchema extends StandardSchemaV1>(
   config: CouchConfigInput,
   ids: string[],
   options: { includeDocs: false }
 ): Promise<BulkGetResponse>
 
-async function _bulkGetWithOptions<DocSchema extends z.ZodType>(
+async function _bulkGetWithOptions<DocSchema extends StandardSchemaV1>(
   config: CouchConfigInput,
   ids: string[],
   options: { includeDocs: true; validate?: { docSchema: DocSchema, onInvalidDoc?: 'throw' | 'skip' } }
 ): Promise<BulkGetResponse<DocSchema>>
 
-async function _bulkGetWithOptions<DocSchema extends z.ZodType>(
+async function _bulkGetWithOptions<DocSchema extends StandardSchemaV1>(
   config: CouchConfigInput,
   ids: string[],
   options: BulkGetOptions<DocSchema> = {}
@@ -155,7 +188,7 @@ async function _bulkGetWithOptions<DocSchema extends z.ZodType>(
   }
 
   const docSchema = options.validate?.docSchema || CouchDoc
-  const rows = parseRows(body.rows, includeDocs, docSchema, options.validate?.onInvalidDoc)
+  const rows = await parseRows(body.rows, includeDocs, docSchema, options.validate?.onInvalidDoc)
 
   return {
     ...body,
@@ -166,15 +199,15 @@ async function _bulkGetWithOptions<DocSchema extends z.ZodType>(
 export async function bulkGet(
   config: CouchConfigInput,
   ids: string[]
-): Promise<BulkGetResponse<typeof CouchDoc>>
+): Promise<BulkGetResponse>
 
 export async function bulkGet(
   config: CouchConfigInput,
   ids: string[],
   options: { includeDocs: false }
-): Promise<BulkGetResponse<typeof CouchDoc>>
+): Promise<BulkGetResponse>
 
-export async function bulkGet<DocSchema extends z.ZodType>(
+export async function bulkGet<DocSchema extends StandardSchemaV1>(
   config: CouchConfigInput,
   ids: string[],
   options: { includeDocs?: true; validate?: { docSchema: DocSchema, onInvalidDoc?: 'throw' | 'skip' } }
@@ -201,7 +234,7 @@ export async function bulkGet<DocSchema extends z.ZodType>(
  * @throws {ZodError} When the configuration or validation schemas fail to parse.
  * @throws {Error} When CouchDB returns a non-retryable error payload.
  */
-export async function bulkGet<DocSchema extends z.ZodType>(
+export async function bulkGet<DocSchema extends StandardSchemaV1>(
   config: CouchConfigInput,
   ids: string[],
   options: BulkGetOptions<DocSchema> = {}
@@ -225,17 +258,17 @@ export type BulkGetBound = {
   (ids: string[], options?: {
     includeDocs?: boolean,
   }): Promise<ViewQueryResponse>;
-  <DocSchema extends z.ZodType>(ids: string[], options?: BulkGetOptions<DocSchema>): Promise<ViewQueryResponseValidated<DocSchema>>;
+  <DocSchema extends StandardSchemaV1>(ids: string[], options?: BulkGetOptions<DocSchema>): Promise<ViewQueryResponseValidated<DocSchema>>;
 }
 
 /**
  * Bulk get documents by IDs and return a dictionary of found and not found documents.
  */
 
-export type BulkGetDictionaryOptions<DocSchema extends z.ZodType> = Omit<BulkGetOptions<DocSchema>, 'includeDocs'>
+export type BulkGetDictionaryOptions<DocSchema extends StandardSchemaV1> = Omit<BulkGetOptions<DocSchema>, 'includeDocs'>
 
-export type BulkGetDictionaryResult<DocSchema extends z.ZodType = typeof CouchDoc> = {
-  found: Record<string, z.output<DocSchema>>
+export type BulkGetDictionaryResult<DocSchema extends StandardSchemaV1 = StandardSchemaV1<ViewDoc>> = {
+  found: Record<string, StandardSchemaV1.InferOutput<DocSchema>>
   notFound: Record<string, z.infer<typeof DefaultRowSchema>>
 }
 
@@ -244,7 +277,7 @@ export async function bulkGetDictionary(
   ids: string[],
 ): Promise<BulkGetDictionaryResult>
 
-export async function bulkGetDictionary<DocSchema extends z.ZodType>(
+export async function bulkGetDictionary<DocSchema extends StandardSchemaV1>(
   config: CouchConfigInput,
   ids: string[],
   options: Omit<BulkGetDictionaryOptions<DocSchema>, 'includeDocs'>
@@ -265,7 +298,7 @@ export async function bulkGetDictionary<DocSchema extends z.ZodType>(
  * @throws {ZodError} When the configuration or validation schemas fail to parse.
  * @throws {Error} When CouchDB returns a non-retryable error payload.
  */
-export async function bulkGetDictionary<DocSchema extends z.ZodType>(
+export async function bulkGetDictionary<DocSchema extends StandardSchemaV1>(
   config: CouchConfigInput,
   ids: string[],
   options?: Omit<BulkGetDictionaryOptions<DocSchema>, 'includeDocs'>

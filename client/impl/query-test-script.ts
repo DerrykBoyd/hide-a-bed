@@ -146,6 +146,23 @@ const getRes = await get(config, "test-doc", {
 
 getRes?.some.nested
 
+const bulkGetRes = await bound.bulkGet(["test-doc"], {
+  validate: {
+    docSchema: z.object({
+      _id: z.string(),
+      accountUuid: z.string(),
+      leadPersonUuid: z.string(),
+      test: z.object({
+        nested: z.string(),
+      })
+    })
+  }
+})
+
+bulkGetRes.rows.forEach((row) => {
+  console.log('bulkGetRes row doc test.nested:', row.doc?.test.nested);
+})
+
 
 /**
  * Things todo:

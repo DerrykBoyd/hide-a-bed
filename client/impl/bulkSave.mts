@@ -7,7 +7,6 @@ import { bulkGetDictionary } from './bulkGet.mts';
 import { setupEmitter } from './trackedEmitter.mts';
 import { TransactionSetupError, TransactionVersionConflictError, TransactionBulkOperationError, TransactionRollbackError } from './transactionErrors.mts';
 import type z from 'zod';
-import type { CouchDocSchema } from '../schema/couch.schema.mts';
 
 export const bulkSave = BulkSave.implementAsync(async (config, docs) => {
   const logger = createLogger(config);
@@ -154,7 +153,7 @@ export const bulkSaveTransaction = BulkSaveTransaction.implementAsync(async (con
     logger.error('Transaction failed, attempting rollback:', error)
 
     // Rollback changes
-    const toRollback: CouchDocSchema[] = []
+    const toRollback: CouchDoc[] = []
     potentialExistingDocsToRollback.forEach(row => {
       if (!row.id || !row.rev) return
       const doc = existingDocs.found[row.id]

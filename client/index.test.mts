@@ -100,7 +100,7 @@ suite('Database Tests', () => {
             })
           }
         }),
-        (err: any) => err?.name === 'ZodError'
+        (err: any) => Array.isArray(err)
       )
     })
     await t.test('get validates docs with schema', async () => {
