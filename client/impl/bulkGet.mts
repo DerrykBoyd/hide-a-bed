@@ -8,8 +8,8 @@ import { z } from 'zod'
 import { DefaultRowSchema, ViewDoc, ViewQueryResponse, type ViewQueryResponseValidated } from '../schema/couch/couch.output.schema.ts'
 import type { StandardSchemaV1 } from '../types/standard-schema.ts'
 
-export type BulkGetResponse<DocSchema extends StandardSchemaV1 = StandardSchemaV1<ViewDoc>> = ViewQueryResponseValidated<DocSchema, z.ZodType, z.ZodObject<{
-  rev: z.ZodString;
+export type BulkGetResponse<DocSchema extends StandardSchemaV1 = StandardSchemaV1<ViewDoc>> = ViewQueryResponseValidated<DocSchema, StandardSchemaV1, StandardSchemaV1<{
+  rev: string;
 }>>
 
 export type OnInvalidDocAction = 'throw' | 'skip'
@@ -338,7 +338,7 @@ export async function bulkGetDictionary<DocSchema extends StandardSchemaV1>(
 
 export type BulkGetDictionaryBound = {
   (ids: string[]): Promise<BulkGetDictionaryResult>;
-  <DocSchema extends z.ZodType = typeof CouchDoc>(
+  <DocSchema extends StandardSchemaV1 = typeof CouchDoc>(
     ids: string[],
     options: BulkGetOptions<DocSchema>
   ): Promise<BulkGetDictionaryResult<DocSchema>>

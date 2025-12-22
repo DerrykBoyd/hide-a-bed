@@ -56,7 +56,9 @@ suite('get', () => {
 
       await assert.rejects(
         () => get(baseConfig, 'doc-invalid', { validate: { docSchema: schema } }),
-        (err: unknown) => (err as Error)?.name === 'ZodError'
+        (err: unknown) => {
+          return Array.isArray(err) && err[0].message === "Invalid input: expected number, received string"
+        }
       )
     })
 

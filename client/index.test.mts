@@ -136,7 +136,7 @@ suite('Database Tests', () => {
             })
           }
         }),
-        (err: any) => err?.name === 'ZodError'
+        (err: any) => Array.isArray(err) && err[0].message.includes('Invalid input:')
       )
     })
     let _rev: string | null | undefined = null

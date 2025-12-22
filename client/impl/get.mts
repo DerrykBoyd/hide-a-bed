@@ -5,22 +5,23 @@ import { CouchDoc, CouchGetOptions } from '../schema/couch.schema.mts'
 import { createLogger } from './logger.mts'
 import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts'
 import { RetryableError, NotFoundError } from './utils/errors.mts'
+import type { StandardSchemaV1 } from '../types/standard-schema.ts'
 
-export type GetOptions<DocSchema extends z.ZodType> = {
+export type GetOptions<DocSchema extends StandardSchemaV1> = {
   validate?: {
     docSchema?: DocSchema
   }
 }
 
-type InternalGetOptions<DocSchema extends z.ZodType> = GetOptions<DocSchema> & {
+type InternalGetOptions<DocSchema extends StandardSchemaV1> = GetOptions<DocSchema> & {
   rev?: string
 }
 
-async function _getWithOptions<DocSchema extends z.ZodType>(
+async function _getWithOptions<DocSchema extends StandardSchemaV1>(
   config: CouchConfigInput,
   id: string,
   options: InternalGetOptions<DocSchema>
-): Promise<z.output<DocSchema> | null> {
+): Promise<StandardSchemaV1.InferOutput<DocSchema> | null> {
   const parsedOptions = CouchGetOptions.parse({
     rev: options.rev,
     validate: options.validate
@@ -74,10 +75,14 @@ async function _getWithOptions<DocSchema extends z.ZodType>(
     }
 
     const docSchema = (parsedOptions.validate?.docSchema ?? CouchDoc) as DocSchema
-    const typedDoc = docSchema.parse(body)
+    const typedDoc = await docSchema["~standard"].validate(body)
+
+    if (typedDoc.issues) {
+      throw typedDoc.issues
+    }
 
     logger.info(`Successfully retrieved document: ${id}, rev ${rev ?? 'latest'}`)
-    return typedDoc
+    return typedDoc.value
   } catch (err) {
     logger.error('Error during get operation:', err)
     RetryableError.handleNetworkError(err)
@@ -89,49 +94,49 @@ export async function get(
   id: string
 ): Promise<z.output<typeof CouchDoc> | null>
 
-export async function get<DocSchema extends z.ZodType>(
+export async function get<DocSchema extends StandardSchemaV1>(
   config: CouchConfigInput,
   id: string,
   options: GetOptions<DocSchema>
-): Promise<z.output<DocSchema> | null>
+): Promise<StandardSchemaV1.InferOutput<DocSchema> | null>
 
-export async function get<DocSchema extends z.ZodType = typeof CouchDoc>(
+export async function get<DocSchema extends StandardSchemaV1 = typeof CouchDoc>(
   config: CouchConfigInput,
   id: string,
   options?: GetOptions<DocSchema>
-): Promise<z.output<DocSchema> | null> {
+): Promise<StandardSchemaV1.InferOutput<DocSchema> | null> {
   return _getWithOptions<DocSchema>(config, id, options ?? {})
 }
 
-export type GetBound = <DocSchema extends z.ZodType = typeof CouchDoc>(
+export type GetBound = <DocSchema extends StandardSchemaV1 = typeof CouchDoc>(
   id: string,
   options?: GetOptions<DocSchema>
-) => Promise<z.output<DocSchema> | null>
+) => Promise<StandardSchemaV1.InferOutput<DocSchema> | null>
 
 export async function getAtRev(
   config: CouchConfigInput,
   id: string,
   rev: string
-): Promise<z.output<typeof CouchDoc> | null>
+): Promise<StandardSchemaV1.InferOutput<typeof CouchDoc> | null>
 
-export async function getAtRev<DocSchema extends z.ZodType>(
+export async function getAtRev<DocSchema extends StandardSchemaV1>(
   config: CouchConfigInput,
   id: string,
   rev: string,
   options: GetOptions<DocSchema>
-): Promise<z.output<DocSchema> | null>
+): Promise<StandardSchemaV1.InferOutput<DocSchema> | null>
 
-export async function getAtRev<DocSchema extends z.ZodType>(
+export async function getAtRev<DocSchema extends StandardSchemaV1>(
   config: CouchConfigInput,
   id: string,
   rev: string,
   options?: GetOptions<DocSchema>
-): Promise<z.output<DocSchema> | null> {
+): Promise<StandardSchemaV1.InferOutput<DocSchema> | null> {
   return _getWithOptions<DocSchema>(config, id, { ...options, rev })
 }
 
-export type GetAtRevBound = <DocSchema extends z.ZodType = typeof CouchDoc>(
+export type GetAtRevBound = <DocSchema extends StandardSchemaV1 = typeof CouchDoc>(
   id: string,
   rev: string,
   options?: GetOptions<DocSchema> | undefined
-) => Promise<z.output<DocSchema> | null>
+) => Promise<StandardSchemaV1.InferOutput<DocSchema> | null>

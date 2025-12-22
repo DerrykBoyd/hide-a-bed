@@ -2,12 +2,13 @@ import needle, { type BodyData, type NeedleHttpVerbs } from 'needle'
 import { createLogger } from './logger.mts'
 
 import { CouchConfig, type CouchConfigInput } from '../schema/config.mts'
-import z from 'zod'
+import { z } from 'zod'
 import { queryString } from './utils/queryString.mts'
 import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts'
 import { RetryableError } from './utils/errors.mts'
 import { ViewOptions, type ViewString } from '../schema/couch/couch.input.schema.ts'
 import type { ViewQueryResponse, ViewQueryResponseValidated } from '../schema/couch/couch.output.schema.ts'
+import type { StandardSchemaV1 } from '../types/standard-schema.ts'
 
 export async function query(
   config: CouchConfigInput,
@@ -15,7 +16,7 @@ export async function query(
   options?: ViewOptions,
 ): Promise<ViewQueryResponse>
 
-export async function query<DocSchema extends z.ZodType, KeySchema extends z.ZodType, ValueSchema extends z.ZodType>(
+export async function query<DocSchema extends StandardSchemaV1, KeySchema extends StandardSchemaV1, ValueSchema extends StandardSchemaV1>(
   config: CouchConfigInput,
   view: ViewString,
   options: ViewOptions & {
@@ -27,7 +28,7 @@ export async function query<DocSchema extends z.ZodType, KeySchema extends z.Zod
   }
 ): Promise<ViewQueryResponseValidated<DocSchema, KeySchema, ValueSchema>>
 
-export async function query<DocSchema extends z.ZodType, KeySchema extends z.ZodType, ValueSchema extends z.ZodType>(
+export async function query<DocSchema extends StandardSchemaV1, KeySchema extends StandardSchemaV1, ValueSchema extends StandardSchemaV1>(
   config: CouchConfigInput,
   view: ViewString,
   options: ViewOptions & {
@@ -46,11 +47,11 @@ export async function query<DocSchema extends z.ZodType, KeySchema extends z.Zod
  *
  * @remarks
  * When using the validation feature, each row in the response will be validated against the provided
- * Types will be inferred from the Zod schemas supplied in the `options.validate` object.
+ * Types will be inferred from the StandardSchemaV1 supplied in the `options.validate` object.
  *
- * @template DocSchema - Zod schema used to validate each returned `doc`, if provided.
- * @template KeySchema - Zod schema used to validate each row `key`, if provided.
- * @template ValueSchema - Zod schema used to validate each row `value`, if provided.
+ * @template DocSchema - StandardSchemaV1 used to validate each returned `doc`, if provided.
+ * @template KeySchema - StandardSchemaV1 used to validate each row `key`, if provided.
+ * @template ValueSchema - StandardSchemaV1 used to validate each row `value`, if provided.
  *
  * @param _config - CouchDB configuration data that is validated before use.
  * @param view - Fully qualified design document and view identifier (e.g., `_design/foo/_view/bar`).
@@ -59,10 +60,10 @@ export async function query<DocSchema extends z.ZodType, KeySchema extends z.Zod
  * @returns The parsed view response with rows validated against the supplied schemas.
  *
  * @throws {RetryableError} When a retryable HTTP status code is encountered or no response is received.
- * @throws {ZodError} When the configuration or validation schemas fail to parse.
+ * @throws {Error<Array<StandardSchemaV1.Issue>>} When the configuration or validation schemas fail to parse.
  * @throws {Error} When CouchDB returns a non-retryable error payload.
  */
-export async function query<DocSchema extends z.ZodType, KeySchema extends z.ZodType, ValueSchema extends z.ZodType>(_config: CouchConfigInput, view: ViewString, options: ViewOptions & {
+export async function query<DocSchema extends StandardSchemaV1, KeySchema extends StandardSchemaV1, ValueSchema extends StandardSchemaV1>(_config: CouchConfigInput, view: ViewString, options: ViewOptions & {
   validate?: {
     docSchema?: DocSchema,
     keySchema?: KeySchema,

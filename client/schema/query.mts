@@ -1,10 +1,10 @@
-import { ZodType } from 'zod'
+import type { StandardSchemaV1 } from '../types/standard-schema.ts';
 import type { ViewOptions, ViewString } from './couch/couch.input.schema.ts'
 import type { ViewQueryResponse, ViewQueryResponseValidated } from './couch/couch.output.schema.ts';
 
 export type QueryBound = {
   (view: ViewString, options?: ViewOptions): Promise<ViewQueryResponse>;
-  <DocSchema extends ZodType, KeySchema extends ZodType, ValueSchema extends ZodType>(
+  <DocSchema extends StandardSchemaV1, KeySchema extends StandardSchemaV1, ValueSchema extends StandardSchemaV1>(
     view: ViewString,
     options: ViewOptions & {
       include_docs: false;
@@ -14,7 +14,7 @@ export type QueryBound = {
       };
     }
   ): Promise<ViewQueryResponseValidated<DocSchema, KeySchema, ValueSchema>>;
-  <DocSchema extends ZodType, KeySchema extends ZodType, ValueSchema extends ZodType>(
+  <DocSchema extends StandardSchemaV1, KeySchema extends StandardSchemaV1, ValueSchema extends StandardSchemaV1>(
     view: ViewString,
     options: ViewOptions & {
       include_docs: true;
