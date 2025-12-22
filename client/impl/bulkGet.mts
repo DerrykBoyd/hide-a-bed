@@ -147,7 +147,7 @@ async function executeBulkGet(_config: CouchConfigInput, ids: string[], includeD
 /**
  * Bulk get documents by IDs with options.
  * 
- * @template DocSchema - Zod schema used to validate each returned document, if provided.
+ * @template DocSchema - schema (StandardSchemaV1) used to validate each returned document, if provided.
  *
  * @param config - CouchDB configuration data that is validated before use.
  * @param ids - Array of document IDs to retrieve.
@@ -156,7 +156,7 @@ async function executeBulkGet(_config: CouchConfigInput, ids: string[], includeD
  * @returns The bulk get response with rows optionally validated against the supplied document schema.
  *
  * @throws {RetryableError} When a retryable HTTP status code is encountered or no response is received.
- * @throws {ZodError} When the configuration or validation schemas fail to parse.
+ * @throws {Error<StandardSchemaV1.FailureResult["issues"]>} When the configuration or validation schemas fail to parse.
  * @throws {Error} When CouchDB returns a non-retryable error payload.
  */
 async function _bulkGetWithOptions<DocSchema extends StandardSchemaV1>(
@@ -218,11 +218,11 @@ export async function bulkGet<DocSchema extends StandardSchemaV1>(
  * 
  * @remarks
  * By default, documents are included in the response. To exclude documents, set `includeDocs` to `false`.
- * When `includeDocs` is `true`, you can provide a Zod schema to validate the documents.
+ * When `includeDocs` is `true`, you can provide a schema (StandardSchemaV1) to validate the documents.
  * When a schema is provided, you can specify how to handle invalid documents using `onInvalidDoc` option.
  * `onInvalidDoc` can be set to `'throw'` (default) to throw an error on invalid documents, or `'skip'` to omit them from the results.
  *
- * @template DocSchema - Zod schema used to validate each returned document, if provided.
+ * @template DocSchema - schema (StandardSchemaV1) used to validate each returned document, if provided.
  *
  * @param config - CouchDB configuration data that is validated before use.
  * @param ids - Array of document IDs to retrieve.
@@ -231,7 +231,7 @@ export async function bulkGet<DocSchema extends StandardSchemaV1>(
  * @returns The bulk get response with rows optionally validated against the supplied document schema.
  *
  * @throws {RetryableError} When a retryable HTTP status code is encountered or no response is received.
- * @throws {ZodError} When the configuration or validation schemas fail to parse.
+ * @throws {Error<StandardSchemaV1.FailureResult["issues"]>} When the configuration or validation schemas fail to parse.
  * @throws {Error} When CouchDB returns a non-retryable error payload.
  */
 export async function bulkGet<DocSchema extends StandardSchemaV1>(
@@ -286,7 +286,7 @@ export async function bulkGetDictionary<DocSchema extends StandardSchemaV1>(
 /**
  * Bulk get documents by IDs and return a dictionary of found and not found documents.
  * 
- * @template DocSchema - Schema used to validate each returned document, if provided. Note: if a document is found and it fails validation this will throw a ZodError.
+ * @template DocSchema - Schema used to validate each returned document, if provided. Note: if a document is found and it fails validation this will throw a Error<StandardSchemaV1.FailureResult["issues"]>.
  *
  * @param config - CouchDB configuration data that is validated before use.
  * @param ids - Array of document IDs to retrieve.
@@ -295,7 +295,7 @@ export async function bulkGetDictionary<DocSchema extends StandardSchemaV1>(
  * @returns An object containing found documents and not found rows.
  * 
  * @throws {RetryableError} When a retryable HTTP status code is encountered or no response is received.
- * @throws {ZodError} When the configuration or validation schemas fail to parse.
+ * @throws {Error<StandardSchemaV1.FailureResult["issues"]>} When the configuration or validation schemas fail to parse.
  * @throws {Error} When CouchDB returns a non-retryable error payload.
  */
 export async function bulkGetDictionary<DocSchema extends StandardSchemaV1>(
