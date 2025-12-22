@@ -1,25 +1,22 @@
 import needle, { type NeedleResponse } from "needle";
-import { GetDBInfo, type GetDBInfoSchema, type MergeNeedleOptsSchema } from "../schema/util.mts";
 import { RetryableError } from './utils/errors.mts';
 import { createLogger } from "./logger.mts";
 import { mergeNeedleOpts } from "./utils/mergeNeedleOpts.mts";
+import { CouchConfig, CouchDBInfo, type CouchConfigInput } from "../schema/config.mts";
 
-type NeedleOptionsInput = Parameters<MergeNeedleOptsSchema>[1]
-type GetDBInfoReturn = Awaited<ReturnType<GetDBInfoSchema>>
-
-export const getDBInfo = GetDBInfo.implementAsync(async (config) => {
+export const getDBInfo = async (configInput: CouchConfigInput) => {
+  const config = CouchConfig.parse(configInput);
   const logger = createLogger(config);
   const url = `${config.couch}`;
-  const opts: NeedleOptionsInput = {
-    json: true,
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  };
-  const mergedOpts = mergeNeedleOpts(config, opts);
+
   let resp: NeedleResponse | undefined;
   try {
-    resp = await needle('get', url, mergedOpts);
+    resp = await needle('get', url, mergeNeedleOpts(config, {
+      json: true,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    }));
   } catch (err) {
     logger.error('Error during get operation:', err);
     RetryableError.handleNetworkError(err);
@@ -30,11 +27,11 @@ export const getDBInfo = GetDBInfo.implementAsync(async (config) => {
     throw new RetryableError('no response', 503);
   }
 
-  const result = resp.body as Record<string, unknown> & { reason?: string; };
+  const result = resp.body;
   if (RetryableError.isRetryableStatusCode(resp.statusCode)) {
     logger.warn(`Retryable status code received: ${resp.statusCode}`);
     throw new RetryableError(result.reason ?? 'retryable error', resp.statusCode);
   }
 
-  return result as GetDBInfoReturn;
-});
+  return CouchDBInfo.parse(result);
+}

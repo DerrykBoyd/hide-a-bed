@@ -1,5 +1,5 @@
 import type z from 'zod';
-import { CouchConfig, type CouchConfigInput, type CouchConfigSchema } from '../schema/config.mts';
+import { CouchConfig, type CouchConfigInput } from '../schema/config.mts';
 import { withRetry } from './retry.mts';
 import { type BulkGetBound, bulkGet, type BulkGetDictionaryBound, bulkGetDictionary } from './bulkGet.mts';
 import { type GetBound, type GetAtRevBound, getAtRev, get } from './get.mts';
@@ -55,8 +55,8 @@ export const bindConfig = (
  */
 export function getBoundWithRetry<
   TBound extends (...args: any[]) => Promise<any>>(
-    func: (config: CouchConfigSchema, ...args: any[]) => Promise<any>,
-    config: CouchConfigSchema) {
+    func: (config: CouchConfig, ...args: any[]) => Promise<any>,
+    config: CouchConfig) {
   const bound = func.bind(null, config)
   if (config.bindWithRetry) {
     return withRetry(bound, {
@@ -76,7 +76,7 @@ export function getBoundWithRetry<
  * @param config The CouchDB configuration
  * @returns An object with CouchDB operations bound to the provided configuration
  */
-function doBind(config: CouchConfigSchema) {
+function doBind(config: CouchConfig) {
   // Default retry options
   const retryOptions = {
     maxRetries: config.maxRetries ?? 10,

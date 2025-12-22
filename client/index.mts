@@ -2,7 +2,6 @@ import { createQuery } from './impl/utils/queryBuilder.mts'
 import { QueryBuilder } from './impl/utils/queryBuilder.mts'
 import { NotFoundError, RetryableError } from './impl/utils/errors.mts'
 import { bindConfig } from './impl/bindConfig.mts'
-import { CouchConfig } from './schema/config.mts';
 import { withRetry } from './impl/retry.mts';
 import { bulkGet, bulkGetDictionary } from './impl/bulkGet.mts';
 import { getAtRev, get } from './impl/get.mts';
@@ -50,9 +49,6 @@ export {
   // Error types
   NotFoundError,
   RetryableError,
-
-  // Schemas
-  CouchConfig
 }
 
 
@@ -84,7 +80,7 @@ export type {
 export type { RetryOptions } from './impl/retry.mts'
 export type { NetworkError } from './impl/utils/errors.mts'
 export type { OnRow } from './impl/stream.mts'
-export type { CouchConfigInput, CouchConfigSchema } from './schema/config.mts'
+export type { CouchConfig, CouchConfigInput } from './schema/config.mts'
 export type { LockOptionsSchema, LockOptionsInput, LockDocSchema } from './schema/sugar/lock.mts'
 export type { WatchOptionsSchema, WatchOptionsInput } from './schema/sugar/watch.mts'
 export type { BoundInstance } from './impl/bindConfig.mts'

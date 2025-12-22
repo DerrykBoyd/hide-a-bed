@@ -3,7 +3,7 @@ import { bulkSave } from './bulkSave.mts';
 import { createLogger } from './logger.mts';
 import { remove } from './remove.mts';
 import { CouchDoc } from '../schema/couch/couch.output.schema.ts';
-import { CouchConfig, type CouchConfigInput } from '../index.mts';
+import { CouchConfig, type CouchConfigInput } from '../schema/config.mts';
 
 /**
  * Removes multiple documents from a CouchDB database using the _bulk_docs endpoint.
