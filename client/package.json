@@ -22,6 +22,7 @@
     "clean": "rm -rf types/output && rm -rf dist && (find . -name \"log.txt\" -type f -delete || true)",
     "build": "npm run clean && tsc && tsdown",
     "build:docs": "typedoc ./index.mts",
+    "dev": "typedoc --watch ./index.mts & npx -y serve ./docs",
     "test": "node --test",
     "lint": "standard",
     "lint:fix": "standard --fix",
