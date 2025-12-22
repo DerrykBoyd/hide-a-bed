@@ -1,6 +1,6 @@
 import { bulkGet } from './bulkGet.mts';
 import { bulkSave } from './bulkSave.mts';
-import { createLogger } from './logger.mts';
+import { createLogger } from './utils/logger.mts';
 import { remove } from './remove.mts';
 import { CouchDoc } from '../schema/couch/couch.output.schema.ts';
 import { CouchConfig, type CouchConfigInput } from '../schema/config.mts';

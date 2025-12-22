@@ -1,7 +1,7 @@
 import { put } from './put.mts'
 import { get } from './get.mts'
 import { Patch, PatchDangerously } from '../schema/patch.mts'
-import { createLogger } from './logger.mts'
+import { createLogger } from './utils/logger.mts'
 import { setTimeout } from 'node:timers/promises'
 
 export const patch = Patch.implementAsync(async (config, id, properties) => {

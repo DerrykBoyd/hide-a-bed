@@ -1,4 +1,4 @@
-import type { CouchConfigInput } from '../schema/config.mts'
+import type { CouchConfigInput } from '../../schema/config.mts'
 
 type LoggerMethod = (...args: unknown[]) => void
 

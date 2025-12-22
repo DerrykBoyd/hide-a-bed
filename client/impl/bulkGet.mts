@@ -1,6 +1,6 @@
 import needle from 'needle'
 import { CouchConfig, type CouchConfigInput } from '../schema/config.mts'
-import { createLogger } from './logger.mts'
+import { createLogger } from './utils/logger.mts'
 import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts'
 import { RetryableError } from './utils/errors.mts'
 import { z } from 'zod'

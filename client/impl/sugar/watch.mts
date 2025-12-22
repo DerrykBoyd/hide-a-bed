@@ -1,7 +1,7 @@
 import needle from 'needle'
 import { EventEmitter } from 'events'
 import { RetryableError } from '../utils/errors.mts'
-import { createLogger } from '../logger.mts'
+import { createLogger } from '../utils/logger.mts'
 import { WatchOptions, type WatchOptionsInput } from '../../schema/sugar/watch.mts'
 import { mergeNeedleOpts } from '../utils/mergeNeedleOpts.mts'
 import { setTimeout } from 'node:timers/promises'

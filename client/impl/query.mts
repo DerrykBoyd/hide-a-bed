@@ -1,5 +1,5 @@
 import needle, { type BodyData, type NeedleHttpVerbs } from 'needle'
-import { createLogger } from './logger.mts'
+import { createLogger } from './utils/logger.mts'
 
 import { CouchConfig, type CouchConfigInput } from '../schema/config.mts'
 import { z } from 'zod'

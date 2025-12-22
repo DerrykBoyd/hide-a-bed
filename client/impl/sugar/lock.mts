@@ -1,7 +1,7 @@
 import { LockOptions, type LockOptionsSchema } from '../../schema/sugar/lock.mts'
 import { put } from '../put.mts'
 import { get } from '../get.mts'
-import { createLogger } from '../logger.mts'
+import { createLogger } from '../utils/logger.mts'
 import { CouchConfig, type CouchConfigInput } from '../../schema/config.mts'
 import { isConflictError } from '../utils/errors.mts'
 

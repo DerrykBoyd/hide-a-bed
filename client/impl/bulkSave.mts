@@ -1,5 +1,5 @@
 import needle from 'needle';
-import { createLogger } from './logger.mts';
+import { createLogger } from './utils/logger.mts';
 import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts';
 import { bulkGetDictionary } from './bulkGet.mts';
 import { setupEmitter } from './trackedEmitter.mts';
