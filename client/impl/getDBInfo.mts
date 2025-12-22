@@ -4,6 +4,31 @@ import { createLogger } from "./logger.mts";
 import { mergeNeedleOpts } from "./utils/mergeNeedleOpts.mts";
 import { CouchConfig, CouchDBInfo, type CouchConfigInput } from "../schema/config.mts";
 
+/**
+ * Fetches and returns CouchDB database information.
+ * 
+ * @see {@link https://docs.couchdb.org/en/stable/api/database/common.html#get--db | CouchDB API Documentation}
+ * 
+ * @param configInput - The CouchDB configuration input.
+ * @returns A promise that resolves to the CouchDB database information.
+ * @throws {RetryableError} `RetryableError` If a retryable error occurs during the request.
+ * @throws {Error} `Error` For other non-retryable errors.
+ * 
+ * @example
+ * ```ts
+ * import { getDBInfo } from './impl/getDBInfo.mts';
+ * 
+ * const config = { couch: 'http://localhost:5984/my-database' };
+ * 
+ * getDBInfo(config)
+ *   .then(info => {
+ *     console.log('Database Info:', info);
+ *   })
+ *   .catch(err => {
+ *     console.error('Error fetching database info:', err);
+ *   });
+ * ```
+ */
 export const getDBInfo = async (configInput: CouchConfigInput) => {
   const config = CouchConfig.parse(configInput);
   const logger = createLogger(config);

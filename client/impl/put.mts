@@ -1,8 +1,8 @@
 import needle from 'needle';
-import { RetryableError } from '../index.mts';
 import { CouchPut } from '../schema/couch.schema.mts';
 import { createLogger } from './logger.mts';
 import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts';
+import { RetryableError } from './utils/errors.mts';
 
 export const put = CouchPut.implementAsync(async (config, doc) => {
   const logger = createLogger(config);

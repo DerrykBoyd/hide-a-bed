@@ -1,11 +1,14 @@
 import needle from 'needle';
-import { put, RetryableError, withRetry, type CouchConfigInput, type CouchDoc } from '../index.mts';
 import { createLogger } from './logger.mts';
 import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts';
 import { bulkGetDictionary } from './bulkGet.mts';
 import { setupEmitter } from './trackedEmitter.mts';
 import { TransactionSetupError, TransactionVersionConflictError, TransactionBulkOperationError, TransactionRollbackError } from './transactionErrors.mts';
-import { BulkSaveResponse, type CouchDocInput } from '../schema/couch/couch.output.schema.ts';
+import { BulkSaveResponse, CouchDoc, type CouchDocInput } from '../schema/couch/couch.output.schema.ts';
+import type { CouchConfigInput } from '../schema/config.mts';
+import { RetryableError } from './utils/errors.mts';
+import { withRetry } from './retry.mts';
+import { put } from './put.mts';
 
 /**
  * Bulk saves documents to CouchDB using the _bulk_docs endpoint.

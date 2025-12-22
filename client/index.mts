@@ -45,10 +45,6 @@ export {
   createQuery,
   createLock,
   removeLock,
-
-  // Error types
-  NotFoundError,
-  RetryableError,
 }
 
 
@@ -78,7 +74,7 @@ export type {
   ViewRowValidated,
 } from './schema/couch/couch.output.schema.ts'
 export type { RetryOptions } from './impl/retry.mts'
-export type { NetworkError } from './impl/utils/errors.mts'
+export type { NetworkError, RetryableError, NotFoundError } from './impl/utils/errors.mts'
 export type { OnRow } from './impl/stream.mts'
 export type { CouchConfig, CouchConfigInput } from './schema/config.mts'
 export type { LockOptionsSchema, LockOptionsInput, LockDocSchema } from './schema/sugar/lock.mts'
