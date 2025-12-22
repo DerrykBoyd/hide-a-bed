@@ -98,7 +98,7 @@ async function parseRows<DocSchema extends StandardSchemaV1>(
  * @throws {RetryableError} When a retryable HTTP status code is encountered or no response is received.
  * @throws {Error} When CouchDB returns a non-retryable error payload.
  */
-async function executeBulkGet(_config: CouchConfigInput, ids: string[], includeDocs: boolean) {
+async function executeBulkGet(_config: CouchConfigInput, ids: Array<string | undefined>, includeDocs: boolean) {
   const configParseResult = CouchConfig.safeParse(_config)
   const logger = createLogger(_config)
   logger.info(`Starting bulk get for ${ids.length} documents`)
@@ -153,19 +153,19 @@ async function executeBulkGet(_config: CouchConfigInput, ids: string[], includeD
  */
 async function _bulkGetWithOptions<DocSchema extends StandardSchemaV1>(
   config: CouchConfigInput,
-  ids: string[],
+  ids: Array<string | undefined>,
   options: { includeDocs: false }
 ): Promise<BulkGetResponse>
 
 async function _bulkGetWithOptions<DocSchema extends StandardSchemaV1>(
   config: CouchConfigInput,
-  ids: string[],
+  ids: Array<string | undefined>,
   options: { includeDocs: true; validate?: { docSchema: DocSchema, onInvalidDoc?: 'throw' | 'skip' } }
 ): Promise<BulkGetResponse<DocSchema>>
 
 async function _bulkGetWithOptions<DocSchema extends StandardSchemaV1>(
   config: CouchConfigInput,
-  ids: string[],
+  ids: Array<string | undefined>,
   options: BulkGetOptions<DocSchema> = {}
 ): Promise<BulkGetResponse<DocSchema>> {
   const includeDocs = options.includeDocs ?? true
@@ -190,18 +190,18 @@ async function _bulkGetWithOptions<DocSchema extends StandardSchemaV1>(
 
 export async function bulkGet(
   config: CouchConfigInput,
-  ids: string[]
+  ids: Array<string | undefined>
 ): Promise<BulkGetResponse>
 
 export async function bulkGet(
   config: CouchConfigInput,
-  ids: string[],
+  ids: Array<string | undefined>,
   options: { includeDocs: false }
 ): Promise<BulkGetResponse>
 
 export async function bulkGet<DocSchema extends StandardSchemaV1>(
   config: CouchConfigInput,
-  ids: string[],
+  ids: Array<string | undefined>,
   options: { includeDocs?: true; validate?: { docSchema: DocSchema, onInvalidDoc?: 'throw' | 'skip' } }
 ): Promise<BulkGetResponse<DocSchema>>
 
@@ -228,7 +228,7 @@ export async function bulkGet<DocSchema extends StandardSchemaV1>(
  */
 export async function bulkGet<DocSchema extends StandardSchemaV1>(
   config: CouchConfigInput,
-  ids: string[],
+  ids: Array<string | undefined>,
   options: BulkGetOptions<DocSchema> = {}
 ) {
   if (options?.includeDocs === false) {
@@ -266,12 +266,12 @@ export type BulkGetDictionaryResult<DocSchema extends StandardSchemaV1 = Standar
 
 export async function bulkGetDictionary(
   config: CouchConfigInput,
-  ids: string[],
+  ids: Array<string | undefined>,
 ): Promise<BulkGetDictionaryResult>
 
 export async function bulkGetDictionary<DocSchema extends StandardSchemaV1>(
   config: CouchConfigInput,
-  ids: string[],
+  ids: Array<string | undefined>,
   options: Omit<BulkGetDictionaryOptions<DocSchema>, 'includeDocs'>
 ): Promise<BulkGetDictionaryResult<DocSchema>>
 
@@ -292,7 +292,7 @@ export async function bulkGetDictionary<DocSchema extends StandardSchemaV1>(
  */
 export async function bulkGetDictionary<DocSchema extends StandardSchemaV1>(
   config: CouchConfigInput,
-  ids: string[],
+  ids: Array<string | undefined>,
   options?: Omit<BulkGetDictionaryOptions<DocSchema>, 'includeDocs'>
 ) {
   const response = await bulkGet(config, ids, {

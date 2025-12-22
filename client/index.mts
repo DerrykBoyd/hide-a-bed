@@ -76,6 +76,7 @@ export type {
 export type {
   ViewRow,
   CouchDoc,
+  CouchDocInput,
   ViewQueryResponse,
   ViewQueryResponseValidated,
   ViewRowValidated,

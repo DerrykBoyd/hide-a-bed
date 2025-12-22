@@ -1,22 +1,31 @@
 import needle from 'needle';
-import { put, RetryableError, withRetry, type CouchDoc } from '../index.mts';
-import { BulkSave, BulkSaveTransaction, type Response } from '../schema/bulk.mts';
+import { put, RetryableError, withRetry, type CouchConfigInput, type CouchDoc } from '../index.mts';
 import { createLogger } from './logger.mts';
 import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts';
 import { bulkGetDictionary } from './bulkGet.mts';
 import { setupEmitter } from './trackedEmitter.mts';
 import { TransactionSetupError, TransactionVersionConflictError, TransactionBulkOperationError, TransactionRollbackError } from './transactionErrors.mts';
+import { BulkSaveResponse, type CouchDocInput } from '../schema/couch/couch.output.schema.ts';
 
-export const bulkSave = BulkSave.implementAsync(async (config, docs) => {
+/**
+ * Bulk saves documents to CouchDB using the _bulk_docs endpoint.
+ * 
+ * @see
+ * https://docs.couchdb.org/en/stable/api/database/bulk-api.html#db-bulk-docs
+ *
+ * @param {CouchConfigInput} config - The CouchDB configuration.
+ * @param {CouchDocInput[]} docs - An array of documents to save.
+ * @returns {Promise<BulkSaveResponse>} - The response from CouchDB after the bulk save operation.
+ *
+ * @throws {RetryableError} When a retryable HTTP status code is encountered or no response is received.
+ * @throws {Error} When CouchDB returns a non-retryable error payload.
+ */
+export const bulkSave = async (config: CouchConfigInput, docs: CouchDocInput[]) => {
   const logger = createLogger(config);
 
-  if (!docs) {
-    logger.warn('bulkSave called with no docs');
-    return { ok: false, error: 'noDocs', reason: 'no docs provided' };
-  }
-  if (!docs.length) {
-    logger.warn('bulkSave called with empty docs array');
-    return { ok: false, error: 'noDocs', reason: 'no docs provided' };
+  if (docs == null || !docs.length) {
+    logger.error('bulkSave called with no docs');
+    throw new Error('no docs provided');
   }
 
   logger.info(`Starting bulk save of ${docs.length} documents`);
@@ -49,10 +58,60 @@ export const bulkSave = BulkSave.implementAsync(async (config, docs) => {
     throw new Error('could not save');
   }
   const results = resp?.body || [];
-  return results;
-});
+  return BulkSaveResponse.parse(results);
+}
 
-export const bulkSaveTransaction = BulkSaveTransaction.implementAsync(async (config, transactionId, docs) => {
+type TransactionStatus = 'pending' | 'completed' | 'rolled_back' | 'rollback_failed';
+type TransactionDoc = {
+  _id: string
+  _rev: string | null
+  type: 'transaction'
+  status: TransactionStatus
+  changes: CouchDocInput[]
+  timestamp: string
+}
+
+/**
+ * Performs a bulk save of documents within a transaction context.
+ * 
+ * @remarks
+ * This operation ensures that either all documents are saved successfully, or none are, maintaining data consistency.
+ * If any document fails to save, the operation will attempt to roll back all changes.
+ *
+ * The transactionId has to be unique for the lifetime of the app. It is used to prevent two processes from executing the same transaction. It is up to you to craft a transactionId that uniquely represents this transaction, and that also is the same if another process tries to generate it.
+ *
+ * Exceptions to handle:
+ *  
+ * `TransactionSetupError` Thrown if the transaction document cannot be created. Usually because it already exists
+ * `TransactionVersionConflictError` Thrown if there are version conflicts with existing documents.
+ * `TransactionBulkOperationError` Thrown if the bulk save operation fails for some documents.
+ * `TransactionRollbackError` Thrown if the rollback operation fails after a transaction failure.
+ * 
+ * @example
+ * ```ts
+ * const docsToSave = [
+ *  { _id: 'doc1', foo: 'bar' },
+ *  { _id: 'doc2', foo: 'baz' }
+ * ];
+ * 
+ * try {
+ *  const results = await bulkSaveTransaction(config, 'unique-transaction-id', docsToSave);
+ *  console.log('Bulk save successful:', results);
+ *  } catch (error) {
+ *  console.error('Bulk save transaction failed:', error);
+ * }
+ * ```
+ * 
+ * @param {CouchConfigInput} config - The CouchDB configuration.
+ * @param {string} transactionId - A unique identifier for the transaction.
+ * @param {CouchDocInput[]} docs - An array of documents to save.
+ * @returns {Promise<BulkSaveResponse>} - The transaction save results.
+ * @throws {TransactionSetupError} When the transaction document cannot be created.
+ * @throws {TransactionVersionConflictError} When there are version conflicts with existing documents.
+ * @throws {TransactionBulkOperationError} When the bulk save operation fails for some documents.
+ * @throws {TransactionRollbackError} When the rollback operation fails after a transaction failure.
+ */
+export const bulkSaveTransaction = async (config: CouchConfigInput, transactionId: string, docs: CouchDocInput[]): Promise<BulkSaveResponse> => {
   const emitter = setupEmitter(config)
   const logger = createLogger(config)
   const retryOptions = {
@@ -64,7 +123,7 @@ export const bulkSaveTransaction = BulkSaveTransaction.implementAsync(async (con
   logger.info(`Starting bulk save transaction ${transactionId} for ${docs.length} documents`)
 
   // Create transaction document
-  const transactionDoc = {
+  const transactionDoc: TransactionDoc = {
     _id: `txn:${transactionId}`,
     _rev: null,
     type: 'transaction',
@@ -93,7 +152,7 @@ export const bulkSaveTransaction = BulkSaveTransaction.implementAsync(async (con
   const revErrors: string[] = []
   // if any of the existingDocs, and the docs provided do not match on rev, then throw an error
   docs.forEach(d => {
-    // @ts-ignore
+    if (!d._id) return
     if (existingDocs.found[d._id] && existingDocs.found[d._id]._rev !== d._rev) revErrors.push(d._id)
     if (existingDocs.notFound[d._id] && d._rev) revErrors.push(d._id)
   })
@@ -104,15 +163,15 @@ export const bulkSaveTransaction = BulkSaveTransaction.implementAsync(async (con
   logger.debug('Checked document revisions:', existingDocs)
   await emitter.emit('transaction-revs-checked', existingDocs)
 
-  const providedDocsById: Record<string, CouchDoc> = {}
+  const providedDocsById: Record<string, CouchDocInput> = {}
   docs.forEach((d) => {
     if (!d._id) return
     providedDocsById[d._id] = d
   })
 
-  const newDocsToRollback: Response = []
-  const potentialExistingDocsToRollback: Response = []
-  const failedDocs: Response = []
+  const newDocsToRollback: BulkSaveResponse = []
+  const potentialExistingDocsToRollback: BulkSaveResponse = []
+  const failedDocs: BulkSaveResponse = []
 
   try {
     logger.info('Transaction started:', transactionDoc)
@@ -169,7 +228,7 @@ export const bulkSaveTransaction = BulkSaveTransaction.implementAsync(async (con
 
     // rollback all the changes
     const bulkRollbackResult = await bulkSave(config, toRollback)
-    let status = 'rolled_back'
+    let status: TransactionStatus = 'rolled_back'
     bulkRollbackResult.forEach(r => {
       if (r.error) status = 'rollback_failed'
     })
@@ -178,8 +237,7 @@ export const bulkSaveTransaction = BulkSaveTransaction.implementAsync(async (con
 
     // Update transaction status to rolled back
     transactionDoc.status = status
-    // @ts-ignore TODO fix this
-    transactionDoc._rev = transactionResponse.rev
+    transactionDoc._rev = transactionResponse.rev || null
     transactionResponse = await _put(transactionDoc)
     logger.warn('Transaction rollback status updated:', transactionDoc)
     await emitter.emit('transaction-rolled-back-status', { transactionResponse, transactionDoc })
@@ -192,5 +250,5 @@ export const bulkSaveTransaction = BulkSaveTransaction.implementAsync(async (con
       bulkRollbackResult
     )
   }
-})
+}
 

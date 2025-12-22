@@ -2,7 +2,7 @@ import z from "zod"
 import type { StandardSchemaV1 } from "../../types/standard-schema.ts"
 
 /**
- * Default schema for a CouchDB document if no validation schema is provided.
+ * Default schema for a returned CouchDB document if no validation schema is provided.
  */
 export const CouchDoc = z.looseObject({
   _id: z.string().describe('the couch doc id'),
@@ -10,6 +10,11 @@ export const CouchDoc = z.looseObject({
   _deleted: z.boolean().optional().describe('is the doc deleted')
 })
 export type CouchDoc = StandardSchemaV1.InferOutput<typeof CouchDoc>
+
+/**
+ * A type for input CouchDB documents (without required _id).
+ */
+export type CouchDocInput = Omit<CouchDoc, '_id'> & { _id?: string }
 
 /**
  * Default schema for a CouchDB view row if no validation schema is provided.
@@ -52,3 +57,15 @@ export interface ViewQueryResponse extends z.infer<typeof ViewQueryResponse> { }
 export type ViewQueryResponseValidated<DocSchema extends StandardSchemaV1, KeySchema extends StandardSchemaV1 = StandardSchemaV1<unknown>, ValueSchema extends StandardSchemaV1 = StandardSchemaV1<unknown>> = Omit<ViewQueryResponse, 'rows'> & {
   rows: Array<ViewRowValidated<DocSchema, KeySchema, ValueSchema>>
 }
+
+/**
+ * CouchDB _bulk_docs response schemas
+ */
+export const BulkSaveResponse = z.array(z.object({
+  ok: z.boolean().nullish(),
+  id: z.string().nullish(),
+  rev: z.string().nullish(),
+  error: z.string().nullish().describe('if an error occurred, one word reason, eg conflict'),
+  reason: z.string().nullish().describe('a full error message')
+}))
+export type BulkSaveResponse = z.infer<typeof BulkSaveResponse>
