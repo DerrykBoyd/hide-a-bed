@@ -1,4 +1,3 @@
-import { BulkRemove, BulkRemoveMap } from '../schema/bulk.mts';
 import { bulkGet } from './bulkGet.mts';
 import { bulkSave } from './bulkSave.mts';
 import { createLogger } from './logger.mts';

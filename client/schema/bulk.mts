@@ -28,18 +28,6 @@ export type BulkSaveSchema = z.infer<typeof BulkSave>
 export const BulkSaveBound = z.function({ input: [z.array(OptionalIdCouchDoc)], output: z.promise(BulkSaveResponseSchema) })
 export type BulkSaveBoundSchema = z.infer<typeof BulkSaveBound>
 
-export const BulkRemove = z.function({ input: [CouchConfig, z.array(z.string().describe('the ids to delete'))], output: z.promise(BulkSaveResponseSchema) })
-export type BulkRemoveSchema = z.infer<typeof BulkRemove>
-
-export const BulkRemoveBound = z.function({ input: [z.array(z.string().describe('the ids to delete'))], output: z.promise(BulkSaveResponseSchema) })
-export type BulkRemoveBoundSchema = z.infer<typeof BulkRemoveBound>
-
-export const BulkRemoveMap = z.function({ input: [CouchConfig, z.array(z.string().describe('the ids to delete'))], output: z.promise(z.array(CouchDocResponse)) })
-export type BulkRemoveMapSchema = z.infer<typeof BulkRemoveMap>
-
-export const BulkRemoveMapBound = z.function({ input: [z.array(z.string().describe('the ids to delete'))], output: z.promise(BulkSaveMapResponseSchema) })
-export type BulkRemoveMapBoundSchema = z.infer<typeof BulkRemoveMapBound>
-
 export const BulkSaveTransaction = z.function({ input: [CouchConfig, z.string().describe('transaction id'), z.array(CouchDoc)], output: z.promise(BulkSaveResponseSchema) })
 export type BulkSaveTransactionSchema = z.infer<typeof BulkSaveTransaction>
 
