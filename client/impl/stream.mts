@@ -9,7 +9,7 @@ import { RetryableError } from './utils/errors.mts'
 import { createLogger } from './logger.mts'
 import { queryString } from './utils/queryString.mts'
 import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts'
-import type { DefaultRowSchema } from '../schema/couch/couch.output.schema.ts'
+import type { ViewRow } from '../schema/couch/couch.output.schema.ts'
 import type { ViewOptions } from '../schema/couch/couch.input.schema.ts'
 
 type StreamArrayChunk<Row> = {
@@ -17,7 +17,7 @@ type StreamArrayChunk<Row> = {
   value: Row
 }
 
-export type OnRow = (row: DefaultRowSchema) => void // TODO: make generic with validation and infer types
+export type OnRow = (row: ViewRow) => void // TODO: make generic with validation and infer types
 type HttpMethod = 'GET' | 'POST'
 
 /**
@@ -91,7 +91,7 @@ export async function queryStream(
 
     let request: ReturnType<typeof needle.get> | ReturnType<typeof needle.post> | null = null
 
-    parserPipeline.on('data', (chunk: StreamArrayChunk<DefaultRowSchema>) => {
+    parserPipeline.on('data', (chunk: StreamArrayChunk<ViewRow>) => {
       try {
         rowCount++
         onRow(chunk.value)

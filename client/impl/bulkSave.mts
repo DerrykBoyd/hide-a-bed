@@ -6,7 +6,6 @@ import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts';
 import { bulkGetDictionary } from './bulkGet.mts';
 import { setupEmitter } from './trackedEmitter.mts';
 import { TransactionSetupError, TransactionVersionConflictError, TransactionBulkOperationError, TransactionRollbackError } from './transactionErrors.mts';
-import type z from 'zod';
 
 export const bulkSave = BulkSave.implementAsync(async (config, docs) => {
   const logger = createLogger(config);
@@ -105,7 +104,7 @@ export const bulkSaveTransaction = BulkSaveTransaction.implementAsync(async (con
   logger.debug('Checked document revisions:', existingDocs)
   await emitter.emit('transaction-revs-checked', existingDocs)
 
-  const providedDocsById: Record<string, z.infer<typeof CouchDoc>> = {}
+  const providedDocsById: Record<string, CouchDoc> = {}
   docs.forEach((d) => {
     if (!d._id) return
     providedDocsById[d._id] = d

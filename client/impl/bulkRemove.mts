@@ -1,16 +1,15 @@
-import type { z } from 'zod';
 import { BulkRemove, BulkRemoveMap } from '../schema/bulk.mts';
-import { CouchDoc } from '../schema/couch.schema.mts';
 import { bulkGet } from './bulkGet.mts';
 import { bulkSave } from './bulkSave.mts';
 import { createLogger } from './logger.mts';
 import { remove } from './remove.mts';
+import { CouchDoc } from '../schema/couch/couch.output.schema.ts';
 
 export const bulkRemove = BulkRemove.implementAsync(async (config, ids) => {
   const logger = createLogger(config);
   logger.info(`Starting bulk remove for ${ids.length} documents`);
   const resp = await bulkGet(config, ids);
-  const toRemove: Array<z.infer<typeof CouchDoc>> = [];
+  const toRemove: Array<CouchDoc> = [];
   resp.rows?.forEach(row => {
     if (!row.doc) return;
     try {

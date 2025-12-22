@@ -1,13 +1,7 @@
 import { z } from 'zod'
 import { CouchConfig } from './config.mts'
 import type { StandardSchemaV1 } from '../types/standard-schema.ts'
-
-export const CouchDoc = z.looseObject({
-  _id: z.string().describe('the couch doc id'),
-  _rev: z.string().optional().nullish().describe('the doc revision'),
-  _deleted: z.boolean().optional().describe('is the doc deleted')
-})
-export type CouchDoc = StandardSchemaV1.InferOutput<typeof CouchDoc>
+import { CouchDoc } from './couch/couch.output.schema.ts'
 
 export const CouchDocResponse = z.object({
   ok: z.boolean().optional().describe('did the request succeed'),

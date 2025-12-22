@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { CouchDoc } from '../couch.schema.mts'
+import { CouchDoc } from '../couch/couch.output.schema.ts'
 
 export const LockDoc = CouchDoc.extend({
   type: z.literal('lock'),

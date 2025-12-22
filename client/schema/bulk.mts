@@ -1,12 +1,13 @@
 import { z } from 'zod'
 import { CouchConfig } from './config.mts'
-import { CouchDoc, CouchDocResponse } from './couch.schema.mts'
+import { CouchDocResponse } from './couch.schema.mts'
+import { CouchDoc } from './couch/couch.output.schema.ts'
 
 export const BulkSaveRow = z.object({
   ok: z.boolean().nullish(),
   id: z.string().nullish(),
   rev: z.string().nullish(),
-  error: z.string().nullish().describe('if an error occured, one word reason, eg conflict'),
+  error: z.string().nullish().describe('if an error occurred, one word reason, eg conflict'),
   reason: z.string().nullish().describe('a full error message')
 })
 export type BulkSaveRowSchema = z.infer<typeof BulkSaveRow>

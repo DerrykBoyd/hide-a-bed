@@ -1,14 +1,13 @@
 import needle from 'needle'
 import { CouchConfig, type CouchConfigInput } from '../schema/config.mts'
-import { CouchDoc } from '../schema/couch.schema.mts'
 import { createLogger } from './logger.mts'
 import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts'
 import { RetryableError } from './utils/errors.mts'
 import { z } from 'zod'
-import { DefaultRowSchema, ViewDoc, ViewQueryResponse, type ViewQueryResponseValidated } from '../schema/couch/couch.output.schema.ts'
+import { ViewRow, ViewQueryResponse, type ViewQueryResponseValidated, CouchDoc, type ViewRowValidated } from '../schema/couch/couch.output.schema.ts'
 import type { StandardSchemaV1 } from '../types/standard-schema.ts'
 
-export type BulkGetResponse<DocSchema extends StandardSchemaV1 = StandardSchemaV1<ViewDoc>> = ViewQueryResponseValidated<DocSchema, StandardSchemaV1, StandardSchemaV1<{
+export type BulkGetResponse<DocSchema extends StandardSchemaV1 = StandardSchemaV1<CouchDoc>> = ViewQueryResponseValidated<DocSchema, StandardSchemaV1, StandardSchemaV1<{
   rev: string;
 }>>
 
@@ -24,7 +23,6 @@ export type BulkGetOptions<DocSchema extends StandardSchemaV1> = {
 
 async function parseRows<DocSchema extends StandardSchemaV1>(
   rows: unknown,
-  includeDocs: boolean,
   schema: DocSchema,
   onInvalidDoc: OnInvalidDocAction = 'throw'
 ) {
@@ -46,17 +44,11 @@ async function parseRows<DocSchema extends StandardSchemaV1>(
   const parsedRows: Array<RowResult> = await Promise.all(rows.map(async (row: any) => {
     try {
       /** 
-       * If no doc is present, return the row as-is (without validation).
+       * If no doc is present, parse without doc validation.
        * This allows handling of not-found documents or rows without docs.
        */
-      if (row.doc == null || !includeDocs) {
-        return z.looseObject({
-          id: z.string().optional(),
-          key: z.any().nullish(),
-          doc: z.any().nullish(),
-          value: z.any().nullish(),
-          error: z.string().optional()
-        }).parse(row)
+      if (row.doc == null) {
+        return z.looseObject(ViewRow.shape).parse(row)
       }
 
       const parsedDoc = await schema['~standard'].validate(row.doc)
@@ -188,7 +180,7 @@ async function _bulkGetWithOptions<DocSchema extends StandardSchemaV1>(
   }
 
   const docSchema = options.validate?.docSchema || CouchDoc
-  const rows = await parseRows(body.rows, includeDocs, docSchema, options.validate?.onInvalidDoc)
+  const rows = await parseRows(body.rows, docSchema, options.validate?.onInvalidDoc)
 
   return {
     ...body,
@@ -267,9 +259,9 @@ export type BulkGetBound = {
 
 export type BulkGetDictionaryOptions<DocSchema extends StandardSchemaV1> = Omit<BulkGetOptions<DocSchema>, 'includeDocs'>
 
-export type BulkGetDictionaryResult<DocSchema extends StandardSchemaV1 = StandardSchemaV1<ViewDoc>> = {
+export type BulkGetDictionaryResult<DocSchema extends StandardSchemaV1 = StandardSchemaV1<CouchDoc>> = {
   found: Record<string, StandardSchemaV1.InferOutput<DocSchema>>
-  notFound: Record<string, z.infer<typeof DefaultRowSchema>>
+  notFound: Record<string, ViewRowValidated<DocSchema, StandardSchemaV1, StandardSchemaV1<{ rev: string }>>>
 }
 
 export async function bulkGetDictionary(
@@ -318,15 +310,15 @@ export async function bulkGetDictionary<DocSchema extends StandardSchemaV1>(
     if (!key) continue
 
     if (row.error || !row.doc) {
-      results.notFound[key] = DefaultRowSchema.parse(row)
+      results.notFound[key] = row
       continue
     }
 
-    const doc = row.doc as z.output<DocSchema>
+    const doc = row.doc
     const docId = typeof (doc as any)?._id === 'string' ? (doc as any)._id : row.id
 
     if (!docId) {
-      results.notFound[key] = DefaultRowSchema.parse(row)
+      results.notFound[key] = row
       continue
     }
 

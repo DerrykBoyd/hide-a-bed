@@ -1,11 +1,12 @@
 import needle from 'needle'
 import { z } from 'zod'
 import type { CouchConfigInput } from '../schema/config.mts'
-import { CouchDoc, CouchGetOptions } from '../schema/couch.schema.mts'
+import { CouchGetOptions } from '../schema/couch.schema.mts'
 import { createLogger } from './logger.mts'
 import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts'
 import { RetryableError, NotFoundError } from './utils/errors.mts'
 import type { StandardSchemaV1 } from '../types/standard-schema.ts'
+import { CouchDoc } from '../schema/couch/couch.output.schema.ts'
 
 export type GetOptions<DocSchema extends StandardSchemaV1> = {
   validate?: {

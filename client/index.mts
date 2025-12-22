@@ -74,8 +74,8 @@ export type {
   ViewOptions as SimpleViewOptions,
 } from './schema/couch/couch.input.schema.ts'
 export type {
-  DefaultRowSchema,
-  ViewDoc,
+  ViewRow,
+  CouchDoc,
   ViewQueryResponse,
   ViewQueryResponseValidated,
   ViewRowValidated,
@@ -84,7 +84,6 @@ export type { RetryOptions } from './impl/retry.mts'
 export type { NetworkError } from './impl/utils/errors.mts'
 export type { OnRow } from './impl/stream.mts'
 export type { CouchConfigInput, CouchConfigSchema } from './schema/config.mts'
-export type { CouchDoc } from './schema/couch.schema.mts'
 export type { LockOptionsSchema, LockOptionsInput, LockDocSchema } from './schema/sugar/lock.mts'
 export type { WatchOptionsSchema, WatchOptionsInput } from './schema/sugar/watch.mts'
 export type { BoundInstance } from './impl/bindConfig.mts'
