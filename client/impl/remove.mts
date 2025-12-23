@@ -1,10 +1,12 @@
 import needle from 'needle';
-import { CouchRemove } from '../schema/couch.schema.mts';
 import { createLogger } from './utils/logger.mts';
 import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts';
 import { RetryableError } from './utils/errors.mts';
+import { CouchPutResponse } from '../schema/couch/couch.output.schema.ts';
+import { CouchConfig, type CouchConfigInput } from '../schema/config.mts';
 
-export const remove = CouchRemove.implementAsync(async (config, id, rev) => {
+export const remove = async (configInput: CouchConfigInput, id: string, rev: string) => {
+  const config = CouchConfig.parse(configInput);
   const logger = createLogger(config);
   const url = `${config.couch}/${id}?rev=${rev}`;
   const opts = {
@@ -45,7 +47,7 @@ export const remove = CouchRemove.implementAsync(async (config, id, rev) => {
     logger.warn(`Document not found for deletion: ${id}`);
     result.ok = false;
     result.error = 'not_found';
-    return result;
+    return CouchPutResponse.parse(result);
   }
 
   if (RetryableError.isRetryableStatusCode(resp.statusCode)) {
@@ -62,5 +64,5 @@ export const remove = CouchRemove.implementAsync(async (config, id, rev) => {
   }
 
   logger.info(`Successfully deleted document: ${id}`);
-  return result;
-});
+  return CouchPutResponse.parse(result);
+}

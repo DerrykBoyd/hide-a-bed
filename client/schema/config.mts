@@ -60,29 +60,3 @@ export const CouchConfig = z.strictObject({
 
 export interface CouchConfig extends z.infer<typeof CouchConfig> { }
 export interface CouchConfigInput extends z.input<typeof CouchConfig> { }
-
-export const CouchDBInfo = z.looseObject({
-  cluster: z.object({
-    n: z.number().describe('Replicas. The number of copies of every document.').optional(),
-    q: z.number().describe('Shards. The number of range partitions.').optional(),
-    r: z.number().describe('Read quorum. The number of consistent copies of a document that need to be read before a successful reply.').optional(),
-    w: z.number().describe('Write quorum. The number of copies of a document that need to be written before a successful reply.').optional(),
-  }).optional(),
-  compact_running: z.boolean().describe('Set to true if the database compaction routine is operating on this database.').optional(),
-  db_name: z.string().describe('The name of the database.'),
-  disk_format_version: z.number().describe('The version of the physical format used for the data when it is stored on disk.').optional(),
-  doc_count: z.number().describe('A count of the documents in the specified database.').optional(),
-  doc_del_count: z.number().describe('Number of deleted documents').optional(),
-  instance_start_time: z.string().optional(),
-  purge_seq: z.string().describe('An opaque string that describes the purge state of the database. Do not rely on this string for counting the number of purge operations.').optional(),
-  sizes: z.object({
-    active: z.number().describe('The size of live data inside the database, in bytes.').optional(),
-    external: z.number().describe('The uncompressed size of database contents in bytes.').optional(),
-    file: z.number().describe('The size of the database file on disk in bytes. Views indexes are not included in the calculation.').optional(),
-  }).optional(),
-  update_seq: z.string().or(z.number()).describe('An opaque string that describes the state of the database. Do not rely on this string for counting the number of updates.').optional(),
-  props: z.object({
-    partitioned: z.boolean().describe('If present and true, this indicates that the database is partitioned.').optional()
-  }).optional()
-})
-export type CouchDBInfo = z.infer<typeof CouchDBInfo>

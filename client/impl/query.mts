@@ -166,5 +166,29 @@ export async function query<DocSchema extends StandardSchemaV1, KeySchema extend
 
   return body
 }
+export type QueryBound = {
+  (view: ViewString, options?: ViewOptions): Promise<ViewQueryResponse>;
+  <DocSchema extends StandardSchemaV1, KeySchema extends StandardSchemaV1, ValueSchema extends StandardSchemaV1>(
+    view: ViewString,
+    options: ViewOptions & {
+      include_docs: false;
+      validate?: {
+        keySchema?: KeySchema;
+        valueSchema?: ValueSchema;
+      };
+    }
+  ): Promise<ViewQueryResponseValidated<DocSchema, KeySchema, ValueSchema>>;
+  <DocSchema extends StandardSchemaV1, KeySchema extends StandardSchemaV1, ValueSchema extends StandardSchemaV1>(
+    view: ViewString,
+    options: ViewOptions & {
+      include_docs: true;
+      validate?: {
+        docSchema?: DocSchema;
+        keySchema?: KeySchema;
+        valueSchema?: ValueSchema;
+      };
+    }
+  ): Promise<ViewQueryResponseValidated<DocSchema, KeySchema, ValueSchema>>;
+};
 
 

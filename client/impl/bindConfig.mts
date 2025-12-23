@@ -6,7 +6,7 @@ import { type GetBound, type GetAtRevBound, getAtRev, get } from './get.mts';
 import { queryStream } from './stream.mts';
 import { patch, patchDangerously } from './patch.mts';
 import { put } from './put.mts';
-import type { QueryBound } from '../schema/query.mts';
+import type { QueryBound } from './query.mts';
 import { query } from './query.mts';
 import { bulkRemove, bulkRemoveMap } from './bulkRemove.mts';
 import { bulkSave, bulkSaveTransaction } from './bulkSave.mts';

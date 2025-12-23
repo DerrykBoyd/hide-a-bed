@@ -53,6 +53,7 @@ suite('bulkRemove', () => {
     const server = spawn('node_modules/.bin/pouchdb-server', ['--in-memory', '--port', PORT.toString()], { stdio: 'inherit' })
     await delay(1000)
     await needle('put', DB_URL, null)
+    await delay(250)
     t.after(() => { server.kill() })
 
     await t.test('removes documents via _bulk_docs', async () => {

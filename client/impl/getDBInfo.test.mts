@@ -22,7 +22,7 @@ suite('getDBInfo', () => {
   })
   test('integration with pouchdb-server', async t => {
     const server = spawn('node_modules/.bin/pouchdb-server', ['--in-memory', '--port', PORT.toString()], { stdio: 'inherit' })
-    await delay(1000)
+    await delay(2000)
     await needle('put', DB_URL, null)
     t.after(() => { server.kill() })
 

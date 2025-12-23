@@ -137,8 +137,7 @@ The patch function lets you update specific properties of a document. The _rev v
 ```javascript
 const config = { 
   couch: 'http://localhost:5984/mydb',
-  retries: 3,
-  delay: 500
+  retries: 3
 }
 const properties = { 
   _rev: '3-fdskjhfsdkjhfsd',
@@ -168,8 +167,7 @@ Update specific properties of a document, no _rev is needed.
 ```javascript
 const config = { 
   couch: 'http://localhost:5984/mydb',
-  retries: 3,
-  delay: 500
+  retries: 3
 }
 const properties = { 
   name: 'Alice Smith',

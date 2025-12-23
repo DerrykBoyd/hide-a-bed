@@ -65,7 +65,7 @@
     "registry": "http://npm.rmcloud.com:8123"
   },
   "volta": {
-    "node": "22.21.1",
-    "npm": "10.8.2"
+    "node": "24.12.0",
+    "npm": "11.6.2"
   }
 }

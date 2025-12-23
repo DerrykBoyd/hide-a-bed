@@ -6,7 +6,7 @@ import { setTimeout as delay } from 'node:timers/promises'
 import type { CouchConfigInput } from '../schema/config.mts'
 import { bulkSave, bulkSaveTransaction } from './bulkSave.mts'
 import { RetryableError } from './utils/errors.mts'
-import { TransactionRollbackError, TransactionVersionConflictError } from './transactionErrors.mts'
+import { TransactionRollbackError, TransactionVersionConflictError } from './utils/transactionErrors.mts'
 
 const PORT = 8993
 const DB_URL = `http://localhost:${PORT}/bulk-save-test`
@@ -97,7 +97,7 @@ suite('bulkSave', () => {
 
   test('integration with pouchdb-server', async t => {
     const server = spawn('node_modules/.bin/pouchdb-server', ['--in-memory', '--port', PORT.toString()], { stdio: 'inherit' })
-    await delay(1000)
+    await delay(2000)
     await needle('put', DB_URL, null)
     t.after(() => { server.kill() })
 
@@ -171,7 +171,7 @@ suite('bulkSave', () => {
 suite('bulkSaveTransaction', () => {
   test('integration with pouchdb-server', async t => {
     const server = spawn('node_modules/.bin/pouchdb-server', ['--in-memory', '--port', TRANSACTION_PORT.toString()], { stdio: 'inherit' })
-    await delay(1000)
+    await delay(2000)
     await needle('put', TRANSACTION_DB_URL, null)
     t.after(() => { server.kill() })
 

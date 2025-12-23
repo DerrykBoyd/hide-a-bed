@@ -1,6 +1,5 @@
 import { createQuery } from './impl/utils/queryBuilder.mts'
 import { QueryBuilder } from './impl/utils/queryBuilder.mts'
-import { NotFoundError, RetryableError } from './impl/utils/errors.mts'
 import { bindConfig } from './impl/bindConfig.mts'
 import { withRetry } from './impl/retry.mts';
 import { bulkGet, bulkGetDictionary } from './impl/bulkGet.mts';
@@ -58,9 +57,7 @@ export type {
   OnInvalidDocAction,
 } from './impl/bulkGet.mts'
 export type { GetOptions, GetBound, GetAtRevBound } from './impl/get.mts'
-export type {
-  QueryBound
-} from './schema/query.mts'
+export type { QueryBound } from './impl/query.mts'
 export type {
   ViewString,
   ViewOptions as SimpleViewOptions,
