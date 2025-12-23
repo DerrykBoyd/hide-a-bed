@@ -174,6 +174,7 @@ export async function query<
   if (options.validate) {
     const { docSchema, keySchema, valueSchema } = options.validate
 
+    // TODO check validation logic and add same `onInvalidDoc` parameter from other impl.
     body.rows = z
       .array(
         z.looseObject({
@@ -191,6 +192,7 @@ export async function query<
 
   return body
 }
+
 export type QueryBound = {
   (view: ViewString, options?: ViewOptions): Promise<ViewQueryResponse>
   <

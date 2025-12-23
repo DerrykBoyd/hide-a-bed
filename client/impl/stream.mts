@@ -17,7 +17,7 @@ type StreamArrayChunk<Row> = {
   value: Row
 }
 
-export type OnRow = (row: ViewRow) => void // TODO: make generic with validation and infer types
+export type OnRow = (row: ViewRow) => void
 type HttpMethod = 'GET' | 'POST'
 
 /**
