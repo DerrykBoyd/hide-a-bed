@@ -69,3 +69,11 @@ export const BulkSaveResponse = z.array(z.object({
   reason: z.string().nullish().describe('a full error message')
 }))
 export type BulkSaveResponse = z.infer<typeof BulkSaveResponse>
+
+export const CouchPutResponse = z.object({
+  ok: z.boolean().optional().describe('did the request succeed'),
+  error: z.string().optional().describe('the error message, if did not succeed'),
+  statusCode: z.number(),
+  id: z.string().optional().describe('the couch doc id'),
+  rev: z.string().optional().describe('the new rev of the doc')
+})

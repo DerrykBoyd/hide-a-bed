@@ -1,10 +1,14 @@
 import needle from 'needle';
-import { CouchPut } from '../schema/couch.schema.mts';
 import { createLogger } from './utils/logger.mts';
 import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts';
 import { RetryableError } from './utils/errors.mts';
+import { CouchConfig, type CouchConfigInput } from '../schema/config.mts';
+import { CouchPutResponse, type CouchDoc } from '../schema/couch/couch.output.schema.ts';
+import { z } from 'zod';
 
-export const put = CouchPut.implementAsync(async (config, doc) => {
+export const put = async (configInput: CouchConfigInput, doc: CouchDoc)
+  : Promise<z.infer<typeof CouchPutResponse>> => {
+  const config = CouchConfig.parse(configInput);
   const logger = createLogger(config);
   const url = `${config.couch}/${doc._id}`;
   const body = doc;
@@ -37,7 +41,7 @@ export const put = CouchPut.implementAsync(async (config, doc) => {
     logger.warn(`Conflict detected for document: ${doc._id}`);
     result.ok = false;
     result.error = 'conflict';
-    return result;
+    return CouchPutResponse.parse(result);
   }
 
   if (RetryableError.isRetryableStatusCode(resp.statusCode)) {
@@ -46,5 +50,5 @@ export const put = CouchPut.implementAsync(async (config, doc) => {
   }
 
   logger.info(`Successfully saved document: ${doc._id}`);
-  return result;
-});
+  return CouchPutResponse.parse(result);
+};

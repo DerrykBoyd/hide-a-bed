@@ -1,7 +1,6 @@
 import needle from 'needle'
 import { z } from 'zod'
 import type { CouchConfigInput } from '../schema/config.mts'
-import { CouchGetOptions } from '../schema/couch.schema.mts'
 import { createLogger } from './utils/logger.mts'
 import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts'
 import { RetryableError, NotFoundError } from './utils/errors.mts'
@@ -17,6 +16,19 @@ export type GetOptions<DocSchema extends StandardSchemaV1> = {
 type InternalGetOptions<DocSchema extends StandardSchemaV1> = GetOptions<DocSchema> & {
   rev?: string
 }
+
+const ValidSchema = z.custom((value) => {
+  return value !== null && typeof value === "object" && "~standard" in value
+}, {
+  message: 'docSchema must be a valid StandardSchemaV1 schema'
+})
+
+export const CouchGetOptions = z.object({
+  rev: z.string().optional().describe('the couch doc revision'),
+  validate: z.object({
+    docSchema: ValidSchema.optional()
+  }).optional().describe('optional document validation rules')
+})
 
 async function _getWithOptions<DocSchema extends StandardSchemaV1>(
   config: CouchConfigInput,
