@@ -610,7 +610,7 @@ that consumes the readable stream.
 
 #### Changes feed companion
 
-The main client no longer bundles the legacy `changes-stream` dependency. Install [`hide-a-bed-changes`](../changes) when you need a CouchDB `_changes` feed helper:
+The main client no longer bundles the legacy `changes-stream` dependency. Install `hide-a-bed-changes` when you need a CouchDB `_changes` feed helper:
 
 ```
 npm install hide-a-bed-changes

@@ -68,7 +68,7 @@ export class NotFoundError extends Error {
  * Error signalling that an operation can be retried due to transient conditions.
  *
  * @remarks
- * Use {@link RetryableError.isRetryableStatusCode} and {@link RetryableError.handleNetworkError}
+ * Use `RetryableError.isRetryableStatusCode` and `RetryableError.handleNetworkError`
  * to detect when a failure should trigger retry logic.
  *
  * @public

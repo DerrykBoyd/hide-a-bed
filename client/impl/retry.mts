@@ -30,7 +30,7 @@ type MaybePromise<T> = PromiseLike<T> | T
  * @typeParam Fn - The function signature to decorate with retry handling.
  * @param fn The function to invoke with retry support.
  * @param options Retry tuning parameters.
- * @returns A function mirroring {@link fn} that automatically retries on {@link RetryableError}.
+ * @returns A function mirroring `fn` that automatically retries on {@link RetryableError}.
  */
 export function withRetry<Fn extends (...args: any[]) => MaybePromise<any>>(
   fn: Fn,
