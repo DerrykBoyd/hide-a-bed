@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 import { EventEmitter } from 'events'
 
@@ -12,11 +13,11 @@ export class TrackedEmitter extends EventEmitter {
     const listeners = this.listeners(event)
     let completed = 0
 
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       if (!listeners || listeners.length === 0) {
         return resolve() // no listeners? no delay
       }
-      listeners.forEach((listener) => {
+      listeners.forEach(listener => {
         listener(...args)
         completed++
         if (completed === listeners.length) {
@@ -28,7 +29,7 @@ export class TrackedEmitter extends EventEmitter {
   }
 }
 
-export const setupEmitter = (config) => {
-  if (!config["~emitter"]) return ({ emit: async () => { } })
-  return config["~emitter"]
+export const setupEmitter = config => {
+  if (!config['~emitter']) return { emit: async () => {} }
+  return config['~emitter']
 }

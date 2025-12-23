@@ -1,19 +1,24 @@
-import type z from 'zod';
-import { CouchConfig, type CouchConfigInput } from '../schema/config.mts';
-import { withRetry } from './retry.mts';
-import { type BulkGetBound, bulkGet, type BulkGetDictionaryBound, bulkGetDictionary } from './bulkGet.mts';
-import { type GetBound, type GetAtRevBound, getAtRev, get } from './get.mts';
-import { queryStream } from './stream.mts';
-import { patch, patchDangerously } from './patch.mts';
-import { put } from './put.mts';
-import type { QueryBound } from './query.mts';
-import { query } from './query.mts';
-import { bulkRemove, bulkRemoveMap } from './bulkRemove.mts';
-import { bulkSave, bulkSaveTransaction } from './bulkSave.mts';
-import { getDBInfo } from './getDBInfo.mts';
-import { remove } from './remove.mts';
-import { createLock, removeLock } from './sugar/lock.mts';
-import { watchDocs } from './sugar/watch.mts';
+import type z from 'zod'
+import { CouchConfig, type CouchConfigInput } from '../schema/config.mts'
+import { withRetry } from './retry.mts'
+import {
+  type BulkGetBound,
+  bulkGet,
+  type BulkGetDictionaryBound,
+  bulkGetDictionary
+} from './bulkGet.mts'
+import { type GetBound, type GetAtRevBound, getAtRev, get } from './get.mts'
+import { queryStream } from './stream.mts'
+import { patch, patchDangerously } from './patch.mts'
+import { put } from './put.mts'
+import type { QueryBound } from './query.mts'
+import { query } from './query.mts'
+import { bulkRemove, bulkRemoveMap } from './bulkRemove.mts'
+import { bulkSave, bulkSaveTransaction } from './bulkSave.mts'
+import { getDBInfo } from './getDBInfo.mts'
+import { remove } from './remove.mts'
+import { createLock, removeLock } from './sugar/lock.mts'
+import { watchDocs } from './sugar/watch.mts'
 
 export type BoundInstance = ReturnType<typeof doBind> & {
   options(overrides: Partial<z.input<typeof CouchConfig>>): BoundInstance
@@ -24,25 +29,21 @@ export type BoundInstance = ReturnType<typeof doBind> & {
  * @param config The CouchDB configuration
  * @returns A bound instance with CouchDB operations and an options() method for overrides
  */
-export const bindConfig = (
-  config: CouchConfigInput
-): BoundInstance => {
-  const parsedConfig = CouchConfig.parse(config);
+export const bindConfig = (config: CouchConfigInput): BoundInstance => {
+  const parsedConfig = CouchConfig.parse(config)
 
-  const funcs = doBind(parsedConfig);
+  const funcs = doBind(parsedConfig)
 
   // Add the options function that returns a new bound instance
   // this allows the user to override some options
-  const reconfigure: BoundInstance['options'] = (
-    overrides: Partial<CouchConfigInput>
-  ) => {
-    const newConfig: z.input<typeof CouchConfig> = { ...config, ...overrides };
-    return bindConfig(newConfig);
-  };
+  const reconfigure: BoundInstance['options'] = (overrides: Partial<CouchConfigInput>) => {
+    const newConfig: z.input<typeof CouchConfig> = { ...config, ...overrides }
+    return bindConfig(newConfig)
+  }
 
-  const bound: BoundInstance = { ...funcs, options: reconfigure };
-  return bound;
-};
+  const bound: BoundInstance = { ...funcs, options: reconfigure }
+  return bound
+}
 
 /**
  * @internal
@@ -54,9 +55,13 @@ export const bindConfig = (
  * @returns The bound function, possibly wrapped with retry logic
  */
 export function getBoundWithRetry<
-  TBound extends (...args: any[]) => Promise<any>>(
-    func: (config: CouchConfig, ...args: any[]) => Promise<any>,
-    config: CouchConfig) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  TBound extends (...args: any[]) => Promise<any>
+>(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  func: (config: CouchConfig, ...args: any[]) => Promise<any>,
+  config: CouchConfig
+) {
   const bound = func.bind(null, config)
   if (config.bindWithRetry) {
     return withRetry(bound, {
@@ -99,22 +104,37 @@ function doBind(config: CouchConfig) {
     /**
      * These functions have single signatures and can be bound directly
      */
-    bulkRemove: config.bindWithRetry ? withRetry(bulkRemove.bind(null, config), retryOptions) : bulkRemove.bind(null, config),
-    bulkRemoveMap: config.bindWithRetry ? withRetry(bulkRemoveMap.bind(null, config), retryOptions) : bulkRemoveMap.bind(null, config),
-    bulkSave: config.bindWithRetry ? withRetry(bulkSave.bind(null, config), retryOptions) : bulkSave.bind(null, config),
+    bulkRemove: config.bindWithRetry
+      ? withRetry(bulkRemove.bind(null, config), retryOptions)
+      : bulkRemove.bind(null, config),
+    bulkRemoveMap: config.bindWithRetry
+      ? withRetry(bulkRemoveMap.bind(null, config), retryOptions)
+      : bulkRemoveMap.bind(null, config),
+    bulkSave: config.bindWithRetry
+      ? withRetry(bulkSave.bind(null, config), retryOptions)
+      : bulkSave.bind(null, config),
     bulkSaveTransaction: bulkSaveTransaction.bind(null, config),
-    getDBInfo: config.bindWithRetry ? withRetry(getDBInfo.bind(null, config), retryOptions) : getDBInfo.bind(null, config),
-    patch: config.bindWithRetry ? withRetry(patch.bind(null, config), retryOptions) : patch.bind(null, config),
+    getDBInfo: config.bindWithRetry
+      ? withRetry(getDBInfo.bind(null, config), retryOptions)
+      : getDBInfo.bind(null, config),
+    patch: config.bindWithRetry
+      ? withRetry(patch.bind(null, config), retryOptions)
+      : patch.bind(null, config),
     patchDangerously: patchDangerously.bind(null, config), // patchDangerously not included in retry
-    put: config.bindWithRetry ? withRetry(put.bind(null, config), retryOptions) : put.bind(null, config),
-    queryStream: config.bindWithRetry ? withRetry(queryStream.bind(null, config), retryOptions) : queryStream.bind(null, config),
-    remove: config.bindWithRetry ? withRetry(remove.bind(null, config), retryOptions) : remove.bind(null, config),
+    put: config.bindWithRetry
+      ? withRetry(put.bind(null, config), retryOptions)
+      : put.bind(null, config),
+    queryStream: config.bindWithRetry
+      ? withRetry(queryStream.bind(null, config), retryOptions)
+      : queryStream.bind(null, config),
+    remove: config.bindWithRetry
+      ? withRetry(remove.bind(null, config), retryOptions)
+      : remove.bind(null, config),
 
     createLock: createLock.bind(null, config),
     removeLock: removeLock.bind(null, config),
-    watchDocs: watchDocs.bind(null, config),
+    watchDocs: watchDocs.bind(null, config)
   }
 
   return result
 }
-

@@ -1,6 +1,6 @@
 {
   "name": "@brivity/hide-a-bed",
-  "version": "7.0.0-test.7",
+  "version": "7.0.0-test.8",
   "description": "An abstraction over couchdb calls that includes easy mock/stubs with pouchdb",
   "type": "module",
   "main": "./dist/cjs/index.cjs",
@@ -25,8 +25,10 @@
     "dev": "typedoc --watch ./index.mts & npx -y serve ./docs",
     "test": "node --test --test-global-setup ./test/setup.mts",
     "test:watch": "node --test --watch --test-global-setup ./test/setup.mts",
-    "lint": "standard",
-    "lint:fix": "standard --fix",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
     "typecheck:watch": "tsc --noEmit --watch",
     "prepublishOnly": "npm run build",
@@ -53,14 +55,18 @@
     "zod": "4.2.1"
   },
   "devDependencies": {
+    "@eslint/js": "9.39.2",
     "@types/needle": "3.3.0",
     "@types/node": "22.19.3",
     "@types/stream-json": "1.7.8",
+    "eslint": "9.39.2",
+    "globals": "16.5.0",
     "pouchdb-server": "4.2.0",
-    "standard": "17.1.0",
+    "prettier": "3.7.4",
     "tsdown": "0.18.1",
     "typedoc": "0.28.15",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.50.1"
   },
   "publishConfig": {
     "registry": "http://npm.rmcloud.com:8123"

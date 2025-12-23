@@ -16,15 +16,4 @@
       "path": "../test"
     }
   ],
-  "settings": {
-    "prettier.enable": false,
-    "editor.formatOnSave": true,
-    "editor.defaultFormatter": "biomejs.biome",
-    "[typescript]": {
-      "editor.defaultFormatter": "vscode.typescript-language-features"
-    },
-    "[javascript]": {
-      "editor.defaultFormatter": "vscode.typescript-language-features"
-    },
-  },
 }

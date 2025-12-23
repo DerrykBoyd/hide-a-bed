@@ -1,4 +1,4 @@
-import type { ViewOptions } from "../../schema/couch/couch.input.schema.ts"
+import type { ViewOptions } from '../../schema/couch/couch.input.schema.ts'
 
 /**
  * A builder class for constructing CouchDB view query options.
@@ -10,10 +10,10 @@ import type { ViewOptions } from "../../schema/couch/couch.input.schema.ts"
  *   .startKey('someKey')
  *   .build();
  * @see SimpleViewOptions for the full list of options.
- * 
+ *
  * @remarks
  * Each method corresponds to a CouchDB view option and returns the builder instance for chaining.
- * 
+ *
  * @returns The constructed SimpleViewOptions object.
  */
 export class QueryBuilder {
@@ -165,8 +165,9 @@ export class QueryBuilder {
   }
 }
 
-type AssertViewOptionsCovered = Exclude<keyof ViewOptions, keyof QueryBuilder> extends never ? true : never
+type AssertViewOptionsCovered =
+  Exclude<keyof ViewOptions, keyof QueryBuilder> extends never ? true : never
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const _assertViewOptionsCovered: AssertViewOptionsCovered = true
 
 export const createQuery = (): QueryBuilder => new QueryBuilder()
-

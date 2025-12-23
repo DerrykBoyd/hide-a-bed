@@ -17,17 +17,23 @@ type InternalGetOptions<DocSchema extends StandardSchemaV1> = GetOptions<DocSche
   rev?: string
 }
 
-const ValidSchema = z.custom((value) => {
-  return value !== null && typeof value === "object" && "~standard" in value
-}, {
-  message: 'docSchema must be a valid StandardSchemaV1 schema'
-})
+const ValidSchema = z.custom(
+  value => {
+    return value !== null && typeof value === 'object' && '~standard' in value
+  },
+  {
+    message: 'docSchema must be a valid StandardSchemaV1 schema'
+  }
+)
 
 export const CouchGetOptions = z.object({
   rev: z.string().optional().describe('the couch doc revision'),
-  validate: z.object({
-    docSchema: ValidSchema.optional()
-  }).optional().describe('optional document validation rules')
+  validate: z
+    .object({
+      docSchema: ValidSchema.optional()
+    })
+    .optional()
+    .describe('optional document validation rules')
 })
 
 async function _getWithOptions<DocSchema extends StandardSchemaV1>(
@@ -66,7 +72,7 @@ async function _getWithOptions<DocSchema extends StandardSchemaV1>(
 
     if (resp.statusCode === 404) {
       if (config.throwOnGetNotFound) {
-        const reason = typeof (body as any)?.reason === 'string' ? (body as any).reason : 'not_found'
+        const reason = typeof body?.reason === 'string' ? body.reason : 'not_found'
         logger.warn(`Document not found (throwing error): ${id}, rev ${rev ?? 'latest'}`)
         throw new NotFoundError(id, reason)
       }
@@ -76,19 +82,19 @@ async function _getWithOptions<DocSchema extends StandardSchemaV1>(
     }
 
     if (RetryableError.isRetryableStatusCode(resp.statusCode)) {
-      const reason = typeof (body as any)?.reason === 'string' ? (body as any).reason : 'retryable error'
+      const reason = typeof body?.reason === 'string' ? body.reason : 'retryable error'
       logger.warn(`Retryable status code received: ${resp.statusCode}`)
       throw new RetryableError(reason, resp.statusCode)
     }
 
     if (resp.statusCode !== 200) {
-      const reason = typeof (body as any)?.reason === 'string' ? (body as any).reason : 'failed'
+      const reason = typeof body?.reason === 'string' ? body.reason : 'failed'
       logger.error(`Unexpected status code: ${resp.statusCode}`)
       throw new Error(reason)
     }
 
     const docSchema = (parsedOptions.validate?.docSchema ?? CouchDoc) as DocSchema
-    const typedDoc = await docSchema["~standard"].validate(body)
+    const typedDoc = await docSchema['~standard'].validate(body)
 
     if (typedDoc.issues) {
       throw typedDoc.issues

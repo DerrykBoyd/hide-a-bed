@@ -32,16 +32,12 @@ type MaybePromise<T> = PromiseLike<T> | T
  * @param options Retry tuning parameters.
  * @returns A function mirroring `fn` that automatically retries on {@link RetryableError}.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function withRetry<Fn extends (...args: any[]) => MaybePromise<any>>(
   fn: Fn,
   options: RetryOptions = {}
 ): (...args: Parameters<Fn>) => Promise<Awaited<ReturnType<Fn>>> {
-  const {
-    maxRetries = 3,
-    initialDelay = 1000,
-    backoffFactor = 2,
-    maxDelay = 30000
-  } = options
+  const { maxRetries = 3, initialDelay = 1000, backoffFactor = 2, maxDelay = 30000 } = options
 
   return async (...args: Parameters<Fn>): Promise<Awaited<ReturnType<Fn>>> => {
     let delay = initialDelay

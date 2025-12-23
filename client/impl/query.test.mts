@@ -11,7 +11,7 @@ import { query } from './query.mts'
 import { RetryableError } from './utils/errors.mts'
 
 const config: CouchConfigInput = {
-  couch: TEST_DB_URL,
+  couch: TEST_DB_URL
 }
 
 async function putDoc(doc: Record<string, unknown> & { _id: string }) {
@@ -19,16 +19,26 @@ async function putDoc(doc: Record<string, unknown> & { _id: string }) {
 }
 
 async function putDesignDoc(id: string, viewName: string, mapFn: string) {
-  await needle('put', `${TEST_DB_URL}/_design/${id}`, {
-    views: {
-      [viewName]: {
-        map: mapFn
+  await needle(
+    'put',
+    `${TEST_DB_URL}/_design/${id}`,
+    {
+      views: {
+        [viewName]: {
+          map: mapFn
+        }
       }
-    }
-  }, { json: true })
+    },
+    { json: true }
+  )
 }
 
-async function eventually<T>(fn: () => Promise<T>, predicate: (value: T) => boolean, attempts = 10, waitMs = 100): Promise<T> {
+async function eventually<T>(
+  fn: () => Promise<T>,
+  predicate: (value: T) => boolean,
+  attempts = 10,
+  waitMs = 100
+): Promise<T> {
   let lastValue: T | undefined
   for (let attempt = 0; attempt < attempts; attempt++) {
     lastValue = await fn()
@@ -43,21 +53,41 @@ suite('query', () => {
     const designId = `query-view-${randomUUID()}`
     const viewName = 'byCategory'
     const tag = `query-suite-${randomUUID()}`
-    await putDesignDoc(designId, viewName, `function(doc) { if (doc.tag !== '${tag}') return; emit(doc.category, doc.count); }`)
+    await putDesignDoc(
+      designId,
+      viewName,
+      `function(doc) { if (doc.tag !== '${tag}') return; emit(doc.category, doc.count); }`
+    )
 
-    const matchingDoc = { _id: `doc-${randomUUID()}`, tag, category: 'keep', count: 42 }
-    const otherDoc = { _id: `doc-${randomUUID()}`, tag, category: 'skip', count: 1 }
-    const unrelatedDoc = { _id: `doc-${randomUUID()}`, tag: 'other', category: 'keep', count: 100 }
+    const matchingDoc = {
+      _id: `doc-${randomUUID()}`,
+      tag,
+      category: 'keep',
+      count: 42
+    }
+    const otherDoc = {
+      _id: `doc-${randomUUID()}`,
+      tag,
+      category: 'skip',
+      count: 1
+    }
+    const unrelatedDoc = {
+      _id: `doc-${randomUUID()}`,
+      tag: 'other',
+      category: 'keep',
+      count: 100
+    }
 
     await putDoc(matchingDoc)
     await putDoc(otherDoc)
     await putDoc(unrelatedDoc)
 
     const response = await eventually(
-      () => query(config, `_design/${designId}/_view/${viewName}`, {
-        include_docs: true,
-        key: matchingDoc.category
-      }),
+      () =>
+        query(config, `_design/${designId}/_view/${viewName}`, {
+          include_docs: true,
+          key: matchingDoc.category
+        }),
       ({ rows }) => rows?.length === 1
     )
 
@@ -74,26 +104,31 @@ suite('query', () => {
     const designId = `query-validate-${randomUUID()}`
     const viewName = 'byPlayer'
     const tag = `query-suite-${randomUUID()}`
-    await putDesignDoc(designId, viewName, `function(doc) { if (doc.tag !== '${tag}') return; emit(doc.player, doc.score); }`)
+    await putDesignDoc(
+      designId,
+      viewName,
+      `function(doc) { if (doc.tag !== '${tag}') return; emit(doc.player, doc.score); }`
+    )
 
     const doc = { _id: `doc-${randomUUID()}`, tag, player: 'alpha', score: 7 }
     await putDoc(doc)
 
     const response = await eventually(
-      () => query(config, `_design/${designId}/_view/${viewName}`, {
-        include_docs: true,
-        key: doc.player,
-        validate: {
-          docSchema: z.looseObject({
-            _id: z.string(),
-            tag: z.string(),
-            player: z.string(),
-            score: z.number()
-          }),
-          keySchema: z.string(),
-          valueSchema: z.number()
-        }
-      }),
+      () =>
+        query(config, `_design/${designId}/_view/${viewName}`, {
+          include_docs: true,
+          key: doc.player,
+          validate: {
+            docSchema: z.looseObject({
+              _id: z.string(),
+              tag: z.string(),
+              player: z.string(),
+              score: z.number()
+            }),
+            keySchema: z.string(),
+            valueSchema: z.number()
+          }
+        }),
       ({ rows }) => rows.length === 1
     )
 
@@ -105,27 +140,43 @@ suite('query', () => {
     const designId = `query-invalid-${randomUUID()}`
     const viewName = 'byPlayer'
     const tag = `query-suite-${randomUUID()}`
-    await putDesignDoc(designId, viewName, `function(doc) { if (doc.tag !== '${tag}') return; emit(doc.player, doc.score); }`)
+    await putDesignDoc(
+      designId,
+      viewName,
+      `function(doc) { if (doc.tag !== '${tag}') return; emit(doc.player, doc.score); }`
+    )
 
-    const validDoc = { _id: `doc-${randomUUID()}`, tag, player: 'valid', score: 3 }
-    const invalidDoc = { _id: `doc-${randomUUID()}`, tag, player: 'invalid', score: 'nope' }
+    const validDoc = {
+      _id: `doc-${randomUUID()}`,
+      tag,
+      player: 'valid',
+      score: 3
+    }
+    const invalidDoc = {
+      _id: `doc-${randomUUID()}`,
+      tag,
+      player: 'invalid',
+      score: 'nope'
+    }
 
     await putDoc(validDoc)
     await putDoc(invalidDoc)
 
     await eventually(
-      () => query(config, `_design/${designId}/_view/${viewName}`, {
-        key: validDoc.player
-      }),
+      () =>
+        query(config, `_design/${designId}/_view/${viewName}`, {
+          key: validDoc.player
+        }),
       ({ rows }) => rows?.length === 1
     )
 
     await assert.rejects(
-      () => query(config, `_design/${designId}/_view/${viewName}`, {
-        validate: {
-          valueSchema: z.number()
-        }
-      }),
+      () =>
+        query(config, `_design/${designId}/_view/${viewName}`, {
+          validate: {
+            valueSchema: z.number()
+          }
+        }),
       (err: unknown) => err instanceof ZodError
     )
   })
@@ -134,15 +185,25 @@ suite('query', () => {
     const designId = `query-post-${randomUUID()}`
     const viewName = 'byPlayer'
     const tag = `query-suite-${randomUUID()}`
-    await putDesignDoc(designId, viewName, `function(doc) { if (doc.tag !== '${tag}') return; emit(doc.player, doc.score); }`)
+    await putDesignDoc(
+      designId,
+      viewName,
+      `function(doc) { if (doc.tag !== '${tag}') return; emit(doc.player, doc.score); }`
+    )
 
-    const targetDoc = { _id: `doc-${randomUUID()}`, tag, player: 'target', score: 11 }
+    const targetDoc = {
+      _id: `doc-${randomUUID()}`,
+      tag,
+      player: 'target',
+      score: 11
+    }
     await putDoc(targetDoc)
 
     await eventually(
-      () => query(config, `_design/${designId}/_view/${viewName}`, {
-        key: targetDoc.player
-      }),
+      () =>
+        query(config, `_design/${designId}/_view/${viewName}`, {
+          key: targetDoc.player
+        }),
       ({ rows }) => rows?.length === 1
     )
 

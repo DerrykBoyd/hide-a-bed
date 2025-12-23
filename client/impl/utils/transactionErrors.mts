@@ -1,7 +1,7 @@
 export class TransactionSetupError extends Error {
-  details: Record<string, any>
+  details: Record<string, unknown>
 
-  constructor(message: string, details: Record<string, any> = {}) {
+  constructor(message: string, details: Record<string, unknown> = {}) {
     super(message)
     this.name = 'TransactionSetupError'
     this.details = details
@@ -19,9 +19,23 @@ export class TransactionVersionConflictError extends Error {
 }
 
 export class TransactionBulkOperationError extends Error {
-  failedDocs: { ok?: boolean | null; id?: string | null; rev?: string | null; error?: string | null; reason?: string | null }[]
+  failedDocs: {
+    ok?: boolean | null
+    id?: string | null
+    rev?: string | null
+    error?: string | null
+    reason?: string | null
+  }[]
 
-  constructor(failedDocs: Array<{ ok?: boolean | null; id?: string | null; rev?: string | null; error?: string | null; reason?: string | null }>) {
+  constructor(
+    failedDocs: Array<{
+      ok?: boolean | null
+      id?: string | null
+      rev?: string | null
+      error?: string | null
+      reason?: string | null
+    }>
+  ) {
     super(`Failed to save documents: ${failedDocs.map(d => d.id).join(', ')}`)
     this.name = 'TransactionBulkOperationError'
     this.failedDocs = failedDocs
@@ -30,9 +44,25 @@ export class TransactionBulkOperationError extends Error {
 
 export class TransactionRollbackError extends Error {
   originalError: Error
-  rollbackResults: { ok?: boolean | null; id?: string | null; rev?: string | null; error?: string | null; reason?: string | null }[]
+  rollbackResults: {
+    ok?: boolean | null
+    id?: string | null
+    rev?: string | null
+    error?: string | null
+    reason?: string | null
+  }[]
 
-  constructor(message: string, originalError: Error, rollbackResults: Array<{ ok?: boolean | null; id?: string | null; rev?: string | null; error?: string | null; reason?: string | null }>) {
+  constructor(
+    message: string,
+    originalError: Error,
+    rollbackResults: Array<{
+      ok?: boolean | null
+      id?: string | null
+      rev?: string | null
+      error?: string | null
+      reason?: string | null
+    }>
+  ) {
     super(message)
     this.name = 'TransactionRollbackError'
     this.originalError = originalError

@@ -1,8 +1,6 @@
 import assert from 'node:assert/strict'
-import { spawn } from 'node:child_process'
 import test, { suite } from 'node:test'
 import needle from 'needle'
-import { setTimeout as delay } from 'node:timers/promises'
 import type { CouchConfigInput } from '../schema/config.mts'
 import { put } from './put.mts'
 import { RetryableError } from './utils/errors.mts'
@@ -51,7 +49,11 @@ suite('put', () => {
     const put_doc_id = `put-doc-${Date.now()}`
 
     await t.test('creates documents via PUT', async () => {
-      const result = await put(baseConfig, { _id: put_doc_id, type: 'integration', count: 1 })
+      const result = await put(baseConfig, {
+        _id: put_doc_id,
+        type: 'integration',
+        count: 1
+      })
       assert.ok(result)
       assert.strictEqual(result.ok, true)
       assert.strictEqual(result.id, put_doc_id)
@@ -68,7 +70,12 @@ suite('put', () => {
     await t.test('updates documents when revision supplied', async () => {
       if (!initialRev) throw new Error('Expected initial revision to be captured')
 
-      const updateResult = await put(baseConfig, { _id: put_doc_id, _rev: initialRev, type: 'integration', count: 2 })
+      const updateResult = await put(baseConfig, {
+        _id: put_doc_id,
+        _rev: initialRev,
+        type: 'integration',
+        count: 2
+      })
       assert.ok(updateResult)
       assert.strictEqual(updateResult.ok, true)
       assert.strictEqual(updateResult.statusCode, 201)
@@ -82,9 +89,18 @@ suite('put', () => {
     await t.test('reports conflicts when revision is stale', async () => {
       if (!initialRev) throw new Error('Expected revision to be captured')
       const staleRev = initialRev
-      const latest = await saveDoc(put_doc_id, { _rev: staleRev, type: 'integration', count: 3 })
+      const latest = await saveDoc(put_doc_id, {
+        _rev: staleRev,
+        type: 'integration',
+        count: 3
+      })
 
-      const result = await put(baseConfig, { _id: put_doc_id, _rev: staleRev, type: 'integration', count: 4 })
+      const result = await put(baseConfig, {
+        _id: put_doc_id,
+        _rev: staleRev,
+        type: 'integration',
+        count: 4
+      })
       assert.ok(result)
       assert.strictEqual(result.ok, false)
       assert.strictEqual(result.error, 'conflict')

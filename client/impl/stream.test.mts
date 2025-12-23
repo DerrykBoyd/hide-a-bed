@@ -18,15 +18,18 @@ suite('queryStream', () => {
       { id: 'row-2', key: 'row-2', value: { count: 2 } }
     ]
 
-    // @ts-ignore
+    // @ts-expect-error testing server
     const server = await startServer((req, res) => {
-      res.on('error', () => { })
+      res.on('error', () => {})
       const requestUrl = new URL(req.url ?? '/', `http://${req.headers.host}`)
       assert.strictEqual(req.method, 'GET')
       assert.strictEqual(requestUrl.pathname, '/_design/demo/_view/by-key')
 
       res.writeHead(200, { 'Content-Type': 'application/json' })
-      const payload = JSON.stringify({ total_rows: expectedRows.length, rows: expectedRows })
+      const payload = JSON.stringify({
+        total_rows: expectedRows.length,
+        rows: expectedRows
+      })
       const chunkSize = 7
       for (let i = 0; i < payload.length; i += chunkSize) {
         res.write(payload.slice(i, i + chunkSize))
@@ -39,14 +42,19 @@ suite('queryStream', () => {
     })
 
     const { port } = server.address() as AddressInfo
-    const rows: any[] = []
+    const rows: unknown[] = []
 
-    await queryStream({ couch: `http://127.0.0.1:${port}` }, '_design/demo/_view/by-key', {}, row => {
-      const matchedRow = expectedRows.find(r => r.id === row.id)
-      assert.ok(matchedRow)
-      assert.deepStrictEqual(row, matchedRow)
-      rows.push(row)
-    })
+    await queryStream(
+      { couch: `http://127.0.0.1:${port}` },
+      '_design/demo/_view/by-key',
+      {},
+      row => {
+        const matchedRow = expectedRows.find(r => r.id === row.id)
+        assert.ok(matchedRow)
+        assert.deepStrictEqual(row, matchedRow)
+        rows.push(row)
+      }
+    )
 
     assert.deepStrictEqual(rows, expectedRows)
   })
@@ -57,15 +65,18 @@ suite('queryStream', () => {
       { id: 'row-2', key: 'row-2', value: { count: 2 } }
     ]
 
-    // @ts-ignore
+    // @ts-expect-error testing server
     const server = await startServer((req, res) => {
-      res.on('error', () => { })
+      res.on('error', () => {})
       const requestUrl = new URL(req.url ?? '/', `http://${req.headers.host}`)
       assert.strictEqual(req.method, 'GET')
       assert.strictEqual(requestUrl.pathname, '/_design/demo/_view/by-key')
 
       res.writeHead(200, { 'Content-Type': 'application/json' })
-      const payload = JSON.stringify({ total_rows: expectedRows.length, rows: expectedRows })
+      const payload = JSON.stringify({
+        total_rows: expectedRows.length,
+        rows: expectedRows
+      })
       const chunkSize = 7
       for (let i = 0; i < payload.length; i += chunkSize) {
         res.write(payload.slice(i, i + chunkSize))
@@ -79,7 +90,7 @@ suite('queryStream', () => {
 
     const { port } = server.address() as AddressInfo
 
-    const rows: any[] = []
+    const rows: unknown[] = []
 
     const db = bindConfig({ couch: `http://127.0.0.1:${port}` })
 
@@ -99,15 +110,18 @@ suite('queryStream', () => {
       { id: 'row-2', key: 'row-2', value: { count: 2 } }
     ]
 
-    // @ts-ignore
+    // @ts-expect-error testing server
     const server = await startServer((req, res) => {
-      res.on('error', () => { })
+      res.on('error', () => {})
       const requestUrl = new URL(req.url ?? '/', `http://${req.headers.host}`)
       assert.strictEqual(req.method, 'GET')
       assert.strictEqual(requestUrl.pathname, '/_design/demo/_view/by-key')
 
       res.writeHead(200, { 'Content-Type': 'application/json' })
-      const payload = JSON.stringify({ total_rows: expectedRows.length, rows: expectedRows })
+      const payload = JSON.stringify({
+        total_rows: expectedRows.length,
+        rows: expectedRows
+      })
       const chunkSize = 7
       for (let i = 0; i < payload.length; i += chunkSize) {
         res.write(payload.slice(i, i + chunkSize))
@@ -120,7 +134,7 @@ suite('queryStream', () => {
     })
 
     const { port } = server.address() as AddressInfo
-    const rows: any[] = []
+    const rows: unknown[] = []
 
     const db = bindConfig({ couch: `http://127.0.0.1:${port}` })
 
@@ -135,9 +149,9 @@ suite('queryStream', () => {
   })
 
   test('queryStream handles empty result sets', async t => {
-    // @ts-ignore
+    // @ts-expect-error testing server
     const server = await startServer((_, res) => {
-      res.on('error', () => { })
+      res.on('error', () => {})
       res.writeHead(200, { 'Content-Type': 'application/json' })
       res.write('{"rows":[]}')
       res.end()
@@ -150,17 +164,22 @@ suite('queryStream', () => {
     const { port } = server.address() as AddressInfo
     let rowCount = 0
 
-    await queryStream({ couch: `http://127.0.0.1:${port}` }, '_design/demo/_view/by-key', {}, () => {
-      rowCount++
-    })
+    await queryStream(
+      { couch: `http://127.0.0.1:${port}` },
+      '_design/demo/_view/by-key',
+      {},
+      () => {
+        rowCount++
+      }
+    )
 
     assert.strictEqual(rowCount, 0)
   })
 
   test('queryStream rejects when row handler throws', async t => {
-    // @ts-ignore
+    // @ts-expect-error testing server
     const server = await startServer((_, res) => {
-      res.on('error', () => { })
+      res.on('error', () => {})
       res.writeHead(200, { 'Content-Type': 'application/json' })
       res.write('{"rows":[{"id":"broken","value":42}]}')
       res.end()

@@ -27,7 +27,10 @@ suite('errors', () => {
   test('handleNetworkError wraps known network failures', () => {
     assert.throws(
       () => RetryableError.handleNetworkError({ code: 'ECONNRESET' }),
-      (err: unknown) => err instanceof RetryableError && err.statusCode === 503 && err.message.includes('ECONNRESET')
+      (err: unknown) =>
+        err instanceof RetryableError &&
+        err.statusCode === 503 &&
+        err.message.includes('ECONNRESET')
     )
   })
 

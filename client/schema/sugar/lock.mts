@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { CouchDoc } from '../couch/couch.output.schema.ts'
+import type { StandardSchemaV1 } from '../../types/standard-schema.ts'
 
 export const LockDoc = CouchDoc.extend({
   type: z.literal('lock'),
@@ -7,11 +8,11 @@ export const LockDoc = CouchDoc.extend({
   lockedAt: z.string().describe('ISO timestamp when lock was created'),
   lockedBy: z.string().describe('username of who created the lock')
 })
-export interface LockDocSchema extends z.infer<typeof LockDoc> { }
+export type LockDocSchema = StandardSchemaV1.InferOutput<typeof LockDoc>
 
 export const LockOptions = z.object({
   enableLocking: z.boolean().prefault(true).describe('whether locking is enabled'),
   username: z.string().describe('username to attribute locks to')
 })
-export interface LockOptionsSchema extends z.infer<typeof LockOptions> { }
-export interface LockOptionsInput extends z.input<typeof LockOptions> { }
+export type LockOptionsSchema = StandardSchemaV1.InferOutput<typeof LockOptions>
+export type LockOptionsInput = StandardSchemaV1.InferInput<typeof LockOptions>

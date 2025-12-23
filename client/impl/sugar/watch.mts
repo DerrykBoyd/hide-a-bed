@@ -5,26 +5,36 @@ import { createLogger } from '../utils/logger.mts'
 import { WatchOptions, type WatchOptionsInput } from '../../schema/sugar/watch.mts'
 import { mergeNeedleOpts } from '../utils/mergeNeedleOpts.mts'
 import { setTimeout } from 'node:timers/promises'
-import { CouchConfig, type CouchConfigInput, type NeedleBaseOptionsSchema } from '../../schema/config.mts'
+import {
+  CouchConfig,
+  type CouchConfigInput,
+  type NeedleBaseOptionsSchema
+} from '../../schema/config.mts'
 
 /**
  * Watch for changes to specified document IDs in CouchDB.
  * Calls the onChange callback for each change detected.
  * Returns an emitter with methods to listen for events and stop watching.
- * 
+ *
  * @param configInput CouchDB configuration
  * @param docIds Document ID or array of document IDs to watch
  * @param onChange Callback function called on each change
  * @param optionsInput Watch options
- * 
+ *
  * @return WatchEmitter with methods to manage the watch
  */
-export function watchDocs(configInput: CouchConfigInput, docIds: string | string[], onChange: (change: any) => void, optionsInput: WatchOptionsInput = {}) {
+export function watchDocs(
+  configInput: CouchConfigInput,
+  docIds: string | string[],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onChange: (change: any) => void,
+  optionsInput: WatchOptionsInput = {}
+) {
   const config = CouchConfig.parse(configInput)
   const options = WatchOptions.parse(optionsInput)
   const logger = createLogger(config)
   const emitter = new EventEmitter()
-  let lastSeq: null | "now" = null
+  let lastSeq: null | 'now' = null
   let stopping = false
   let retryCount = 0
   let currentRequest: null | ReturnType<typeof needle.get> = null
@@ -80,7 +90,9 @@ export function watchDocs(configInput: CouchConfigInput, docIds: string | string
     })
 
     currentRequest.on('response', response => {
-      logger.debug(`Received response with status code, watching [${_docIds}]: ${response.statusCode}`)
+      logger.debug(
+        `Received response with status code, watching [${_docIds}]: ${response.statusCode}`
+      )
       if (RetryableError.isRetryableStatusCode(response.statusCode)) {
         logger.warn(`Retryable status code received: ${response.statusCode}`)
         // @ts-expect-error bad type?
@@ -163,7 +175,8 @@ export function watchDocs(configInput: CouchConfigInput, docIds: string | string
 
   return {
     on: (event: string, listener: EventListener) => emitter.on(event, listener),
-    removeListener: (event: string, listener: EventListener) => emitter.removeListener(event, listener),
+    removeListener: (event: string, listener: EventListener) =>
+      emitter.removeListener(event, listener),
     stop: () => {
       stopping = true
       // @ts-expect-error bad type?

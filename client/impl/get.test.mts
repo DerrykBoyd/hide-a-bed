@@ -1,8 +1,6 @@
 import assert from 'node:assert/strict'
-import { spawn } from 'node:child_process'
 import test, { suite } from 'node:test'
 import needle from 'needle'
-import { setTimeout as delay } from 'node:timers/promises'
 import { z } from 'zod'
 import type { CouchConfigInput } from '../schema/config.mts'
 import { get, getAtRev } from './get.mts'
@@ -16,10 +14,15 @@ const baseConfig: CouchConfigInput = {
 type DocBody = Record<string, unknown>
 
 async function saveDoc(id: string, body: DocBody) {
-  const response = await needle('put', `${TEST_DB_URL}/${id}`, {
-    _id: id,
-    ...body
-  }, { json: true })
+  const response = await needle(
+    'put',
+    `${TEST_DB_URL}/${id}`,
+    {
+      _id: id,
+      ...body
+    },
+    { json: true }
+  )
 
   if (response.statusCode !== 201 && response.statusCode !== 200) {
     throw new Error(`Failed to save document ${id}: ${response.statusCode}`)
@@ -45,7 +48,9 @@ suite('get', () => {
         count: z.number()
       })
 
-      const doc = await get(baseConfig, doc_valid_id, { validate: { docSchema: schema } })
+      const doc = await get(baseConfig, doc_valid_id, {
+        validate: { docSchema: schema }
+      })
       assert.ok(doc)
       assert.strictEqual(doc?.kind, 'example')
       assert.strictEqual(doc?.count, 7)
@@ -53,7 +58,10 @@ suite('get', () => {
       await assert.rejects(
         () => get(baseConfig, doc_invalid_id, { validate: { docSchema: schema } }),
         (err: unknown) => {
-          return Array.isArray(err) && err[0].message === "Invalid input: expected number, received string"
+          return (
+            Array.isArray(err) &&
+            err[0].message === 'Invalid input: expected number, received string'
+          )
         }
       )
     })
@@ -64,7 +72,10 @@ suite('get', () => {
     })
 
     await t.test('throws NotFoundError when configured', async () => {
-      const strictConfig: CouchConfigInput = { ...baseConfig, throwOnGetNotFound: true }
+      const strictConfig: CouchConfigInput = {
+        ...baseConfig,
+        throwOnGetNotFound: true
+      }
 
       await assert.rejects(
         () => get(strictConfig, 'doc-missing'),
@@ -78,15 +89,21 @@ suite('get', () => {
         version: z.number()
       })
 
-      const latest = await get(baseConfig, doc_rev_id, { validate: { docSchema: versionedSchema } })
+      const latest = await get(baseConfig, doc_rev_id, {
+        validate: { docSchema: versionedSchema }
+      })
       assert.strictEqual(latest?.version, 2)
 
-      const early = await getAtRev(baseConfig, doc_rev_id, firstRev.rev, { validate: { docSchema: versionedSchema } })
+      const early = await getAtRev(baseConfig, doc_rev_id, firstRev.rev, {
+        validate: { docSchema: versionedSchema }
+      })
       assert.strictEqual(early?.version, 1)
     })
 
     await t.test('propagates retryable network errors', async () => {
-      const offlineConfig: CouchConfigInput = { couch: 'http://localhost:6553/offline-db' }
+      const offlineConfig: CouchConfigInput = {
+        couch: 'http://localhost:6553/offline-db'
+      }
 
       await assert.rejects(
         () => get(offlineConfig, 'doc-valid'),

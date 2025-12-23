@@ -113,9 +113,7 @@ export async function queryStream(
       settleResolve()
     })
 
-    request = method === 'GET'
-      ? needle.get(url, mergedOpts)
-      : needle.post(url, payload, mergedOpts)
+    request = method === 'GET' ? needle.get(url, mergedOpts) : needle.post(url, payload, mergedOpts)
 
     request.on('response', (response: IncomingMessage) => {
       logger.debug(`Received response with status code: ${response.statusCode}`)

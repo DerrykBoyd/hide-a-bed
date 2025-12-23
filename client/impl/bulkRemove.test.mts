@@ -1,8 +1,6 @@
 import assert from 'node:assert/strict'
-import { spawn } from 'node:child_process'
 import test, { suite } from 'node:test'
 import needle from 'needle'
-import { setTimeout as delay } from 'node:timers/promises'
 import type { CouchConfigInput } from '../schema/config.mts'
 import { bulkRemove, bulkRemoveMap } from './bulkRemove.mts'
 import { TEST_DB_URL } from '../test/setup-db.mts'
@@ -14,10 +12,15 @@ const config: CouchConfigInput = {
 type DocBody = Record<string, unknown>
 
 async function saveDoc(id: string, body: DocBody) {
-  const response = await needle('put', `${TEST_DB_URL}/${id}`, {
-    _id: id,
-    ...body
-  }, { json: true })
+  const response = await needle(
+    'put',
+    `${TEST_DB_URL}/${id}`,
+    {
+      _id: id,
+      ...body
+    },
+    { json: true }
+  )
 
   if (response.statusCode !== 201 && response.statusCode !== 200) {
     throw new Error(`Failed to save document ${id}: ${response.statusCode}`)
@@ -31,20 +34,18 @@ async function getDoc(id: string) {
 }
 
 suite('bulkRemove', () => {
-  test("it should throw if provided config is invalid", async () => {
-    await assert.rejects(
-      async () => {
-        // @ts-expect-error testing invalid config
-        await bulkRemove({ notAnOption: true, couch: DB_URL, useConsoleLogger: true }, ['doc1'])
-      }
-    )
+  test('it should throw if provided config is invalid', async () => {
+    await assert.rejects(async () => {
+      // @ts-expect-error testing invalid config
+      await bulkRemove({ notAnOption: true, couch: DB_URL, useConsoleLogger: true }, ['doc1'])
+    })
 
-    await assert.rejects(
-      async () => {
-        // @ts-expect-error testing invalid config
-        await bulkRemoveMap({ anotherBadOption: 123, couch: DB_URL, useConsoleLogger: true }, ['doc1'])
-      }
-    )
+    await assert.rejects(async () => {
+      // @ts-expect-error testing invalid config
+      await bulkRemoveMap({ anotherBadOption: 123, couch: DB_URL, useConsoleLogger: true }, [
+        'doc1'
+      ])
+    })
   })
 
   test('integration with pouchdb-server', async t => {
@@ -87,7 +88,10 @@ suite('bulkRemove', () => {
     await t.test('bulkRemoveMap skips docs without revs', async () => {
       await saveDoc('bulk-remove-map-doc-2', { kind: 'map', count: 2 })
 
-      const results = await bulkRemoveMap(config, ['bulk-remove-map-doc-2', 'bulk-remove-map-missing'])
+      const results = await bulkRemoveMap(config, [
+        'bulk-remove-map-doc-2',
+        'bulk-remove-map-missing'
+      ])
       assert.strictEqual(results.length, 1)
       const [first] = results
       assert.ok(first)

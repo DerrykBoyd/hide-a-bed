@@ -1,8 +1,6 @@
 import assert from 'node:assert/strict'
-import { spawn } from 'node:child_process'
 import test, { suite } from 'node:test'
 import needle from 'needle'
-import { setTimeout as delay } from 'node:timers/promises'
 import type { CouchConfigInput } from '../schema/config.mts'
 import { remove } from './remove.mts'
 import { RetryableError } from './utils/errors.mts'
@@ -15,10 +13,15 @@ const baseConfig: CouchConfigInput = {
 type DocBody = Record<string, unknown>
 
 async function saveDoc(id: string, body: DocBody) {
-  const response = await needle('put', `${TEST_DB_URL}/${id}`, {
-    _id: id,
-    ...body
-  }, { json: true })
+  const response = await needle(
+    'put',
+    `${TEST_DB_URL}/${id}`,
+    {
+      _id: id,
+      ...body
+    },
+    { json: true }
+  )
 
   if (response.statusCode !== 201 && response.statusCode !== 200) {
     throw new Error(`Failed to save document ${id}: ${response.statusCode}`)
@@ -34,8 +37,12 @@ async function getDoc(id: string) {
 suite('remove', () => {
   test('it should throw if provided config is invalid', async () => {
     await assert.rejects(async () => {
-      // @ts-expect-error testing invalid config
-      await remove({ couch: DB_URL, useConsoleLogger: true, unexpected: true }, 'doc-invalid-config', '1-invalid')
+      await remove(
+        // @ts-expect-error testing invalid config
+        { couch: DB_URL, useConsoleLogger: true, unexpected: true },
+        'doc-invalid-config',
+        '1-invalid'
+      )
     })
   })
 
@@ -62,7 +69,9 @@ suite('remove', () => {
     })
 
     await t.test('propagates retryable network errors', async () => {
-      const offlineConfig: CouchConfigInput = { couch: 'http://localhost:6553/offline-remove-db' }
+      const offlineConfig: CouchConfigInput = {
+        couch: 'http://localhost:6553/offline-remove-db'
+      }
 
       await assert.rejects(
         () => remove(offlineConfig, 'remove-doc-network', '1-offline'),

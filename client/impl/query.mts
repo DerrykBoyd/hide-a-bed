@@ -7,34 +7,45 @@ import { queryString } from './utils/queryString.mts'
 import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts'
 import { RetryableError } from './utils/errors.mts'
 import { ViewOptions, type ViewString } from '../schema/couch/couch.input.schema.ts'
-import type { ViewQueryResponse, ViewQueryResponseValidated } from '../schema/couch/couch.output.schema.ts'
+import type {
+  ViewQueryResponse,
+  ViewQueryResponseValidated
+} from '../schema/couch/couch.output.schema.ts'
 import type { StandardSchemaV1 } from '../types/standard-schema.ts'
 
 export async function query(
   config: CouchConfigInput,
   view: ViewString,
-  options?: ViewOptions,
+  options?: ViewOptions
 ): Promise<ViewQueryResponse>
 
-export async function query<DocSchema extends StandardSchemaV1, KeySchema extends StandardSchemaV1, ValueSchema extends StandardSchemaV1>(
+export async function query<
+  DocSchema extends StandardSchemaV1,
+  KeySchema extends StandardSchemaV1,
+  ValueSchema extends StandardSchemaV1
+>(
   config: CouchConfigInput,
   view: ViewString,
   options: ViewOptions & {
     validate?: {
-      keySchema?: KeySchema,
+      keySchema?: KeySchema
       valueSchema?: ValueSchema
-    },
+    }
   }
 ): Promise<ViewQueryResponseValidated<DocSchema, KeySchema, ValueSchema>>
 
-export async function query<DocSchema extends StandardSchemaV1, KeySchema extends StandardSchemaV1, ValueSchema extends StandardSchemaV1>(
+export async function query<
+  DocSchema extends StandardSchemaV1,
+  KeySchema extends StandardSchemaV1,
+  ValueSchema extends StandardSchemaV1
+>(
   config: CouchConfigInput,
   view: ViewString,
   options: ViewOptions & {
-    include_docs: true,
+    include_docs: true
     validate?: {
-      docSchema?: DocSchema,
-      keySchema?: KeySchema,
+      docSchema?: DocSchema
+      keySchema?: KeySchema
       valueSchema?: ValueSchema
     }
   }
@@ -62,13 +73,21 @@ export async function query<DocSchema extends StandardSchemaV1, KeySchema extend
  * @throws {Error<Array<StandardSchemaV1.Issue>>} When the configuration or validation schemas fail to parse.
  * @throws {Error} When CouchDB returns a non-retryable error payload.
  */
-export async function query<DocSchema extends StandardSchemaV1, KeySchema extends StandardSchemaV1, ValueSchema extends StandardSchemaV1>(_config: CouchConfigInput, view: ViewString, options: ViewOptions & {
-  validate?: {
-    docSchema?: DocSchema,
-    keySchema?: KeySchema,
-    valueSchema?: ValueSchema
-  }
-} = {}): Promise<ViewQueryResponseValidated<DocSchema, KeySchema, ValueSchema>> {
+export async function query<
+  DocSchema extends StandardSchemaV1,
+  KeySchema extends StandardSchemaV1,
+  ValueSchema extends StandardSchemaV1
+>(
+  _config: CouchConfigInput,
+  view: ViewString,
+  options: ViewOptions & {
+    validate?: {
+      docSchema?: DocSchema
+      keySchema?: KeySchema
+      valueSchema?: ValueSchema
+    }
+  } = {}
+): Promise<ViewQueryResponseValidated<DocSchema, KeySchema, ValueSchema>> {
   const configParseResult = CouchConfig.safeParse(_config)
   const logger = createLogger(_config)
   logger.info(`Starting view query: ${view}`)
@@ -125,7 +144,10 @@ export async function query<DocSchema extends StandardSchemaV1, KeySchema extend
 
   try {
     logger.debug(`Sending ${method} request to: ${url}`)
-    results = (method === 'get') ? await needle('get', url, mergedOpts) : await needle('post', url, payload, mergedOpts)
+    results =
+      method === 'get'
+        ? await needle('get', url, mergedOpts)
+        : await needle('post', url, payload, mergedOpts)
   } catch (err) {
     logger.error('Network error during query:', err)
     RetryableError.handleNetworkError(err)
@@ -136,7 +158,7 @@ export async function query<DocSchema extends StandardSchemaV1, KeySchema extend
     throw new RetryableError('no response', 503)
   }
 
-  let body = results.body
+  const body = results.body
 
   if (RetryableError.isRetryableStatusCode(results.statusCode)) {
     logger.warn(`Retryable status code received: ${results.statusCode}`)
@@ -152,12 +174,16 @@ export async function query<DocSchema extends StandardSchemaV1, KeySchema extend
   if (options.validate) {
     const { docSchema, keySchema, valueSchema } = options.validate
 
-    body.rows = z.array(z.looseObject({
-      id: z.string(),
-      key: keySchema ? keySchema : z.any(),
-      value: valueSchema ? valueSchema : z.any(),
-      doc: docSchema ? docSchema : z.any().optional(),
-    })).parse(body.rows)
+    body.rows = z
+      .array(
+        z.looseObject({
+          id: z.string(),
+          key: keySchema ? keySchema : z.any(),
+          value: valueSchema ? valueSchema : z.any(),
+          doc: docSchema ? docSchema : z.any().optional()
+        })
+      )
+      .parse(body.rows)
   }
 
   logger.info(`Successfully executed view query: ${view}`)
@@ -166,28 +192,34 @@ export async function query<DocSchema extends StandardSchemaV1, KeySchema extend
   return body
 }
 export type QueryBound = {
-  (view: ViewString, options?: ViewOptions): Promise<ViewQueryResponse>;
-  <DocSchema extends StandardSchemaV1, KeySchema extends StandardSchemaV1, ValueSchema extends StandardSchemaV1>(
+  (view: ViewString, options?: ViewOptions): Promise<ViewQueryResponse>
+  <
+    DocSchema extends StandardSchemaV1,
+    KeySchema extends StandardSchemaV1,
+    ValueSchema extends StandardSchemaV1
+  >(
     view: ViewString,
     options: ViewOptions & {
-      include_docs: false;
+      include_docs: false
       validate?: {
-        keySchema?: KeySchema;
-        valueSchema?: ValueSchema;
-      };
+        keySchema?: KeySchema
+        valueSchema?: ValueSchema
+      }
     }
-  ): Promise<ViewQueryResponseValidated<DocSchema, KeySchema, ValueSchema>>;
-  <DocSchema extends StandardSchemaV1, KeySchema extends StandardSchemaV1, ValueSchema extends StandardSchemaV1>(
+  ): Promise<ViewQueryResponseValidated<DocSchema, KeySchema, ValueSchema>>
+  <
+    DocSchema extends StandardSchemaV1,
+    KeySchema extends StandardSchemaV1,
+    ValueSchema extends StandardSchemaV1
+  >(
     view: ViewString,
     options: ViewOptions & {
-      include_docs: true;
+      include_docs: true
       validate?: {
-        docSchema?: DocSchema;
-        keySchema?: KeySchema;
-        valueSchema?: ValueSchema;
-      };
+        docSchema?: DocSchema
+        keySchema?: KeySchema
+        valueSchema?: ValueSchema
+      }
     }
-  ): Promise<ViewQueryResponseValidated<DocSchema, KeySchema, ValueSchema>>;
-};
-
-
+  ): Promise<ViewQueryResponseValidated<DocSchema, KeySchema, ValueSchema>>
+}

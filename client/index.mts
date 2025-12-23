@@ -1,12 +1,12 @@
 import { createQuery } from './impl/utils/queryBuilder.mts'
 import { QueryBuilder } from './impl/utils/queryBuilder.mts'
 import { bindConfig } from './impl/bindConfig.mts'
-import { withRetry } from './impl/retry.mts';
-import { bulkGet, bulkGetDictionary } from './impl/bulkGet.mts';
-import { getAtRev, get } from './impl/get.mts';
-import { queryStream } from './impl/stream.mts';
-import { patch, patchDangerously } from './impl/patch.mts';
-import { put } from './impl/put.mts';
+import { withRetry } from './impl/retry.mts'
+import { bulkGet, bulkGetDictionary } from './impl/bulkGet.mts'
+import { getAtRev, get } from './impl/get.mts'
+import { queryStream } from './impl/stream.mts'
+import { patch, patchDangerously } from './impl/patch.mts'
+import { put } from './impl/put.mts'
 import { remove } from './impl/remove.mts'
 import { bulkSave, bulkSaveTransaction } from './impl/bulkSave.mts'
 import { query } from './impl/query.mts'
@@ -43,9 +43,8 @@ export {
   QueryBuilder,
   createQuery,
   createLock,
-  removeLock,
+  removeLock
 }
-
 
 export type {
   BulkGetBound,
@@ -54,13 +53,13 @@ export type {
   BulkGetDictionaryResult,
   BulkGetOptions,
   BulkGetResponse,
-  OnInvalidDocAction,
+  OnInvalidDocAction
 } from './impl/bulkGet.mts'
 export type { GetOptions, GetBound, GetAtRevBound } from './impl/get.mts'
 export type { QueryBound } from './impl/query.mts'
 export type {
   ViewString,
-  ViewOptions as SimpleViewOptions,
+  ViewOptions as SimpleViewOptions
 } from './schema/couch/couch.input.schema.ts'
 export type {
   ViewRow,
@@ -68,7 +67,7 @@ export type {
   CouchDocInput,
   ViewQueryResponse,
   ViewQueryResponseValidated,
-  ViewRowValidated,
+  ViewRowValidated
 } from './schema/couch/couch.output.schema.ts'
 export type { RetryOptions } from './impl/retry.mts'
 export type { NetworkError, RetryableError, NotFoundError } from './impl/utils/errors.mts'

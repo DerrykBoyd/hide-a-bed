@@ -1,8 +1,6 @@
 import assert from 'node:assert/strict'
-import { spawn } from 'node:child_process'
 import test, { suite } from 'node:test'
 import needle from 'needle'
-import { setTimeout as delay } from 'node:timers/promises'
 import type { CouchConfigInput } from '../schema/config.mts'
 import { get } from './get.mts'
 import { patch, patchDangerously } from './patch.mts'
@@ -18,10 +16,15 @@ const baseConfig: CouchConfigInput = {
 type DocBody = Record<string, unknown>
 
 async function saveDoc(id: string, body: DocBody) {
-  const response = await needle('put', `${TEST_DB_URL}/${id}`, {
-    _id: id,
-    ...body
-  }, { json: true })
+  const response = await needle(
+    'put',
+    `${TEST_DB_URL}/${id}`,
+    {
+      _id: id,
+      ...body
+    },
+    { json: true }
+  )
 
   if (response.statusCode !== 201 && response.statusCode !== 200) {
     throw new Error(`Failed to save document ${id}: ${response.statusCode}`)
@@ -31,23 +34,25 @@ async function saveDoc(id: string, body: DocBody) {
 }
 
 suite('patch', () => {
-  test("it will throw if provided config is invalid", async () => {
-    await assert.rejects(
-      async () => {
-        // @ts-expect-error testing invalid config
-        await patch({ notAnOption: true, couch: DB_URL, useConsoleLogger: true }, 'doc1', { foo: 'bar' })
-      }
-    )
+  test('it will throw if provided config is invalid', async () => {
+    await assert.rejects(async () => {
+      // @ts-expect-error testing invalid config
+      await patch({ notAnOption: true, couch: DB_URL, useConsoleLogger: true }, 'doc1', {
+        foo: 'bar'
+      })
+    })
 
-    await assert.rejects(
-      async () => {
+    await assert.rejects(async () => {
+      await patchDangerously(
         // @ts-expect-error testing invalid config
-        await patchDangerously({ anotherBadOption: 123, couch: DB_URL, useConsoleLogger: true }, 'doc1', { foo: 'bar' })
-      }
-    )
+        { anotherBadOption: 123, couch: DB_URL, useConsoleLogger: true },
+        'doc1',
+        { foo: 'bar' }
+      )
+    })
   })
 
-  test("patch should throw if document revision is not provided", async () => {
+  test('patch should throw if document revision is not provided', async () => {
     await assert.rejects(
       async () => {
         // @ts-expect-error testing missing _rev
@@ -64,7 +69,11 @@ suite('patch', () => {
     const initial = await saveDoc(patch_doc_id, { message: 'original' })
 
     await t.test('patch updates document when revision matches', async () => {
-      const result = await patch(baseConfig, patch_doc_id, { _rev: initial.rev, message: 'patched', updated: true })
+      const result = await patch(baseConfig, patch_doc_id, {
+        _rev: initial.rev,
+        message: 'patched',
+        updated: true
+      })
       assert.ok(result.ok)
       assert.ok(result.rev)
 
@@ -77,7 +86,10 @@ suite('patch', () => {
       const current = await get(baseConfig, patch_doc_id)
       const staleRev = initial.rev
 
-      const conflict = await patch(baseConfig, patch_doc_id, { _rev: staleRev, message: 'should-fail' })
+      const conflict = await patch(baseConfig, patch_doc_id, {
+        _rev: staleRev,
+        message: 'should-fail'
+      })
       assert.strictEqual(conflict.ok, false)
       assert.strictEqual(conflict.statusCode, 409)
       assert.strictEqual(conflict.error, 'conflict')
@@ -87,7 +99,9 @@ suite('patch', () => {
     })
 
     await t.test('patchDangerously merges properties without revision', async () => {
-      const result = await patchDangerously(baseConfig, patch_doc_id, { description: 'dangerously updated' })
+      const result = await patchDangerously(baseConfig, patch_doc_id, {
+        description: 'dangerously updated'
+      })
       assert.ok(result?.ok)
 
       const doc = await get(baseConfig, patch_doc_id)
@@ -95,7 +109,9 @@ suite('patch', () => {
     })
 
     await t.test('patchDangerously returns not_found when document missing', async () => {
-      const response = await patchDangerously(baseConfig, 'missing-doc', { message: 'noop' })
+      const response = await patchDangerously(baseConfig, 'missing-doc', {
+        message: 'noop'
+      })
       assert.strictEqual(response?.ok, false)
       assert.strictEqual(response?.statusCode, 404)
       assert.strictEqual(response?.error, 'not_found')
@@ -110,7 +126,10 @@ suite('patch', () => {
         backoffFactor: 1
       }
 
-      const response = await patchDangerously(conflictConfig, patch_doc_id, { _rev: initial.rev, conflicted: true })
+      const response = await patchDangerously(conflictConfig, patch_doc_id, {
+        _rev: initial.rev,
+        conflicted: true
+      })
       assert.strictEqual(response?.ok, false)
       assert.strictEqual(response?.statusCode, 500)
       assert.match(response?.error ?? '', /Failed to patch after 1 attempts/)

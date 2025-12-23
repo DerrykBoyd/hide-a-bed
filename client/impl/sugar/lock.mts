@@ -5,18 +5,21 @@ import { createLogger } from '../utils/logger.mts'
 import { CouchConfig, type CouchConfigInput } from '../../schema/config.mts'
 import { isConflictError } from '../utils/errors.mts'
 
-
 /**
  * Create a lock document for the specified document ID.
  * Returns true if the lock was created, false if locking is disabled or a conflict occurred.
- * 
+ *
  * @param configInput CouchDB configuration
  * @param docId The document ID to lock
  * @param lockOptions Locking options
- * 
+ *
  * @return True if the lock was created, false otherwise
  */
-export async function createLock(configInput: CouchConfigInput, docId: string, lockOptions: LockOptionsSchema): Promise<boolean> {
+export async function createLock(
+  configInput: CouchConfigInput,
+  docId: string,
+  lockOptions: LockOptionsSchema
+): Promise<boolean> {
   const config = CouchConfig.parse(configInput)
   const options = LockOptions.parse(lockOptions)
 
@@ -52,14 +55,18 @@ export async function createLock(configInput: CouchConfigInput, docId: string, l
 
 /**
  * Remove the lock document for the specified document ID if owned by the caller.
- * 
+ *
  * @param configInput CouchDB configuration
  * @param docId The document ID to unlock
  * @param lockOptions Locking options
- * 
+ *
  * @return Promise that resolves when the unlock operation is complete
  */
-export async function removeLock(configInput: CouchConfigInput, docId: string, lockOptions: LockOptionsSchema): Promise<void> {
+export async function removeLock(
+  configInput: CouchConfigInput,
+  docId: string,
+  lockOptions: LockOptionsSchema
+): Promise<void> {
   const config = CouchConfig.parse(configInput)
   const options = LockOptions.parse(lockOptions)
   const logger = createLogger(config)

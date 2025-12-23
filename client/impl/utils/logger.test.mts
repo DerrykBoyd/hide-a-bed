@@ -10,14 +10,14 @@ const baseConfig = (): CouchConfigInput => ({
 suite('createLogger', () => {
   test('returns cached logger when present', () => {
     const cached: Logger = {
-      error: () => { },
-      warn: () => { },
-      info: () => { },
-      debug: () => { }
+      error: () => {},
+      warn: () => {},
+      info: () => {},
+      debug: () => {}
     }
     const config: CouchConfigInput = {
       ...baseConfig(),
-      "~normalizedLogger": cached
+      '~normalizedLogger': cached
     }
 
     const logger = createLogger(config)
@@ -36,10 +36,18 @@ suite('createLogger', () => {
     const originalInfo = console.info
     const originalDebug = console.debug
 
-    console.error = (...args: unknown[]) => { errorCalls.push(args) }
-    console.warn = (...args: unknown[]) => { warnCalls.push(args) }
-    console.info = (...args: unknown[]) => { infoCalls.push(args) }
-    console.debug = (...args: unknown[]) => { debugCalls.push(args) }
+    console.error = (...args: unknown[]) => {
+      errorCalls.push(args)
+    }
+    console.warn = (...args: unknown[]) => {
+      warnCalls.push(args)
+    }
+    console.info = (...args: unknown[]) => {
+      infoCalls.push(args)
+    }
+    console.debug = (...args: unknown[]) => {
+      debugCalls.push(args)
+    }
 
     try {
       const config: CouchConfigInput = {
@@ -54,7 +62,7 @@ suite('createLogger', () => {
       logger.info('info')
       logger.debug('debug')
 
-      assert.strictEqual(config["~normalizedLogger"], logger)
+      assert.strictEqual(config['~normalizedLogger'], logger)
       assert.deepStrictEqual(errorCalls, [['boom']])
       assert.deepStrictEqual(warnCalls, [['warn', 123]])
       assert.deepStrictEqual(infoCalls, [['info']])
@@ -71,7 +79,7 @@ suite('createLogger', () => {
     const config = baseConfig()
     const logger = createLogger(config)
 
-    assert.strictEqual(config["~normalizedLogger"], logger)
+    assert.strictEqual(config['~normalizedLogger'], logger)
     assert.doesNotThrow(() => logger.error('noop'))
     assert.doesNotThrow(() => logger.warn('noop'))
     assert.doesNotThrow(() => logger.info('noop'))
@@ -79,7 +87,7 @@ suite('createLogger', () => {
   })
 
   test('wraps function logger', () => {
-    const calls: Array<{ level: string, args: unknown[] }> = []
+    const calls: Array<{ level: string; args: unknown[] }> = []
     const fnLogger = (level: string, ...args: unknown[]) => {
       calls.push({ level, args })
     }

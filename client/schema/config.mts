@@ -1,13 +1,16 @@
 import { z } from 'zod'
+import type { StandardSchemaV1 } from '../types/standard-schema.ts'
 
 const anyArgs = z.array(z.any())
 
-const LoggerSchema = z.object({
-  error: z.function({ input: anyArgs, output: z.void() }).optional(),
-  warn: z.function({ input: anyArgs, output: z.void() }).optional(),
-  info: z.function({ input: anyArgs, output: z.void() }).optional(),
-  debug: z.function({ input: anyArgs, output: z.void() }).optional()
-}).or(z.function({ input: anyArgs, output: z.void() }))
+const LoggerSchema = z
+  .object({
+    error: z.function({ input: anyArgs, output: z.void() }).optional(),
+    warn: z.function({ input: anyArgs, output: z.void() }).optional(),
+    info: z.function({ input: anyArgs, output: z.void() }).optional(),
+    debug: z.function({ input: anyArgs, output: z.void() }).optional()
+  })
+  .or(z.function({ input: anyArgs, output: z.void() }))
 
 export const NeedleBaseOptions = z.object({
   json: z.boolean(),
@@ -44,19 +47,35 @@ export const NeedleOptions = z.object({
   keepAlive: z.boolean().optional()
 })
 
-export const CouchConfig = z.strictObject({
-  backoffFactor: z.number().optional().default(2).describe('multiplier for exponential backoff'),
-  bindWithRetry: z.boolean().optional().default(true).describe('should we bind with retry'),
-  couch: z.string().describe('the url of the couch db'),
-  initialDelay: z.number().optional().default(1000).describe('initial retry delay in milliseconds'),
-  logger: LoggerSchema.optional().describe('logging interface supporting winston-like or simple function interface'),
-  maxRetries: z.number().optional().default(3).describe('maximum number of retry attempts'),
-  needleOpts: NeedleOptions.optional(),
-  throwOnGetNotFound: z.boolean().optional().default(false).describe('if a get is 404 should we throw or return undefined'),
-  useConsoleLogger: z.boolean().optional().default(false).describe('turn on console as a fallback logger'),
-  "~emitter": z.any().optional().describe('emitter for events'),
-  "~normalizedLogger": z.any().optional(), // Internal property for caching normalized logger
-}).describe('The std config object')
+export const CouchConfig = z
+  .strictObject({
+    backoffFactor: z.number().optional().default(2).describe('multiplier for exponential backoff'),
+    bindWithRetry: z.boolean().optional().default(true).describe('should we bind with retry'),
+    couch: z.string().describe('the url of the couch db'),
+    initialDelay: z
+      .number()
+      .optional()
+      .default(1000)
+      .describe('initial retry delay in milliseconds'),
+    logger: LoggerSchema.optional().describe(
+      'logging interface supporting winston-like or simple function interface'
+    ),
+    maxRetries: z.number().optional().default(3).describe('maximum number of retry attempts'),
+    needleOpts: NeedleOptions.optional(),
+    throwOnGetNotFound: z
+      .boolean()
+      .optional()
+      .default(false)
+      .describe('if a get is 404 should we throw or return undefined'),
+    useConsoleLogger: z
+      .boolean()
+      .optional()
+      .default(false)
+      .describe('turn on console as a fallback logger'),
+    '~emitter': z.any().optional().describe('emitter for events'),
+    '~normalizedLogger': z.any().optional() // Internal property for caching normalized logger
+  })
+  .describe('The std config object')
 
-export interface CouchConfig extends z.infer<typeof CouchConfig> { }
-export interface CouchConfigInput extends z.input<typeof CouchConfig> { }
+export type CouchConfig = StandardSchemaV1.InferOutput<typeof CouchConfig>
+export type CouchConfigInput = StandardSchemaV1.InferInput<typeof CouchConfig>

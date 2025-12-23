@@ -7,16 +7,20 @@ import { RetryableError } from './utils/errors.mts'
 import { bulkGet, bulkGetDictionary } from './bulkGet.mts'
 import { TEST_DB_URL } from '../test/setup-db.mts'
 
-
 const config: CouchConfigInput = {
-  couch: TEST_DB_URL,
+  couch: TEST_DB_URL
 }
 
 async function ensureDoc(id: string, body: Record<string, unknown>) {
-  await needle('put', `${TEST_DB_URL}/${id}`, {
-    _id: id,
-    ...body
-  }, { json: true })
+  await needle(
+    'put',
+    `${TEST_DB_URL}/${id}`,
+    {
+      _id: id,
+      ...body
+    },
+    { json: true }
+  )
 }
 
 suite('bulkGet', () => {
@@ -37,7 +41,9 @@ suite('bulkGet', () => {
     })
 
     await t.test('supports includeDocs=false via _bulkGetWithOptions', async () => {
-      const response = await bulkGet(config, ['doc-1'], { includeDocs: false })
+      const response = await bulkGet(config, ['doc-1'], {
+        includeDocs: false
+      })
       assert.strictEqual(response.rows.length, 1)
       const [row] = response.rows
       assert.strictEqual(row?.id, 'doc-1')
@@ -60,11 +66,12 @@ suite('bulkGet', () => {
       assert.strictEqual(valid.rows[0]?.doc?.count, 7)
 
       await assert.rejects(
-        () => bulkGet(config, ['doc-invalid'], {
-          validate: {
-            docSchema: schema
-          }
-        }),
+        () =>
+          bulkGet(config, ['doc-invalid'], {
+            validate: {
+              docSchema: schema
+            }
+          }),
         (err: unknown) => {
           assert.ok(Array.isArray(err))
           assert.match(err[0]?.message, /Invalid input:/)
@@ -106,7 +113,6 @@ suite('bulkGet', () => {
     await t.test('bulkGetDictionary groups results', async () => {
       const result = await bulkGetDictionary(config, ['doc-valid', 'doc-missing'])
       assert.deepStrictEqual(Object.keys(result.found), ['doc-valid'])
-      // @ts-ignore
       assert.strictEqual(result.found['doc-valid'].count, 7)
       assert.deepStrictEqual(Object.keys(result.notFound), ['doc-missing'])
       assert.strictEqual(result.notFound['doc-missing'].error, 'not_found')

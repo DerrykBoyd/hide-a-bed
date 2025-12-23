@@ -44,9 +44,12 @@ suite('withRetry', () => {
 
     const wrapped = withRetry(fn, { initialDelay: 0, maxDelay: 0 })
 
-    await assert.rejects(() => wrapped(), (err: unknown) => {
-      return err instanceof Error && !(err instanceof RetryableError) && err.message === 'fatal'
-    })
+    await assert.rejects(
+      () => wrapped(),
+      (err: unknown) => {
+        return err instanceof Error && !(err instanceof RetryableError) && err.message === 'fatal'
+      }
+    )
     assert.strictEqual(attempts, 1)
   })
 
@@ -57,11 +60,18 @@ suite('withRetry', () => {
       throw new RetryableError('still failing', 503)
     }
 
-    const wrapped = withRetry(fn, { maxRetries: 2, initialDelay: 0, maxDelay: 0 })
-
-    await assert.rejects(() => wrapped(), (err: unknown) => {
-      return err instanceof RetryableError && err.message === 'still failing'
+    const wrapped = withRetry(fn, {
+      maxRetries: 2,
+      initialDelay: 0,
+      maxDelay: 0
     })
+
+    await assert.rejects(
+      () => wrapped(),
+      (err: unknown) => {
+        return err instanceof RetryableError && err.message === 'still failing'
+      }
+    )
     assert.strictEqual(attempts, 3)
   })
 })

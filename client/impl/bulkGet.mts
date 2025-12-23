@@ -4,12 +4,23 @@ import { createLogger } from './utils/logger.mts'
 import { mergeNeedleOpts } from './utils/mergeNeedleOpts.mts'
 import { RetryableError } from './utils/errors.mts'
 import { z } from 'zod'
-import { ViewRow, ViewQueryResponse, type ViewQueryResponseValidated, CouchDoc, type ViewRowValidated } from '../schema/couch/couch.output.schema.ts'
+import {
+  ViewRow,
+  ViewQueryResponse,
+  type ViewQueryResponseValidated,
+  CouchDoc,
+  type ViewRowValidated
+} from '../schema/couch/couch.output.schema.ts'
 import type { StandardSchemaV1 } from '../types/standard-schema.ts'
 
-export type BulkGetResponse<DocSchema extends StandardSchemaV1 = StandardSchemaV1<CouchDoc>> = ViewQueryResponseValidated<DocSchema, StandardSchemaV1, StandardSchemaV1<{
-  rev: string;
-}>>
+export type BulkGetResponse<DocSchema extends StandardSchemaV1 = StandardSchemaV1<CouchDoc>> =
+  ViewQueryResponseValidated<
+    DocSchema,
+    StandardSchemaV1,
+    StandardSchemaV1<{
+      rev: string
+    }>
+  >
 
 export type OnInvalidDocAction = 'throw' | 'skip'
 
@@ -37,68 +48,76 @@ async function parseRows<DocSchema extends StandardSchemaV1>(
     doc?: StandardSchemaV1.InferOutput<DocSchema>
     error?: string
   }
-  type RowResult = FinalRow
-    | "skip"
-  const isFinalRow = (row: RowResult): row is FinalRow => row !== "skip"
+  type RowResult = FinalRow | 'skip'
+  const isFinalRow = (row: RowResult): row is FinalRow => row !== 'skip'
 
-  const parsedRows: Array<RowResult> = await Promise.all(rows.map(async (row: any) => {
-    try {
-      /** 
-       * If no doc is present, parse without doc validation.
-       * This allows handling of not-found documents or rows without docs.
-       */
-      if (row.doc == null) {
-        return z.looseObject(ViewRow.shape).parse(row)
-      }
+  const parsedRows: Array<RowResult> = await Promise.all(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    rows.map(async (row: any) => {
+      try {
+        /**
+         * If no doc is present, parse without doc validation.
+         * This allows handling of not-found documents or rows without docs.
+         */
+        if (row.doc == null) {
+          return z.looseObject(ViewRow.shape).parse(row)
+        }
 
-      const parsedDoc = await schema['~standard'].validate(row.doc)
+        const parsedDoc = await schema['~standard'].validate(row.doc)
 
-      if (parsedDoc.issues) {
+        if (parsedDoc.issues) {
+          if (onInvalidDoc === 'throw') {
+            throw parsedDoc.issues
+          } else {
+            // skip invalid doc
+            return 'skip'
+          }
+        } else {
+          const parsedRow = z
+            .looseObject({
+              id: z.string().optional(),
+              key: z.any().nullish(),
+              value: z.any().nullish(),
+              error: z.string().optional()
+            })
+            .parse(row)
+
+          return {
+            ...parsedRow,
+            doc: parsedDoc.value
+          }
+        }
+      } catch (e) {
         if (onInvalidDoc === 'throw') {
-          throw parsedDoc.issues
+          throw e
         } else {
           // skip invalid doc
-          return "skip"
+          return 'skip'
         }
-      } else {
-        const parsedRow = z.looseObject({
-          id: z.string().optional(),
-          key: z.any().nullish(),
-          value: z.any().nullish(),
-          error: z.string().optional()
-        }).parse(row)
-
-        return ({
-          ...parsedRow,
-          doc: parsedDoc.value
-        })
       }
-    } catch (e) {
-      if (onInvalidDoc === 'throw') {
-        throw e
-      } else {
-        // skip invalid doc
-        return "skip"
-      }
-    }
-  }))
+    })
+  )
 
   return parsedRows.filter(isFinalRow)
 }
 
 /**
  * Executes the bulk get operation against CouchDB.
- * 
+ *
  * @param _config CouchDB configuration
  * @param ids Array of document IDs to retrieve
  * @param includeDocs Whether to include documents in the response
- * 
+ *
  * @returns The raw response body from CouchDB
- * 
+ *
  * @throws {RetryableError} When a retryable HTTP status code is encountered or no response is received.
  * @throws {Error} When CouchDB returns a non-retryable error payload.
  */
-async function executeBulkGet(_config: CouchConfigInput, ids: Array<string | undefined>, includeDocs: boolean) {
+async function executeBulkGet(
+  _config: CouchConfigInput,
+  ids: Array<string | undefined>,
+  includeDocs: boolean
+) {
   const configParseResult = CouchConfig.safeParse(_config)
   const logger = createLogger(_config)
   logger.info(`Starting bulk get for ${ids.length} documents`)
@@ -138,7 +157,7 @@ async function executeBulkGet(_config: CouchConfigInput, ids: Array<string | und
 
 /**
  * Bulk get documents by IDs with options.
- * 
+ *
  * @template DocSchema - schema (StandardSchemaV1) used to validate each returned document, if provided.
  *
  * @param config - CouchDB configuration data that is validated before use.
@@ -151,7 +170,7 @@ async function executeBulkGet(_config: CouchConfigInput, ids: Array<string | und
  * @throws {Error<StandardSchemaV1.FailureResult["issues"]>} When the configuration or validation schemas fail to parse.
  * @throws {Error} When CouchDB returns a non-retryable error payload.
  */
-async function _bulkGetWithOptions<DocSchema extends StandardSchemaV1>(
+async function _bulkGetWithOptions(
   config: CouchConfigInput,
   ids: Array<string | undefined>,
   options: { includeDocs: false }
@@ -160,7 +179,10 @@ async function _bulkGetWithOptions<DocSchema extends StandardSchemaV1>(
 async function _bulkGetWithOptions<DocSchema extends StandardSchemaV1>(
   config: CouchConfigInput,
   ids: Array<string | undefined>,
-  options: { includeDocs: true; validate?: { docSchema: DocSchema, onInvalidDoc?: 'throw' | 'skip' } }
+  options: {
+    includeDocs: true
+    validate?: { docSchema: DocSchema; onInvalidDoc?: 'throw' | 'skip' }
+  }
 ): Promise<BulkGetResponse<DocSchema>>
 
 async function _bulkGetWithOptions<DocSchema extends StandardSchemaV1>(
@@ -202,12 +224,15 @@ export async function bulkGet(
 export async function bulkGet<DocSchema extends StandardSchemaV1>(
   config: CouchConfigInput,
   ids: Array<string | undefined>,
-  options: { includeDocs?: true; validate?: { docSchema: DocSchema, onInvalidDoc?: 'throw' | 'skip' } }
+  options: {
+    includeDocs?: true
+    validate?: { docSchema: DocSchema; onInvalidDoc?: 'throw' | 'skip' }
+  }
 ): Promise<BulkGetResponse<DocSchema>>
 
 /**
  * Bulk get documents by IDs.
- * 
+ *
  * @remarks
  * By default, documents are included in the response. To exclude documents, set `includeDocs` to `false`.
  * When `includeDocs` is `true`, you can provide a schema (StandardSchemaV1) to validate the documents.
@@ -247,26 +272,40 @@ export async function bulkGet<DocSchema extends StandardSchemaV1>(
  * Bound version of bulkGet with config pre-applied.
  */
 export type BulkGetBound = {
-  (ids: string[], options?: {
-    includeDocs?: boolean,
-  }): Promise<ViewQueryResponse>;
-  <DocSchema extends StandardSchemaV1>(ids: string[], options?: BulkGetOptions<DocSchema>): Promise<ViewQueryResponseValidated<DocSchema>>;
+  (
+    ids: string[],
+    options?: {
+      includeDocs?: boolean
+    }
+  ): Promise<ViewQueryResponse>
+  <DocSchema extends StandardSchemaV1>(
+    ids: string[],
+    options?: BulkGetOptions<DocSchema>
+  ): Promise<ViewQueryResponseValidated<DocSchema>>
 }
 
 /**
  * Bulk get documents by IDs and return a dictionary of found and not found documents.
  */
 
-export type BulkGetDictionaryOptions<DocSchema extends StandardSchemaV1> = Omit<BulkGetOptions<DocSchema>, 'includeDocs'>
+export type BulkGetDictionaryOptions<DocSchema extends StandardSchemaV1> = Omit<
+  BulkGetOptions<DocSchema>,
+  'includeDocs'
+>
 
-export type BulkGetDictionaryResult<DocSchema extends StandardSchemaV1 = StandardSchemaV1<CouchDoc>> = {
+export type BulkGetDictionaryResult<
+  DocSchema extends StandardSchemaV1 = StandardSchemaV1<CouchDoc>
+> = {
   found: Record<string, StandardSchemaV1.InferOutput<DocSchema>>
-  notFound: Record<string, ViewRowValidated<DocSchema, StandardSchemaV1, StandardSchemaV1<{ rev: string }>>>
+  notFound: Record<
+    string,
+    ViewRowValidated<DocSchema, StandardSchemaV1, StandardSchemaV1<{ rev: string }>>
+  >
 }
 
 export async function bulkGetDictionary(
   config: CouchConfigInput,
-  ids: Array<string | undefined>,
+  ids: Array<string | undefined>
 ): Promise<BulkGetDictionaryResult>
 
 export async function bulkGetDictionary<DocSchema extends StandardSchemaV1>(
@@ -277,15 +316,15 @@ export async function bulkGetDictionary<DocSchema extends StandardSchemaV1>(
 
 /**
  * Bulk get documents by IDs and return a dictionary of found and not found documents.
- * 
+ *
  * @template DocSchema - Schema used to validate each returned document, if provided. Note: if a document is found and it fails validation this will throw a Error<StandardSchemaV1.FailureResult["issues"]>.
  *
  * @param config - CouchDB configuration data that is validated before use.
  * @param ids - Array of document IDs to retrieve.
  * @param options - Options for bulk get operation, including validation schema.
- * 
+ *
  * @returns An object containing found documents and not found rows.
- * 
+ *
  * @throws {RetryableError} When a retryable HTTP status code is encountered or no response is received.
  * @throws {Error<StandardSchemaV1.FailureResult["issues"]>} When the configuration or validation schemas fail to parse.
  * @throws {Error} When CouchDB returns a non-retryable error payload.
@@ -315,7 +354,9 @@ export async function bulkGetDictionary<DocSchema extends StandardSchemaV1>(
     }
 
     const doc = row.doc
-    const docId = typeof (doc as any)?._id === 'string' ? (doc as any)._id : row.id
+    const docId =
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      typeof (doc as any)?._id === 'string' ? (doc as any)._id : row.id
 
     if (!docId) {
       results.notFound[key] = row
@@ -329,7 +370,7 @@ export async function bulkGetDictionary<DocSchema extends StandardSchemaV1>(
 }
 
 export type BulkGetDictionaryBound = {
-  (ids: string[]): Promise<BulkGetDictionaryResult>;
+  (ids: string[]): Promise<BulkGetDictionaryResult>
   <DocSchema extends StandardSchemaV1 = typeof CouchDoc>(
     ids: string[],
     options: BulkGetOptions<DocSchema>
