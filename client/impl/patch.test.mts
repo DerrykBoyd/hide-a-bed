@@ -6,12 +6,10 @@ import { setTimeout as delay } from 'node:timers/promises'
 import type { CouchConfigInput } from '../schema/config.mts'
 import { get } from './get.mts'
 import { patch, patchDangerously } from './patch.mts'
-
-const PORT = 8994
-const DB_URL = `http://localhost:${PORT}/patch-test`
+import { TEST_DB_URL } from '../test/setup-db.mts'
 
 const baseConfig: CouchConfigInput = {
-  couch: DB_URL,
+  couch: TEST_DB_URL,
   initialDelay: 10,
   maxRetries: 2,
   backoffFactor: 1.2
@@ -20,7 +18,7 @@ const baseConfig: CouchConfigInput = {
 type DocBody = Record<string, unknown>
 
 async function saveDoc(id: string, body: DocBody) {
-  const response = await needle('put', `${DB_URL}/${id}`, {
+  const response = await needle('put', `${TEST_DB_URL}/${id}`, {
     _id: id,
     ...body
   }, { json: true })
@@ -62,41 +60,37 @@ suite('patch', () => {
   })
 
   test('integration with pouchdb-server', async t => {
-    const server = spawn('node_modules/.bin/pouchdb-server', ['--in-memory', '--port', PORT.toString()], { stdio: 'inherit' })
-    await delay(2000)
-    await needle('put', DB_URL, null)
-    t.after(() => { server.kill() })
-
-    const initial = await saveDoc('patch-doc', { message: 'original' })
+    const patch_doc_id = `patch-doc-${Date.now()}`
+    const initial = await saveDoc(patch_doc_id, { message: 'original' })
 
     await t.test('patch updates document when revision matches', async () => {
-      const result = await patch(baseConfig, 'patch-doc', { _rev: initial.rev, message: 'patched', updated: true })
+      const result = await patch(baseConfig, patch_doc_id, { _rev: initial.rev, message: 'patched', updated: true })
       assert.ok(result.ok)
       assert.ok(result.rev)
 
-      const doc = await get(baseConfig, 'patch-doc')
+      const doc = await get(baseConfig, patch_doc_id)
       assert.strictEqual(doc?.message, 'patched')
       assert.strictEqual(doc?.updated, true)
     })
 
     await t.test('patch returns conflict on stale revision', async () => {
-      const current = await get(baseConfig, 'patch-doc')
+      const current = await get(baseConfig, patch_doc_id)
       const staleRev = initial.rev
 
-      const conflict = await patch(baseConfig, 'patch-doc', { _rev: staleRev, message: 'should-fail' })
+      const conflict = await patch(baseConfig, patch_doc_id, { _rev: staleRev, message: 'should-fail' })
       assert.strictEqual(conflict.ok, false)
       assert.strictEqual(conflict.statusCode, 409)
       assert.strictEqual(conflict.error, 'conflict')
 
-      const doc = await get(baseConfig, 'patch-doc')
+      const doc = await get(baseConfig, patch_doc_id)
       assert.strictEqual(doc?.message, current?.message)
     })
 
     await t.test('patchDangerously merges properties without revision', async () => {
-      const result = await patchDangerously(baseConfig, 'patch-doc', { description: 'dangerously updated' })
+      const result = await patchDangerously(baseConfig, patch_doc_id, { description: 'dangerously updated' })
       assert.ok(result?.ok)
 
-      const doc = await get(baseConfig, 'patch-doc')
+      const doc = await get(baseConfig, patch_doc_id)
       assert.strictEqual(doc?.description, 'dangerously updated')
     })
 
@@ -108,7 +102,7 @@ suite('patch', () => {
     })
 
     await t.test('patchDangerously reports failure after exhausting retries', async () => {
-      const doc = await get(baseConfig, 'patch-doc')
+      const doc = await get(baseConfig, patch_doc_id)
       const conflictConfig: CouchConfigInput = {
         ...baseConfig,
         maxRetries: 1,
@@ -116,12 +110,12 @@ suite('patch', () => {
         backoffFactor: 1
       }
 
-      const response = await patchDangerously(conflictConfig, 'patch-doc', { _rev: initial.rev, conflicted: true })
+      const response = await patchDangerously(conflictConfig, patch_doc_id, { _rev: initial.rev, conflicted: true })
       assert.strictEqual(response?.ok, false)
       assert.strictEqual(response?.statusCode, 500)
       assert.match(response?.error ?? '', /Failed to patch after 1 attempts/)
 
-      const current = await get(baseConfig, 'patch-doc')
+      const current = await get(baseConfig, patch_doc_id)
       assert.strictEqual(current?.conflicted, undefined)
       assert.strictEqual(current?._rev, doc?._rev)
     })

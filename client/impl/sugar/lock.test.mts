@@ -5,28 +5,21 @@ import needle from 'needle'
 import { setTimeout as delay } from 'node:timers/promises'
 import type { CouchConfigInput } from '../../schema/config.mts'
 import { createLock, removeLock } from './lock.mts'
-
-const PORT = 8995
-const DB_URL = `http://localhost:${PORT}/lock-test`
+import { TEST_DB_URL } from '../../test/setup-db.mts'
 
 const baseConfig: CouchConfigInput = {
-  couch: DB_URL,
+  couch: TEST_DB_URL,
   useConsoleLogger: true
 }
 
 async function fetchLockDoc(docId: string) {
-  return await needle('get', `${DB_URL}/lock-${docId}`, null, { json: true })
+  return await needle('get', `${TEST_DB_URL}/lock-${docId}`, null, { json: true })
 }
 
 suite('lock', () => {
   test('integration with pouchdb-server', async t => {
-    const server = spawn('node_modules/.bin/pouchdb-server', ['--in-memory', '--port', PORT.toString()], { stdio: 'inherit' })
-    await delay(2000)
-    await needle('put', DB_URL, null)
-    t.after(() => { server.kill() })
-
     await t.test('creates a lock document when enabled', async () => {
-      const docId = 'creates-lock'
+      const docId = `lock-creates-${Date.now()}`
       const created = await createLock(baseConfig, docId, { enableLocking: true, username: 'alice' })
       assert.strictEqual(created, true)
 
@@ -38,7 +31,7 @@ suite('lock', () => {
     })
 
     await t.test('returns true without writing when locking disabled', async () => {
-      const docId = 'lock-disabled'
+      const docId = `lock-disabled-${Date.now()}`
       const created = await createLock(baseConfig, docId, { enableLocking: false, username: 'anyone' })
       assert.strictEqual(created, true)
 
@@ -47,7 +40,7 @@ suite('lock', () => {
     })
 
     await t.test('returns false on conflict and keeps existing lock', async () => {
-      const docId = 'lock-conflict'
+      const docId = `lock-conflict-${Date.now()}`
       await createLock(baseConfig, docId, { enableLocking: true, username: 'alice' })
       const created = await createLock(baseConfig, docId, { enableLocking: true, username: 'bob' })
       assert.strictEqual(created, false)
@@ -59,7 +52,7 @@ suite('lock', () => {
     })
 
     await t.test('removes lock when owned by caller', async () => {
-      const docId = 'lock-remove'
+      const docId = `lock-remove-${Date.now()}`
       await createLock(baseConfig, docId, { enableLocking: true, username: 'alice' })
       await removeLock(baseConfig, docId, { enableLocking: true, username: 'alice' })
 
@@ -68,7 +61,7 @@ suite('lock', () => {
     })
 
     await t.test('skips removal when lock owned by someone else', async () => {
-      const docId = 'lock-foreign'
+      const docId = `lock-remove-others-${Date.now()}`
       await createLock(baseConfig, docId, { enableLocking: true, username: 'alice' })
       await removeLock(baseConfig, docId, { enableLocking: true, username: 'bob' })
 
@@ -79,7 +72,7 @@ suite('lock', () => {
     })
 
     await t.test('respects disabled removal', async () => {
-      const docId = 'lock-disabled-remove'
+      const docId = `lock-disabled-remove-${Date.now()}`
       await createLock(baseConfig, docId, { enableLocking: true, username: 'alice' })
       await removeLock(baseConfig, docId, { enableLocking: false, username: 'alice' })
 

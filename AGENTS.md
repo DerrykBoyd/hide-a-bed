@@ -25,6 +25,8 @@ This document orients automation and AI assistants working in hide-a-bed.
   - client/: `npm test`
   - stub/: `npm test`
   - test/: `npm test`
+- Tests rely on the shared global setup in `client/test/setup.mts`, which starts an in-memory PouchDB server and tears it down after the suite.
+- When writing tests that use the shared database, ensure generated document IDs are unique per test run (for example, prefix with the test title plus `crypto.randomUUID()`) and avoid reusing hard-coded `_id` strings across suites. This keeps parallel runs isolated and prevents conflicts when the shared database still contains documents from previous tests.
 - **Lint fixes**: `npm run lint:fix` (StandardJS) per package.
 
 ## Coding Guidelines
@@ -40,6 +42,7 @@ This document orients automation and AI assistants working in hide-a-bed.
 - If touching CouchDB request logic, verify error handling in client/impl/errors.mts and transactionerrors.mts.
 - Mirror existing retry/backoff helpers when adding network calls (see client/impl/retry.mts).
 - Update or add tests alongside feature changes. Prefer placing new client tests in client/tests/ and stub tests in stub/tests/.
+- Generate unique CouchDB `_id` values per run. Use helpers such as `crypto.randomUUID()` or test-name prefixes so suites do not collide inside the shared `hide-a-bed-test-db` that persists for the life of the test process.
 - For cross-package changes, adjust stub/ and test/ as needed to keep APIs aligned.
 
 ## Verification Checklist

@@ -5,18 +5,16 @@ import needle from 'needle'
 import { setTimeout as delay } from 'node:timers/promises'
 import type { CouchConfigInput } from '../schema/config.mts'
 import { bulkRemove, bulkRemoveMap } from './bulkRemove.mts'
-
-const PORT = 8992
-const DB_URL = `http://localhost:${PORT}/bulk-remove-test`
+import { TEST_DB_URL } from '../test/setup-db.mts'
 
 const config: CouchConfigInput = {
-  couch: DB_URL
+  couch: TEST_DB_URL
 }
 
 type DocBody = Record<string, unknown>
 
 async function saveDoc(id: string, body: DocBody) {
-  const response = await needle('put', `${DB_URL}/${id}`, {
+  const response = await needle('put', `${TEST_DB_URL}/${id}`, {
     _id: id,
     ...body
   }, { json: true })
@@ -29,7 +27,7 @@ async function saveDoc(id: string, body: DocBody) {
 }
 
 async function getDoc(id: string) {
-  return needle('get', `${DB_URL}/${id}`, null, { json: true })
+  return needle('get', `${TEST_DB_URL}/${id}`, null, { json: true })
 }
 
 suite('bulkRemove', () => {
@@ -50,12 +48,6 @@ suite('bulkRemove', () => {
   })
 
   test('integration with pouchdb-server', async t => {
-    const server = spawn('node_modules/.bin/pouchdb-server', ['--in-memory', '--port', PORT.toString()], { stdio: 'inherit' })
-    await delay(1000)
-    await needle('put', DB_URL, null)
-    await delay(250)
-    t.after(() => { server.kill() })
-
     await t.test('removes documents via _bulk_docs', async () => {
       await saveDoc('bulk-remove-doc-1', { kind: 'test', count: 1 })
 

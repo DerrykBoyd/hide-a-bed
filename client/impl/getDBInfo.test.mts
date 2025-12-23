@@ -7,9 +7,7 @@ import needle from 'needle'
 import type { CouchConfigInput } from '../schema/config.mts'
 import { getDBInfo } from './getDBInfo.mts'
 import { RetryableError } from './utils/errors.mts'
-
-const PORT = 8992
-const DB_URL = `http://localhost:${PORT}/get-db-info-test`
+import { TEST_DB_URL } from '../test/setup-db.mts'
 
 suite('getDBInfo', () => {
   test("it should throw if provided config is invalid", async () => {
@@ -21,15 +19,10 @@ suite('getDBInfo', () => {
     )
   })
   test('integration with pouchdb-server', async t => {
-    const server = spawn('node_modules/.bin/pouchdb-server', ['--in-memory', '--port', PORT.toString()], { stdio: 'inherit' })
-    await delay(2000)
-    await needle('put', DB_URL, null)
-    t.after(() => { server.kill() })
-
     await t.test('returns database metadata', async () => {
-      const config: CouchConfigInput = { couch: DB_URL }
+      const config: CouchConfigInput = { couch: TEST_DB_URL }
       const info = await getDBInfo(config)
-      assert.strictEqual(info.db_name, 'get-db-info-test')
+      assert.strictEqual(info.db_name, 'hide-a-bed-test-db')
       assert.ok(typeof info.doc_count === 'number')
     })
   })

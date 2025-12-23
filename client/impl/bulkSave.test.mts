@@ -7,19 +7,14 @@ import type { CouchConfigInput } from '../schema/config.mts'
 import { bulkSave, bulkSaveTransaction } from './bulkSave.mts'
 import { RetryableError } from './utils/errors.mts'
 import { TransactionRollbackError, TransactionVersionConflictError } from './utils/transactionErrors.mts'
-
-const PORT = 8993
-const DB_URL = `http://localhost:${PORT}/bulk-save-test`
+import { TEST_DB_URL } from '../test/setup-db.mts'
 
 const baseConfig: CouchConfigInput = {
-  couch: DB_URL, useConsoleLogger: true
+  couch: TEST_DB_URL, useConsoleLogger: true
 }
 
-const TRANSACTION_PORT = 8994
-const TRANSACTION_DB_URL = `http://localhost:${TRANSACTION_PORT}/bulk-save-transaction-test`
-
 const transactionBaseConfig: CouchConfigInput = {
-  couch: TRANSACTION_DB_URL,
+  couch: TEST_DB_URL,
   bindWithRetry: false,
   useConsoleLogger: true
 }
@@ -63,14 +58,14 @@ async function getDocFrom(dbUrl: string, id: string) {
 }
 
 async function getDoc(id: string) {
-  return getDocFrom(DB_URL, id)
+  return getDocFrom(TEST_DB_URL, id)
 }
 
 suite('bulkSave', () => {
   test('rejects invalid config arguments', async () => {
     await assert.rejects(async () => {
       // @ts-expect-error intentionally passing unsupported option
-      await bulkSave({ couch: DB_URL, unsupported: true }, [{ _id: 'bad-config-doc', count: 1 }])
+      await bulkSave({ couch: TEST_DB_URL, unsupported: true }, [{ _id: 'bad-config-doc', count: 1 }])
     })
   })
 
@@ -96,43 +91,38 @@ suite('bulkSave', () => {
   })
 
   test('integration with pouchdb-server', async t => {
-    const server = spawn('node_modules/.bin/pouchdb-server', ['--in-memory', '--port', PORT.toString()], { stdio: 'inherit' })
-    await delay(2000)
-    await needle('put', DB_URL, null)
-    t.after(() => { server.kill() })
-
     let docTwoInitialRev: string | undefined
+    const docs = [
+      { _id: `bulk-save-doc-1-${Date.now()}`, type: 'integration', count: 1 },
+      { _id: `bulk-save-doc-2-${Date.now()}`, type: 'integration', count: 2 }
+    ]
 
     await t.test('creates documents via _bulk_docs', async () => {
-      const docs = [
-        { _id: 'bulk-save-doc-1', type: 'integration', count: 1 },
-        { _id: 'bulk-save-doc-2', type: 'integration', count: 2 }
-      ]
 
       const results = await bulkSave(baseConfig, docs)
       assert.strictEqual(results.length, 2)
       const [first, second] = results
       assert.ok(first)
-      assert.strictEqual(first.id, 'bulk-save-doc-1')
+      assert.strictEqual(first.id, docs[0]._id)
       assert.strictEqual(first.ok, true)
       assert.ok(second)
-      assert.strictEqual(second.id, 'bulk-save-doc-2')
+      assert.strictEqual(second.id, docs[1]._id)
       assert.strictEqual(second.ok, true)
 
       docTwoInitialRev = second.rev ?? undefined
       assert.ok(typeof docTwoInitialRev === 'string')
 
-      const { statusCode, body } = await getDoc('bulk-save-doc-1')
+      const { statusCode, body } = await getDoc(docs[0]._id)
       assert.strictEqual(statusCode, 200)
       assert.strictEqual(body?.type, 'integration')
       assert.strictEqual(body?.count, 1)
     })
 
     await t.test('updates documents when revision supplied', async () => {
-      const current = await getDoc('bulk-save-doc-2')
+      const current = await getDoc(docs[1]._id)
       assert.strictEqual(current.statusCode, 200)
       const updateResults = await bulkSave(baseConfig, [{
-        _id: 'bulk-save-doc-2',
+        _id: docs[1]._id,
         _rev: current.body?._rev,
         type: 'integration',
         count: 3
@@ -144,7 +134,7 @@ suite('bulkSave', () => {
       assert.strictEqual(updated.ok, true)
       assert.ok(updated.rev)
 
-      const { body } = await getDoc('bulk-save-doc-2')
+      const { body } = await getDoc(docs[1]._id)
       assert.strictEqual(body?.count, 3)
     })
 
@@ -152,7 +142,7 @@ suite('bulkSave', () => {
       if (!docTwoInitialRev) throw new Error('Expected initial revision to be captured')
 
       const conflictResults = await bulkSave(baseConfig, [{
-        _id: 'bulk-save-doc-2',
+        _id: docs[1]._id,
         _rev: docTwoInitialRev,
         type: 'integration',
         count: 99
@@ -161,7 +151,7 @@ suite('bulkSave', () => {
       assert.strictEqual(conflictResults.length, 1)
       const [conflict] = conflictResults
       assert.ok(conflict)
-      assert.strictEqual(conflict.id, 'bulk-save-doc-2')
+      assert.strictEqual(conflict.id, docs[1]._id)
       assert.strictEqual(conflict.error, 'conflict')
       assert.ok(conflict.reason)
     })
@@ -170,11 +160,6 @@ suite('bulkSave', () => {
 
 suite('bulkSaveTransaction', () => {
   test('integration with pouchdb-server', async t => {
-    const server = spawn('node_modules/.bin/pouchdb-server', ['--in-memory', '--port', TRANSACTION_PORT.toString()], { stdio: 'inherit' })
-    await delay(2000)
-    await needle('put', TRANSACTION_DB_URL, null)
-    t.after(() => { server.kill() })
-
     await t.test('completes transaction for new and existing docs', async () => {
       const emitter = createTestEmitter()
       const config: CouchConfigInput = {
@@ -182,11 +167,11 @@ suite('bulkSaveTransaction', () => {
         '~emitter': emitter
       }
 
-      const existingId = 'txn-existing-success'
-      const newId = 'txn-new-success'
-      const transactionId = 'bulk-transaction-success'
+      const existingId = `txn-existing-success-${Date.now()}`
+      const newId = `txn-new-success-${Date.now()}`
+      const transactionId = `bulk-transaction-success-${Date.now()}`
 
-      const existing = await saveDoc(TRANSACTION_DB_URL, existingId, { type: 'transaction', count: 1 })
+      const existing = await saveDoc(TEST_DB_URL, existingId, { type: 'transaction', count: 1 })
 
       const docs = [
         { _id: existingId, _rev: existing.rev, type: 'transaction', count: 2 },
@@ -200,15 +185,15 @@ suite('bulkSaveTransaction', () => {
       assert.ok(results[1]?.ok)
       assert.strictEqual(results[1]?.id, newId)
 
-      const updatedExisting = await getDocFrom(TRANSACTION_DB_URL, existingId)
+      const updatedExisting = await getDocFrom(TEST_DB_URL, existingId)
       assert.strictEqual(updatedExisting.statusCode, 200)
       assert.strictEqual(updatedExisting.body?.count, 2)
 
-      const createdDoc = await getDocFrom(TRANSACTION_DB_URL, newId)
+      const createdDoc = await getDocFrom(TEST_DB_URL, newId)
       assert.strictEqual(createdDoc.statusCode, 200)
       assert.strictEqual(createdDoc.body?.count, 1)
 
-      const transactionDoc = await getDocFrom(TRANSACTION_DB_URL, `txn:${transactionId}`)
+      const transactionDoc = await getDocFrom(TEST_DB_URL, `txn:${transactionId}`)
       assert.strictEqual(transactionDoc.statusCode, 200)
       assert.strictEqual(transactionDoc.body?.status, 'completed')
 
@@ -223,12 +208,11 @@ suite('bulkSaveTransaction', () => {
         '~emitter': emitter
       }
 
-      const docId = 'txn-conflict-target'
-      const transactionId = 'bulk-transaction-conflict'
+      const docId = `txn-conflict-doc-${Date.now()}`
+      const transactionId = `bulk-transaction-conflict-${Date.now()}`
 
-      const first = await saveDoc(TRANSACTION_DB_URL, docId, { type: 'conflict', count: 1 })
-      await saveDoc(TRANSACTION_DB_URL, docId, { _rev: first.rev, type: 'conflict', count: 2 })
-
+      const first = await saveDoc(TEST_DB_URL, docId, { type: 'conflict', count: 1 })
+      await saveDoc(TEST_DB_URL, docId, { _rev: first.rev, type: 'conflict', count: 2 })
       await assert.rejects(
         () => bulkSaveTransaction(config, transactionId, [{
           _id: docId,
@@ -250,15 +234,15 @@ suite('bulkSaveTransaction', () => {
         '~emitter': emitter
       }
 
-      const successId = 'txn-rollback-existing'
-      const conflictId = 'txn-rollback-conflict'
-      const transactionId = 'bulk-transaction-rollback'
+      const successId = `txn-rollback-existing-${Date.now()}`
+      const conflictId = `txn-rollback-conflict-${Date.now()}`
+      const transactionId = `bulk-transaction-rollback-${Date.now()}`
 
-      const existing = await saveDoc(TRANSACTION_DB_URL, successId, { type: 'rollback', count: 1 })
-      const conflicting = await saveDoc(TRANSACTION_DB_URL, conflictId, { type: 'rollback', count: 1 })
+      const existing = await saveDoc(TEST_DB_URL, successId, { type: 'rollback', count: 1 })
+      const conflicting = await saveDoc(TEST_DB_URL, conflictId, { type: 'rollback', count: 1 })
 
       emitter.on('transaction-revs-checked', async () => {
-        await needle('put', `${TRANSACTION_DB_URL}/${conflictId}`, {
+        await needle('put', `${TEST_DB_URL}/${conflictId}`, {
           _id: conflictId,
           _rev: conflicting.rev,
           type: 'rollback',
@@ -274,15 +258,15 @@ suite('bulkSaveTransaction', () => {
         (err: unknown) => err instanceof TransactionRollbackError
       )
 
-      const rolledBack = await getDocFrom(TRANSACTION_DB_URL, successId)
+      const rolledBack = await getDocFrom(TEST_DB_URL, successId)
       assert.strictEqual(rolledBack.statusCode, 200)
       assert.strictEqual(rolledBack.body?.count, 1)
 
-      const conflicted = await getDocFrom(TRANSACTION_DB_URL, conflictId)
+      const conflicted = await getDocFrom(TEST_DB_URL, conflictId)
       assert.strictEqual(conflicted.statusCode, 200)
       assert.strictEqual(conflicted.body?.count, 99)
 
-      const transactionDoc = await getDocFrom(TRANSACTION_DB_URL, `txn:${transactionId}`)
+      const transactionDoc = await getDocFrom(TEST_DB_URL, `txn:${transactionId}`)
       assert.strictEqual(transactionDoc.statusCode, 200)
       assert.strictEqual(transactionDoc.body?.status, 'rolled_back')
 

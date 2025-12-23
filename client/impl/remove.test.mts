@@ -6,18 +6,16 @@ import { setTimeout as delay } from 'node:timers/promises'
 import type { CouchConfigInput } from '../schema/config.mts'
 import { remove } from './remove.mts'
 import { RetryableError } from './utils/errors.mts'
-
-const PORT = 8995
-const DB_URL = `http://localhost:${PORT}/remove-test`
+import { TEST_DB_URL } from '../test/setup-db.mts'
 
 const baseConfig: CouchConfigInput = {
-  couch: DB_URL
+  couch: TEST_DB_URL
 }
 
 type DocBody = Record<string, unknown>
 
 async function saveDoc(id: string, body: DocBody) {
-  const response = await needle('put', `${DB_URL}/${id}`, {
+  const response = await needle('put', `${TEST_DB_URL}/${id}`, {
     _id: id,
     ...body
   }, { json: true })
@@ -30,7 +28,7 @@ async function saveDoc(id: string, body: DocBody) {
 }
 
 async function getDoc(id: string) {
-  return needle('get', `${DB_URL}/${id}`, null, { json: true })
+  return needle('get', `${TEST_DB_URL}/${id}`, null, { json: true })
 }
 
 suite('remove', () => {
@@ -42,20 +40,16 @@ suite('remove', () => {
   })
 
   test('integration with pouchdb-server', async t => {
-    const server = spawn('node_modules/.bin/pouchdb-server', ['--in-memory', '--port', PORT.toString()], { stdio: 'inherit' })
-    await delay(2000)
-    await needle('put', DB_URL, null)
-    t.after(() => { server.kill() })
-
     await t.test('removes an existing document', async () => {
-      const { rev } = await saveDoc('remove-doc-1', { kind: 'test', count: 1 })
+      const remove_doc_id = `remove-doc-1-${Date.now()}`
+      const { rev } = await saveDoc(remove_doc_id, { kind: 'test', count: 1 })
 
-      const result = await remove(baseConfig, 'remove-doc-1', rev)
+      const result = await remove(baseConfig, remove_doc_id, rev)
       assert.strictEqual(result.ok, true)
-      assert.strictEqual(result.id, 'remove-doc-1')
+      assert.strictEqual(result.id, remove_doc_id)
       assert.strictEqual(result.statusCode, 200)
 
-      const { statusCode, body } = await getDoc('remove-doc-1')
+      const { statusCode, body } = await getDoc(remove_doc_id)
       assert.strictEqual(statusCode, 404)
       assert.strictEqual(body?.error, 'not_found')
     })

@@ -1,22 +1,19 @@
 import assert from 'node:assert/strict'
-import { spawn } from 'node:child_process'
 import test, { suite } from 'node:test'
 import needle from 'needle'
-import { setTimeout as delay } from 'node:timers/promises'
 import type { CouchConfigInput } from '../schema/config.mts'
 import { z } from 'zod'
 import { RetryableError } from './utils/errors.mts'
 import { bulkGet, bulkGetDictionary } from './bulkGet.mts'
+import { TEST_DB_URL } from '../test/setup-db.mts'
 
-const PORT = 8990
-const DB_URL = `http://localhost:${PORT}/bulk-get-test`
 
 const config: CouchConfigInput = {
-  couch: DB_URL,
+  couch: TEST_DB_URL,
 }
 
 async function ensureDoc(id: string, body: Record<string, unknown>) {
-  await needle('put', `${DB_URL}/${id}`, {
+  await needle('put', `${TEST_DB_URL}/${id}`, {
     _id: id,
     ...body
   }, { json: true })
@@ -24,11 +21,6 @@ async function ensureDoc(id: string, body: Record<string, unknown>) {
 
 suite('bulkGet', () => {
   test('integration with pouchdb-server', async t => {
-    const server = spawn('node_modules/.bin/pouchdb-server', ['--in-memory', '--port', PORT.toString()], { stdio: 'inherit' })
-    await delay(2000)
-    await needle('put', DB_URL, null)
-    t.after(() => { server.kill() })
-
     await ensureDoc('doc-1', { value: 42 })
     await ensureDoc('doc-valid', { count: 7 })
     await ensureDoc('doc-invalid', { count: 'nope' })

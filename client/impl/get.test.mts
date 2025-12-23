@@ -7,18 +7,16 @@ import { z } from 'zod'
 import type { CouchConfigInput } from '../schema/config.mts'
 import { get, getAtRev } from './get.mts'
 import { NotFoundError, RetryableError } from './utils/errors.mts'
-
-const PORT = 8991
-const DB_URL = `http://localhost:${PORT}/get-test`
+import { TEST_DB_URL } from '../test/setup-db.mts'
 
 const baseConfig: CouchConfigInput = {
-  couch: DB_URL
+  couch: TEST_DB_URL
 }
 
 type DocBody = Record<string, unknown>
 
 async function saveDoc(id: string, body: DocBody) {
-  const response = await needle('put', `${DB_URL}/${id}`, {
+  const response = await needle('put', `${TEST_DB_URL}/${id}`, {
     _id: id,
     ...body
   }, { json: true })
@@ -32,15 +30,13 @@ async function saveDoc(id: string, body: DocBody) {
 
 suite('get', () => {
   test('integration with pouchdb-server', async t => {
-    const server = spawn('node_modules/.bin/pouchdb-server', ['--in-memory', '--port', PORT.toString()], { stdio: 'inherit' })
-    await delay(2000)
-    await needle('put', DB_URL, null)
-    t.after(() => { server.kill() })
-
-    await saveDoc('doc-valid', { kind: 'example', count: 7 })
-    await saveDoc('doc-invalid', { kind: 'example', count: 'oops' })
-    const firstRev = await saveDoc('doc-rev', { version: 1 })
-    await saveDoc('doc-rev', { _rev: firstRev.rev, version: 2 })
+    const doc_valid_id = `doc-valid-${Date.now()}`
+    const doc_invalid_id = `doc-invalid-${Date.now()}`
+    const doc_rev_id = `doc-rev-${Date.now()}`
+    await saveDoc(doc_valid_id, { kind: 'example', count: 7 })
+    await saveDoc(doc_invalid_id, { kind: 'example', count: 'oops' })
+    const firstRev = await saveDoc(doc_rev_id, { version: 1 })
+    await saveDoc(doc_rev_id, { _rev: firstRev.rev, version: 2 })
 
     await t.test('returns documents and validates schema', async () => {
       const schema = z.looseObject({
@@ -49,13 +45,13 @@ suite('get', () => {
         count: z.number()
       })
 
-      const doc = await get(baseConfig, 'doc-valid', { validate: { docSchema: schema } })
+      const doc = await get(baseConfig, doc_valid_id, { validate: { docSchema: schema } })
       assert.ok(doc)
       assert.strictEqual(doc?.kind, 'example')
       assert.strictEqual(doc?.count, 7)
 
       await assert.rejects(
-        () => get(baseConfig, 'doc-invalid', { validate: { docSchema: schema } }),
+        () => get(baseConfig, doc_invalid_id, { validate: { docSchema: schema } }),
         (err: unknown) => {
           return Array.isArray(err) && err[0].message === "Invalid input: expected number, received string"
         }
@@ -82,10 +78,10 @@ suite('get', () => {
         version: z.number()
       })
 
-      const latest = await get(baseConfig, 'doc-rev', { validate: { docSchema: versionedSchema } })
+      const latest = await get(baseConfig, doc_rev_id, { validate: { docSchema: versionedSchema } })
       assert.strictEqual(latest?.version, 2)
 
-      const early = await getAtRev(baseConfig, 'doc-rev', firstRev.rev, { validate: { docSchema: versionedSchema } })
+      const early = await getAtRev(baseConfig, doc_rev_id, firstRev.rev, { validate: { docSchema: versionedSchema } })
       assert.strictEqual(early?.version, 1)
     })
 
