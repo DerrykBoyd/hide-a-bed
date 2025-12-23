@@ -20,7 +20,6 @@ export async function query<DocSchema extends StandardSchemaV1, KeySchema extend
   config: CouchConfigInput,
   view: ViewString,
   options: ViewOptions & {
-    include_docs: false,
     validate?: {
       keySchema?: KeySchema,
       valueSchema?: ValueSchema
