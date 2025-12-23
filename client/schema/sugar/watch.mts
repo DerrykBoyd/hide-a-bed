@@ -10,6 +10,5 @@ export const WatchOptions = z
   })
   .partial()
 
+export type WatchOptions = StandardSchemaV1.InferOutput<typeof WatchOptions>
 export type WatchOptionsInput = StandardSchemaV1.InferInput<typeof WatchOptions>
-
-export type WatchOptionsSchema = StandardSchemaV1.InferOutput<typeof WatchOptions>

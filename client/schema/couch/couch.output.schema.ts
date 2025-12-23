@@ -74,7 +74,7 @@ export type ViewQueryResponseValidated<
 }
 
 /**
- * CouchDB _bulk_docs response schemas
+ * CouchDB _bulk_docs response schema
  */
 export const BulkSaveResponse = z.array(
   z.object({

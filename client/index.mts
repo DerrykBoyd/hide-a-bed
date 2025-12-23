@@ -73,6 +73,10 @@ export type { RetryOptions } from './impl/retry.mts'
 export type { NetworkError, RetryableError, NotFoundError } from './impl/utils/errors.mts'
 export type { OnRow } from './impl/stream.mts'
 export type { CouchConfig, CouchConfigInput } from './schema/config.mts'
-export type { LockOptionsSchema, LockOptionsInput, LockDocSchema } from './schema/sugar/lock.mts'
-export type { WatchOptionsSchema, WatchOptionsInput } from './schema/sugar/watch.mts'
+export type { LockOptions, LockOptionsInput, LockDoc } from './schema/sugar/lock.mts'
+export type {
+  WatchOptions as WatchOptionsSchema,
+  WatchOptionsInput
+} from './schema/sugar/watch.mts'
 export type { BoundInstance } from './impl/bindConfig.mts'
+export type { StandardSchemaV1 } from './types/standard-schema.ts'

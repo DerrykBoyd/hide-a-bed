@@ -1,4 +1,4 @@
-import { LockOptions, type LockOptionsSchema } from '../../schema/sugar/lock.mts'
+import { LockOptions } from '../../schema/sugar/lock.mts'
 import { put } from '../put.mts'
 import { get } from '../get.mts'
 import { createLogger } from '../utils/logger.mts'
@@ -18,7 +18,7 @@ import { isConflictError } from '../utils/errors.mts'
 export async function createLock(
   configInput: CouchConfigInput,
   docId: string,
-  lockOptions: LockOptionsSchema
+  lockOptions: LockOptions
 ): Promise<boolean> {
   const config = CouchConfig.parse(configInput)
   const options = LockOptions.parse(lockOptions)
@@ -65,7 +65,7 @@ export async function createLock(
 export async function removeLock(
   configInput: CouchConfigInput,
   docId: string,
-  lockOptions: LockOptionsSchema
+  lockOptions: LockOptions
 ): Promise<void> {
   const config = CouchConfig.parse(configInput)
   const options = LockOptions.parse(lockOptions)

@@ -8,11 +8,11 @@ export const LockDoc = CouchDoc.extend({
   lockedAt: z.string().describe('ISO timestamp when lock was created'),
   lockedBy: z.string().describe('username of who created the lock')
 })
-export type LockDocSchema = StandardSchemaV1.InferOutput<typeof LockDoc>
+export type LockDoc = StandardSchemaV1.InferOutput<typeof LockDoc>
 
 export const LockOptions = z.object({
   enableLocking: z.boolean().prefault(true).describe('whether locking is enabled'),
   username: z.string().describe('username to attribute locks to')
 })
-export type LockOptionsSchema = StandardSchemaV1.InferOutput<typeof LockOptions>
+export type LockOptions = StandardSchemaV1.InferOutput<typeof LockOptions>
 export type LockOptionsInput = StandardSchemaV1.InferInput<typeof LockOptions>
